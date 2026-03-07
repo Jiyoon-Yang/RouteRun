@@ -1,0 +1,7 @@
+1. 인가
+    - 임포트경로: @dobby/core-utils/src/utils/auth/index.ts
+    - RLS authenticated 변환할 것
+    - 반환 받은 userId를 아래의 시나리오에서 사용
+    - 에러처리
+        - 임포트경로: @dobby/core-utils/src/utils/error/api-error.ts
+        - 에러코드: 상위 에러 그대로 반환

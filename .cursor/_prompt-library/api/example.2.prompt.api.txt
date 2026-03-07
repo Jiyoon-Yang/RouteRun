@@ -1,0 +1,72 @@
+아래의 조건을 모두 적용하여, 아래의 요구사항을 모두 구현할 것.
+구현 결과를 체크리스트로 반환할 것.
+
+==============================================
+
+조건-커서룰) 아래의 커서룰을 적용하여 작업하고, 이 작업이 끝나면 해당 rules 적용 결과를 체크리스트로 반환할 것.
+            - .cursor/rules/01-common.mdc
+            - .cursor/rules/06-api.mdc
+
+==============================================
+
+조건-파일경로) 구현될 ROUTE 파일경로: remote-billing/src/pages/api/billings-pricing/read.catalog.ts
+
+==============================================
+
+핵심요구사항) 다음의 API를 supabase를 연동하여 step-by-step 으로 구현하고, 적용 결과를 체크리스트로 반환할 것.
+            1. 상세 구현 정보
+                1-1) 메서드: GET
+                1-2) 요청데이터: {}
+                1-3) 응답데이터: {
+                    type,
+                    original_price,
+                    discount_rate,
+                    discounted_price,
+                    seat,
+                    day
+                }
+
+            2. 인가
+                - 인가 불필요 (공개 API)
+
+            3. 오류 코드 정의
+                - METHOD_NOT_ALLOWED: 허용되지 않는 메서드 (405)
+                - DATABASE_READ_FAILED: 데이터베이스 조회 실패 (500)
+                - CATALOG_NOT_FOUND: 카탈로그 데이터 없음 (500)
+                - INTERNAL_ERROR: 내부 서버 오류 (500)
+
+            4. 카탈로그 조회 시나리오
+                1) 상품 목록 조회
+                    - 테이블명: billing_catalog
+                    - 컬럼명:
+                        - type
+                        - original_price
+                        - discount_rate
+                        - discounted_price
+                        - seat
+                        - day
+
+                    - 정렬조건:
+                        - created_at ASC
+
+                2) 상품 조회 에러 발생시
+                    - 오류코드: DATABASE_READ_FAILED
+                    - 에러메시지: "billing_catalog 조회 중 오류가 발생했습니다"
+
+                3) 상품 데이터가 없는 경우
+                    - 오류코드: CATALOG_NOT_FOUND
+                    - 에러메시지: "billing_catalog 데이터가 없습니다"
+
+            5. 아래 테이블 스키마를 참고하여, 응답 데이터를 반환할 것.
+              - create table public.billing_catalog (
+                id uuid not null default gen_random_uuid (),
+                created_at timestamp with time zone not null default now(),
+                name text not null,
+                type text not null,
+                original_price numeric not null,
+                discount_rate smallint not null,
+                discounted_price numeric not null,
+                seat smallint not null,
+                day smallint not null,
+                constraint billing_v2_catalog_duplicate_pkey primary key (id)
+              ) TABLESPACE pg_default;

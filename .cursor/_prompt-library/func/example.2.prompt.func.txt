@@ -1,0 +1,34 @@
+아래의 조건을 모두 적용하여, 아래의 요구사항을 모두 구현할 것.
+구현 결과를 체크리스트로 반환할 것.
+
+==============================================
+
+조건-커서룰) 아래의 커서룰을 적용하여 작업하고, 이 작업이 끝나면 해당 rules 적용 결과를 체크리스트로 반환할 것.
+            - .cursor/rules/01-common.mdc
+            - .cursor/rules/04-func.mdc
+
+==============================================
+
+조건-파일경로) 참고할 API  파일경로: remote-user/src/pages/api/user-payments-history/read.payments.history.ts
+조건-파일경로) 참고할 TSX  파일경로: remote-user/src/components/user-payments-history/payment-list/index.tsx
+조건-파일경로) 참고할 CSS  파일경로: remote-user/src/components/user-payments-history/payment-list/styles.module.css
+조건-파일경로) 구현될 HOOK 파일경로: remote-user/src/components/user-payments-history/payment-list/hooks/index.binding.payments.history.hook.ts
+
+==============================================
+
+핵심요구사항) 제공된 API를 사용하여 아래 기능을 step-by-step 으로 구현하고, 적용 결과를 체크리스트로 반환할 것.
+            1) 라이브러리조건
+                - API: 이미 설치되어있는 @tanstack/react-query를 사용할 것.
+           
+            2) 유저시나리오(목록 조회)
+                1. 페이지에 접속하면 목록조회 API를 요청할 것.
+                    1-1) Request Origin: process.env.NEXT_PUBLIC_REMOTE_USER_ORIGIN
+                    1-2) Endpoint: remote-user/src/pages/api/user-payments-history/read.payments.history.ts
+                    1-3) Method: 'GET'
+                    1-4) 요청데이터: {}
+                    1-5) 응답데이터: API "1-2)Endpoint" 경로의 파일 확인할 것.
+        
+                2. 로딩 화면을 보여줄 것.
+                    - 로딩방식: 스켈레톤
+                    - 참고 디자인 JSX: remote-billing/src/components/billings-memberships/memberships-main-credit/index.tsx
+                    - 디자인 CSS: remote-billing/src/components/billings-memberships/memberships-main-credit/styles.module.css

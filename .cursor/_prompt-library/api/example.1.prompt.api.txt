@@ -1,0 +1,89 @@
+아래의 조건을 모두 적용하여, 아래의 요구사항을 모두 구현할 것.
+구현 결과를 체크리스트로 반환할 것.
+
+==============================================
+
+조건-커서룰) 아래의 커서룰을 적용하여 작업하고, 이 작업이 끝나면 해당 rules 적용 결과를 체크리스트로 반환할 것.
+            - .cursor/rules/01-common.mdc
+            - .cursor/rules/06-api.mdc
+
+==============================================
+
+조건-파일경로) 구현될 ROUTE 파일경로: remote-billing/src/pages/api/commons/payments-readies/generate.ts
+
+==============================================
+
+핵심요구사항) 다음의 API를 supabase를 연동하여 step-by-step 으로 구현하고, 적용 결과를 체크리스트로 반환할 것.
+            1. 상세 구현 정보
+                1-1) 메서드: POST
+                1-2) 요청데이터: {
+                    catalogId
+                    type
+                    day
+                    seat
+                    originalPrice
+                    discountRate
+                    discountedPrice
+                }
+                1-3) 응답데이터: {
+                    paymentId
+                    orderName
+                    totalAmount
+                    currency
+                    customData: {
+                        userId
+                        catalogId
+                        catalogType
+                        catalogDay
+                        seat
+                    }
+                }
+
+            2. 인가
+                - 임포트경로: @dobby/core-utils/src/utils/auth/index.ts
+                - RLS authenticated 변환할 것
+                - 반환 받은 userId를 아래의 시나리오에서 사용
+
+            3. 결제준비 시나리오
+                1) 상품조회
+                    - 테이블명: billing_catalog
+                    - 컬럼명:
+                        - id
+                        - name
+
+                    - AND조건:
+                        - id               === 요청데이터.catalogId
+                        - type             === 요청데이터.type
+                        - day              === 요청데이터.day
+                        - original_price   === 요청데이터.originalPrice
+                        - discount_rate    === 요청데이터.discountRate
+                        - discounted_price === 요청데이터.discountedPrice
+
+                2) 상품조회 결과가 없는 경우
+                    - 에러메시지: "일치하는 상품이 존재하지 않습니다."
+
+                3) 금지상품을 선택한 경우
+                    - 금지상품: 
+                        - Basic 30일권 1명 초과 선택시
+
+                    - 검증방법:
+                        - AND조건:
+                            - 요청데이터.type === "Basic"
+                            - 요청데이터.day  === 30
+                            - 요청데이터.seat  >  1
+
+                    - 실패처리:
+                        - 에러메시지: "본 상품은 1명만 구매 가능합니다."
+
+                4) 주문서생성
+                    - paymentId  : UUID()
+                    - orderName  : billing_catalog.name
+                    - totalAmount: 요청데이터.discountedPrice * seat
+                    - currency   : 'CURRENCY_KRW'
+                    - customData: {
+                        userId     : 인가.userId
+                        catalogId  : 요청데이터.catalogId
+                        catalogType: 요청데이터.type
+                        catalogDay : 요청데이터.day
+                        seat       : 요청데이터.seat
+                    }

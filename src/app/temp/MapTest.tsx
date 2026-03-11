@@ -1,7 +1,14 @@
 "use client";
 
 import Script from "next/script";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
+import {
+  saveRunningCourse,
+  getCourseList,
+  deleteCourse,
+  updateCourse,
+  type CourseListItem,
+} from "@/lib/supabase";
 
 /** 카카오맵 클릭 이벤트에서 전달되는 객체 타입 (위도·경도 조회용) */
 interface KakaoClickMouseEvent {
@@ -29,17 +36,7 @@ export interface SupabaseCoursePointRow {
 
 /* ============================================
  * Supabase 테이블 형식 변환 함수
- * ============================================
- * 요구 테이블 구조:
- * - id: uuid (자동 생성) → insert 시 제외
- * - course_id: uuid
- * - point_type: text (START / WAYPOINT / END)
- * - latitude: float8
- * - longitude: float8
- * - sequence: int4 (클릭 순서, 1부터)
- *
- * 규칙: 첫 번째 클릭 = START, 마지막 = END, 그 사이 = WAYPOINT
- */
+ * ============================================ */
 function toSupabaseCoursePoints(
   courseId: string,
   points: ClickPoint[]
@@ -64,20 +61,22 @@ function toSupabaseCoursePoints(
 
 /* ============================================
  * MapTest 컴포넌트
- * ============================================
- * - 카카오맵을 띄우고, 클릭할 때마다 해당 지점의 위도/경도를 콘솔에 출력합니다.
- * - 클릭된 좌표를 순서대로 배열에 담고, Supabase 테이블 형식으로 변환하는 로직을 포함합니다.
- */
+ * ============================================ */
 export default function MapTest() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [points, setPoints] = useState<ClickPoint[]>([]);
-  /** 테스트용 course_id (실제 저장 시에는 코스 생성 후 받은 uuid 사용) */
-  const [courseId] = useState(() =>
-    typeof crypto !== "undefined" && crypto.randomUUID
-      ? crypto.randomUUID()
-      : "test-course-id"
-  );
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [distance, setDistance] = useState("");
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const [courses, setCourses] = useState<CourseListItem[]>([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", author: "", distance: "" });
+
   const mapRef = useRef<object | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const polylineRef = useRef<object | null>(null);
@@ -85,9 +84,22 @@ export default function MapTest() {
   const pointsRef = useRef<ClickPoint[]>([]);
   pointsRef.current = points;
 
-  /* 스크립트가 로드된 뒤에만 지도를 만들 수 있습니다.
-   * autoload=false 로 넣었기 때문에, 스크립트만 로드되고 지도는 자동으로 안 뜹니다.
-   * 우리가 원할 때 kakao.maps.load() 를 호출해서 그다음에 지도를 생성합니다. */
+  const fetchCourses = useCallback(async () => {
+    try {
+      setCoursesLoading(true);
+      const list = await getCourseList();
+      setCourses(list);
+    } catch (err) {
+      console.error("코스 목록 조회 실패:", err);
+    } finally {
+      setCoursesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
+
   useEffect(() => {
     if (!scriptLoaded || typeof window === "undefined" || !window.kakao) return;
     if (!mapContainerRef.current) return;
@@ -97,7 +109,6 @@ export default function MapTest() {
       const container = mapContainerRef.current;
       if (!container) return;
 
-      /* 지도 중심: 서울역 근처. level 숫자가 작을수록 확대됩니다. */
       const options = {
         center: new kakao.maps.LatLng(37.5563, 126.9723),
         level: 5,
@@ -106,7 +117,6 @@ export default function MapTest() {
       mapRef.current = map;
       setMapReady(true);
 
-      /* 지도 클릭: 해당 좌표 추가. 단, 출발지와 같은 위치 클릭은 마커에서 처리하므로 스킵 */
       kakao.maps.event.addListener(map, "click", (mouseEvent?: KakaoClickMouseEvent) => {
         if (!mouseEvent) return;
         const latLng = mouseEvent.latLng;
@@ -121,13 +131,11 @@ export default function MapTest() {
         ) {
           return;
         }
-        console.log("클릭한 좌표 — 위도(latitude):", latitude, ", 경도(longitude):", longitude);
         setPoints((p) => [...p, { latitude, longitude }]);
       });
     });
   }, [scriptLoaded]);
 
-  /* points 변경 시: 기존 선·마커 제거 후, 순서대로 선(폴리라인)과 마커 다시 그림. 출발지 마커는 호버 시 진하게, 클릭 시 도착지로 같은 좌표 추가 */
   useEffect(() => {
     if (!mapReady || !mapRef.current || typeof window === "undefined" || !window.kakao) return;
     const map = mapRef.current as InstanceType<typeof window.kakao.maps.Map>;
@@ -164,7 +172,6 @@ export default function MapTest() {
         kakao.maps.event.addListener(marker, "mouseout", () => marker.setOpacity(0.85));
         kakao.maps.event.addListener(marker, "click", () => {
           const start = points[0];
-          console.log("출발지 클릭 — 도착지를 같은 위치로 추가:", start.latitude, start.longitude);
           setPoints((prev) => [...prev, { latitude: start.latitude, longitude: start.longitude }]);
         });
       }
@@ -172,61 +179,248 @@ export default function MapTest() {
     });
   }, [points, mapReady]);
 
-  /* points가 바뀔 때마다 Supabase 형으로 변환한 결과를 콘솔에 출력 (API 응답 구조 파악용) */
-  useEffect(() => {
-    if (points.length === 0) return;
-    const rows = toSupabaseCoursePoints(courseId, points);
-    console.log("Supabase 저장용 데이터 (course_points):", rows);
-  }, [points, courseId]);
+  const handleSave = async () => {
+    if (points.length === 0) {
+      setSaveError("좌표를 먼저 찍어주세요.");
+      return;
+    }
+    setSaveError(null);
+    setSaveLoading(true);
+    try {
+      await saveRunningCourse({
+        title: title || "제목 없음",
+        author: author || "익명",
+        distance: parseFloat(distance) || 0,
+        images: [],
+        points,
+      });
+      setPoints([]);
+      setTitle("");
+      setAuthor("");
+      setDistance("");
+      await fetchCourses();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.");
+    } finally {
+      setSaveLoading(false);
+    }
+  };
 
-  const supabaseRows = toSupabaseCoursePoints(courseId, points);
+  const handleDelete = async (courseId: string) => {
+    if (!confirm("이 코스를 삭제하시겠습니까?")) return;
+    try {
+      await deleteCourse(courseId);
+      await fetchCourses();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "삭제 실패");
+    }
+  };
+
+  const handleEditStart = (course: CourseListItem) => {
+    setEditingId(course.id);
+    setEditForm({
+      title: course.title,
+      author: course.author,
+      distance: String(course.distance),
+    });
+  };
+
+  const handleEditSave = async () => {
+    if (!editingId) return;
+    try {
+      await updateCourse(editingId, {
+        title: editForm.title,
+        author: editForm.author,
+        distance: parseFloat(editForm.distance) || 0,
+      });
+      setEditingId(null);
+      await fetchCourses();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "수정 실패");
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditingId(null);
+  };
+
+  const supabaseRows = toSupabaseCoursePoints("preview", points);
 
   return (
     <>
-      {/* 카카오맵 JavaScript SDK를 불러옵니다.
-       * appkey는 .env의 NEXT_PUBLIC_KAKAO_MAP_API_KEY 사용 (브라우저에서 접근 가능).
-       * autoload=false 로 두면 kakao.maps.load() 호출 후 지도를 생성합니다. */}
       <Script
         src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY ?? ""}&autoload=false`}
         strategy="afterInteractive"
         onLoad={() => setScriptLoaded(true)}
       />
 
-      <div className="mx-auto max-w-4xl px-4 py-6">
+      <div className="mx-auto max-w-7xl px-4 py-6">
         <h1 className="mb-2 text-xl font-semibold text-black">
           코스 등록 테스트 (카카오맵)
         </h1>
         <p className="mb-4 text-sm text-neutral-600">
-          지도를 클릭해 출발지 → 경유지 → 도착지를 순서대로 찍으세요. 선으로 연결됩니다. 도착지를 출발지와 같은 위치로 하려면 출발지 마커에 마우스를 올리면(색이 진해짐) 그 상태에서 클릭하세요.
+          지도를 클릭해 출발지 → 경유지 → 도착지를 순서대로 찍으세요. 도착지를 출발지와 같은
+          위치로 하려면 출발지 마커를 클릭하세요.
         </p>
 
-        {/* 지도가 들어갈 영역. ref로 DOM을 잡아서 카카오맵 API에 넘깁니다. */}
-        <div
-          ref={mapContainerRef}
-          className="h-[60vh] w-full border border-neutral-200 bg-neutral-100"
-        />
+        <div className="flex gap-6">
+          {/* 왼쪽: 저장된 코스 리스트 */}
+          <div className="w-80 shrink-0 border border-neutral-200 bg-white">
+            <div className="border-b border-neutral-200 p-3">
+              <h2 className="text-sm font-medium text-black">저장된 코스</h2>
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto p-4">
+              {coursesLoading ? (
+                <p className="text-sm text-neutral-500">로딩 중...</p>
+              ) : courses.length === 0 ? (
+                <p className="text-sm text-neutral-500">저장된 코스가 없습니다.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {courses.map((course) => (
+                    <li
+                      key={course.id}
+                      className="rounded border border-neutral-200 bg-neutral-50 p-3 text-sm"
+                    >
+                      {editingId === course.id ? (
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={editForm.title}
+                            onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                            placeholder="제목"
+                            className="w-full rounded border border-neutral-300 px-2 py-1 text-sm"
+                          />
+                          <input
+                            type="text"
+                            value={editForm.author}
+                            onChange={(e) => setEditForm((f) => ({ ...f, author: e.target.value }))}
+                            placeholder="작성자"
+                            className="w-full rounded border border-neutral-300 px-2 py-1 text-sm"
+                          />
+                          <input
+                            type="text"
+                            value={editForm.distance}
+                            onChange={(e) =>
+                              setEditForm((f) => ({ ...f, distance: e.target.value }))
+                            }
+                            placeholder="거리(km)"
+                            className="w-full rounded border border-neutral-300 px-2 py-1 text-sm"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={handleEditSave}
+                              className="rounded bg-black px-2 py-1 text-xs text-white"
+                            >
+                              저장
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleEditCancel}
+                              className="rounded border border-neutral-300 px-2 py-1 text-xs"
+                            >
+                              취소
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="font-medium text-black">{course.title}</p>
+                          <p className="mt-0.5 text-neutral-600">
+                            {course.author} · {course.distance}km
+                          </p>
+                          <p className="mt-0.5 text-xs text-neutral-400">
+                            {new Date(course.created_at).toLocaleString("ko-KR")}
+                          </p>
+                          <div className="mt-2 flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleEditStart(course)}
+                              className="rounded border border-neutral-300 px-2 py-1 text-xs hover:bg-neutral-100"
+                            >
+                              수정
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(course.id)}
+                              className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                            >
+                              삭제
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
 
-        {/* 클릭된 좌표 목록 (블랙 앤 화이트, 심플) */}
-        <div className="mt-4 border border-neutral-200 bg-white p-4">
-          <h2 className="mb-2 text-sm font-medium text-black">
-            클릭한 좌표 ({points.length}개)
-          </h2>
-          {points.length === 0 ? (
-            <p className="text-sm text-neutral-500">지도를 클릭해 보세요.</p>
-          ) : (
-            <ul className="space-y-1 text-sm text-neutral-700">
-              {supabaseRows.map((row, index) => (
-                <li key={index} className="flex gap-2">
-                  <span className="font-mono text-black">
-                    [{row.sequence}] {row.point_type}
-                  </span>
-                  <span>
-                    위도 {row.latitude.toFixed(6)}, 경도 {row.longitude.toFixed(6)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
+          {/* 오른쪽: 지도 + 좌표 + 저장 */}
+          <div className="flex-1 min-w-0">
+            <div
+              ref={mapContainerRef}
+              className="h-[50vh] w-full border border-neutral-200 bg-neutral-100"
+            />
+
+            <div className="mt-4 border border-neutral-200 bg-white p-4">
+              <h2 className="mb-2 text-sm font-medium text-black">
+                클릭한 좌표 ({points.length}개)
+              </h2>
+              {points.length === 0 ? (
+                <p className="mb-4 text-sm text-neutral-500">지도를 클릭해 보세요.</p>
+              ) : (
+                <ul className="mb-4 space-y-1 text-sm text-neutral-700">
+                  {supabaseRows.map((row, index) => (
+                    <li key={index} className="flex gap-2">
+                      <span className="font-mono text-black">
+                        [{row.sequence}] {row.point_type}
+                      </span>
+                      <span>
+                        위도 {row.latitude.toFixed(6)}, 경도 {row.longitude.toFixed(6)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="flex flex-wrap gap-3 gap-y-2">
+                <input
+                  type="text"
+                  placeholder="제목"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="max-w-[200px] rounded border border-neutral-300 px-2 py-1 text-sm"
+                />
+                <input
+                  type="text"
+                  placeholder="작성자"
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                  className="max-w-[200px] rounded border border-neutral-300 px-2 py-1 text-sm"
+                />
+                <input
+                  type="text"
+                  placeholder="거리(km)"
+                  value={distance}
+                  onChange={(e) => setDistance(e.target.value)}
+                  className="max-w-[100px] rounded border border-neutral-300 px-2 py-1 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saveLoading || points.length === 0}
+                  className="rounded bg-black px-4 py-1 text-sm font-medium text-white disabled:bg-neutral-400"
+                >
+                  {saveLoading ? "저장 중..." : "저장"}
+                </button>
+              </div>
+              {saveError && (
+                <p className="mt-2 text-sm text-red-600">{saveError}</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </>

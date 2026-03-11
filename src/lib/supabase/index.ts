@@ -5,3 +5,10 @@ export {
   type SaveRunningCourseResult,
   type CoursePointInput,
 } from "./saveRunningCourse";
+export {
+  getCourseList,
+  deleteCourse,
+  updateCourse,
+  type CourseListItem,
+  type UpdateCourseInput,
+} from "./course";

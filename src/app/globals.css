@@ -3,14 +3,126 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Color tokens (from Figma foundation) */
+  --color-black-50: #e7e7e7;
+  --color-black-100: #b3b3b3;
+  --color-black-200: #8e8e8e;
+  --color-black-300: #5b5b5b;
+  --color-black-400: #3b3b3b;
+  --color-black-500: #0a0a0a;
+  --color-black-600: #090909;
+  --color-black-700: #070707;
+  --color-black-800: #060606;
+  --color-black-900: #040404;
+
+  --color-white-100: #fdfdfd;
+  --color-white-200: #fdfdfd;
+  --color-white-300: #fcfcfc;
+  --color-white-400: #fbfbfb;
+  --color-white-500: #fafafa;
+  --color-white-600: #e4e4e4;
+  --color-white-700: #b2b2b2;
+  --color-white-800: #8a8a8a;
+  --color-white-900: #696969;
+
+  --color-white_grey-50: #fcfcfc;
+  --color-white_grey-100: #f7f7f7;
+  --color-white_grey-200: #f3f3f3;
+  --color-white_grey-300: #ededed;
+  --color-white_grey-400: #e4e4e4;
+  --color-white_grey-500: #e4e4e4;
+  --color-white_grey-600: #cfcfcf;
+  --color-white_grey-700: #a2a2a2;
+  --color-white_grey-800: #7d7d7d;
+  --color-white_grey-900: #606060;
+
+  --color-grey-50: #f7f7f7;
+  --color-grey-100: #e7e7e7;
+  --color-grey-200: #dcdcdc;
+  --color-grey-300: #cbcbcb;
+  --color-grey-400: #c1c1c1;
+  --color-grey-500: #b2b2b2;
+  --color-grey-600: #a2a2a2;
+  --color-grey-700: #7e7e7e;
+  --color-grey-800: #626262;
+  --color-grey-900: #4b4b4b;
+
+  /* Dark Grey / Light Black (from Figma foundation) */
+  --color-dark_grey-50: #f0f0f0;
+  --color-dark_grey-100: #d1d1d1;
+  --color-dark_grey-200: #bababa;
+  --color-dark_grey-300: #9b9b9b;
+  --color-dark_grey-400: #878787;
+  --color-dark_grey-500: #696969;
+  --color-dark_grey-600: #606060;
+  --color-dark_grey-700: #4b4b4b;
+  --color-dark_grey-800: #3a3a3a;
+  --color-dark_grey-900: #2c2c2c;
+
+  --color-light_black-50: #ebebeb;
+  --color-light_black-100: #c2c2c2;
+  --color-light_black-200: #a4a4a4;
+  --color-light_black-300: #7b7b7b;
+  --color-light_black-400: #616161;
+  --color-light_black-500: #3a3a3a;
+  --color-light_black-600: #353535;
+  --color-light_black-700: #292929;
+  --color-light_black-800: #202020;
+  --color-light_black-900: #181818;
+
+  --color-red-50: #faebeb;
+  --color-red-100: #f0c2c2;
+  --color-red-200: #e9a5a5;
+  --color-red-300: #e07c7c;
+  --color-red-400: #d96262;
+  --color-red-500: #d03b3b;
+  --color-red-600: #bd3636;
+  --color-red-700: #942a2a;
+  --color-red-800: #722020;
+  --color-red-900: #571919;
+
+  --color-orange-50: #fef1e8;
+  --color-orange-100: #fdd4b7;
+  --color-orange-200: #fcbf94;
+  --color-orange-300: #fba163;
+  --color-orange-400: #fa8f45;
+  --color-orange-500: #f97316;
+  --color-orange-600: #e36914;
+  --color-orange-700: #b15210;
+  --color-orange-800: #893f0c;
+  --color-orange-900: #693009;
+
+  --color-green-50: #e8f3ec;
+  --color-green-100: #b7d9c3;
+  --color-green-200: #94c6a6;
+  --color-green-300: #63ac7e;
+  --color-green-400: #459c65;
+  --color-green-500: #16833e;
+  --color-green-600: #147738;
+  --color-green-700: #105d2c;
+  --color-green-800: #0c4822;
+  --color-green-900: #09371a;
+
+  --color-blue-50: #ebf1fb;
+  --color-blue-100: #bfd2f1;
+  --color-blue-200: #a1bdeb;
+  --color-blue-300: #769fe2;
+  --color-blue-400: #5b8cdc;
+  --color-blue-500: #326fd3;
+  --color-blue-600: #2e65c0;
+  --color-blue-700: #244f96;
+  --color-blue-800: #1c3d74;
+  --color-blue-900: #152f59;
+
+  /* App semantic aliases */
+  --background: var(--color-white-100);
+  --foreground: var(--color-black-900);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: var(--color-black-900);
+    --foreground: var(--color-white-100);
   }
 }
 

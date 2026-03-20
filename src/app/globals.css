@@ -114,6 +114,104 @@
   --color-blue-800: #1c3d74;
   --color-blue-900: #152f59;
 
+  /* Typography tokens (from Figma foundation / provided typography spec) */
+  --typography-heading-1-ko-desktop-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-heading-1-ko-desktop-font-size: 24px;
+  --typography-heading-1-ko-desktop-line-height: 30px;
+  --typography-heading-1-ko-desktop-font-weight: 600;
+  --typography-heading-1-ko-desktop-letter-spacing: 0px;
+
+  --typography-heading-2-ko-desktop-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-heading-2-ko-desktop-font-size: 20px;
+  --typography-heading-2-ko-desktop-line-height: 26px;
+  --typography-heading-2-ko-desktop-font-weight: 600;
+  --typography-heading-2-ko-desktop-letter-spacing: 0px;
+
+  --typography-heading-3-ko-desktop-semibold-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-heading-3-ko-desktop-semibold-font-size: 18px;
+  --typography-heading-3-ko-desktop-semibold-line-height: 22px;
+  --typography-heading-3-ko-desktop-semibold-font-weight: 600;
+  --typography-heading-3-ko-desktop-semibold-letter-spacing: 0px;
+
+  --typography-heading-3-ko-desktop-regular-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-heading-3-ko-desktop-regular-font-size: 18px;
+  --typography-heading-3-ko-desktop-regular-line-height: 22px;
+  --typography-heading-3-ko-desktop-regular-font-weight: 400;
+  --typography-heading-3-ko-desktop-regular-letter-spacing: 0px;
+
+  --typography-body-1-ko-desktop-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-body-1-ko-desktop-font-size: 16px;
+  --typography-body-1-ko-desktop-line-height: 24px;
+  --typography-body-1-ko-desktop-font-weight: 600;
+  --typography-body-1-ko-desktop-letter-spacing: 0px;
+
+  --typography-body-2-ko-desktop-semibold-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-body-2-ko-desktop-semibold-font-size: 14px;
+  --typography-body-2-ko-desktop-semibold-line-height: 20px;
+  --typography-body-2-ko-desktop-semibold-font-weight: 600;
+  --typography-body-2-ko-desktop-semibold-letter-spacing: 0px;
+
+  --typography-body-2-ko-desktop-regular-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-body-2-ko-desktop-regular-font-size: 14px;
+  --typography-body-2-ko-desktop-regular-line-height: 20px;
+  --typography-body-2-ko-desktop-regular-font-weight: 400;
+  --typography-body-2-ko-desktop-regular-letter-spacing: 0px;
+
+  --typography-caption-1-ko-desktop-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-caption-1-ko-desktop-font-size: 12px;
+  --typography-caption-1-ko-desktop-line-height: 18px;
+  --typography-caption-1-ko-desktop-font-weight: 500;
+  --typography-caption-1-ko-desktop-letter-spacing: 0px;
+
+  /* Mobile (basic default = desktop) */
+  --typography-heading-1-ko-mobile-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-heading-1-ko-mobile-font-size: 24px;
+  --typography-heading-1-ko-mobile-line-height: 30px;
+  --typography-heading-1-ko-mobile-font-weight: 600;
+  --typography-heading-1-ko-mobile-letter-spacing: 0px;
+
+  --typography-heading-2-ko-mobile-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-heading-2-ko-mobile-font-size: 20px;
+  --typography-heading-2-ko-mobile-line-height: 26px;
+  --typography-heading-2-ko-mobile-font-weight: 600;
+  --typography-heading-2-ko-mobile-letter-spacing: 0px;
+
+  --typography-heading-3-ko-mobile-semibold-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-heading-3-ko-mobile-semibold-font-size: 18px;
+  --typography-heading-3-ko-mobile-semibold-line-height: 22px;
+  --typography-heading-3-ko-mobile-semibold-font-weight: 600;
+  --typography-heading-3-ko-mobile-semibold-letter-spacing: 0px;
+
+  --typography-heading-3-ko-mobile-regular-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-heading-3-ko-mobile-regular-font-size: 18px;
+  --typography-heading-3-ko-mobile-regular-line-height: 22px;
+  --typography-heading-3-ko-mobile-regular-font-weight: 400;
+  --typography-heading-3-ko-mobile-regular-letter-spacing: 0px;
+
+  --typography-body-1-ko-mobile-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-body-1-ko-mobile-font-size: 16px;
+  --typography-body-1-ko-mobile-line-height: 24px;
+  --typography-body-1-ko-mobile-font-weight: 600;
+  --typography-body-1-ko-mobile-letter-spacing: 0px;
+
+  --typography-body-2-ko-mobile-semibold-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-body-2-ko-mobile-semibold-font-size: 14px;
+  --typography-body-2-ko-mobile-semibold-line-height: 20px;
+  --typography-body-2-ko-mobile-semibold-font-weight: 600;
+  --typography-body-2-ko-mobile-semibold-letter-spacing: 0px;
+
+  --typography-body-2-ko-mobile-regular-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-body-2-ko-mobile-regular-font-size: 14px;
+  --typography-body-2-ko-mobile-regular-line-height: 20px;
+  --typography-body-2-ko-mobile-regular-font-weight: 400;
+  --typography-body-2-ko-mobile-regular-letter-spacing: 0px;
+
+  --typography-caption-1-ko-mobile-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-caption-1-ko-mobile-font-size: 12px;
+  --typography-caption-1-ko-mobile-line-height: 18px;
+  --typography-caption-1-ko-mobile-font-weight: 500;
+  --typography-caption-1-ko-mobile-letter-spacing: 0px;
+
   /* App semantic aliases */
   --background: var(--color-white-100);
   --foreground: var(--color-black-900);
@@ -129,7 +227,7 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--typography-body-1-ko-desktop-font-family);
 }
 
 @layer utilities {

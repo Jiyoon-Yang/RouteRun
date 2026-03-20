@@ -1,0 +1,38 @@
+목표)
+- 제공된 피그마 파운데이션(typography) 정의를 프로젝트 전역에서 재사용 가능한 “타이포 토큰”으로 구현한다.
+- 구현 결과(완료/미완료)를 체크리스트로 반환한다.
+
+==============================================
+조건-커서룰)
+- 아래 커서룰을 적용하여 작업하고, 작업 종료 시 rules 적용 결과를 체크리스트로 반환할 것.
+  - @01-common.mdc
+
+==============================================
+입력-피그마)
+- 활용 MCP: Figma Desktop MCP
+- foundation 노드 URL(컬러 정의가 들어있는 파운데이션): https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=164-15063&t=EmrCDBjML5G23gTR-4
+
+
+산출물-파일경로)
+- TS: src/commons/constants/typography.ts
+- CSS: src/app/globals.css
+
+==============================================
+핵심요구사항)
+- 피그마 foundation 내 typography 값을 “토큰화”하여 코드에서 단일 소스 오브 트루스로 관리할 것.
+- foundation 내 typography 토큰 이름을 누락 없이 기재/반영할 것.
+- foundation에 존재하는 모바일/데스크톱 분기 값을 동일 토큰 이름 체계를 유지한 채 TS와 CSS에 반영할 것.
+- (중요) 추후 영문 typography는 한국어 값과 분리되어 교체/확장될 수 있도록(예: ko/en 분리 또는 확장 포인트 제공) 셋업할 것.
+- CSS에서도 동일한 토큰 이름으로 접근 가능하도록 `globals.css`에 CSS 변수(`--typography-*`)를 셋업할 것.
+
+typography 토큰 추출)
+- typography 토큰명·목록은 프롬프트에 적지 않고, 입력-피그마)의 foundation 노드ID만으로 결정한다.
+- CursorTalkToFigmaMCP에서 해당 노드에 정의된 typography 토큰 이름과 각 토큰의 속성(font-family, font-size, line-height, font-weight, letter-spacing 등) 값을 추출한 뒤, 그 결과를 `typography.ts`와 `globals.css`에 그대로 반영할 것.
+- CSS 변수는 토큰 1개당 속성을 분해해 `--typography-${token}-font-family`, `--typography-${token}-font-size` ... 형태로 선언하는 것을 기본으로 한다. (프로젝트가 채택한 명명 규칙이 있으면 그 규칙을 우선)
+
+체크리스트(출력 포맷)
+- [ ] `src/commons/constants/typography.ts`에 토큰 이름 → typography 속성 값 매핑이 구현됨
+- [ ] `src/app/globals.css`에 `--typography-*` CSS 변수가 토큰과 1:1로 선언됨
+- [ ] 모바일/데스크톱 분기 값이 TS와 CSS에 반영됨
+- [ ] (확장성) 영문 typography로 교체/확장이 가능한 구조(ko/en 분리 또는 확장 포인트)가 마련됨
+- [ ] foundation 노드에서 추출한 typography 토큰명이 `typography.ts`와 `globals.css`에 누락 없이 반영됨

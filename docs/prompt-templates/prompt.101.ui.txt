@@ -1,0 +1,72 @@
+가이드) 요구사항이 많거나 협업/인수인계 문서로 쓸 때는 이 Long 템플릿을 사용.
+
+목표)
+- 피그마(또는 디자인 시안) 기준으로 공통 컴포넌트 UI를 TSX/CSS로 구현한다.
+- 프로젝트의 토큰/스타일 규칙을 따르며 재사용 가능한 컴포넌트 API를 만든다.
+- 구현 결과(완료/미완료)를 체크리스트로 반환한다.
+
+==============================================
+
+조건-커서룰)
+- 아래 커서룰을 적용하여 작업하고, 종료 시 rules 적용 결과를 체크리스트로 반환할 것.
+  - @01-common.mdc
+  - @02-wireframe.mdc
+  - @03-ui.mdc
+
+==============================================
+
+입력-디자인)
+- 활용 MCP: Figma Desktop MCP
+- 참고할 디자인 노드 URL(필요한 세트 모두 기입)
+  - size: [URL]
+  - variant set A: [URL]
+  - variant set B: [URL]
+  - variant set C: [URL]
+
+==============================================
+
+산출물-파일경로)
+- TSX: [예: src/commons/components/{component-name}/index.tsx]
+- CSS: [예: src/commons/components/{component-name}/styles.module.css]
+
+==============================================
+
+핵심요구사항)
+1) 컴포넌트 API
+- 아래 항목을 컴포넌트 props로 지원할 것(필요 없는 항목은 제거 가능)
+  - `variant`: [예: 'primary' | 'secondary' | 'tertiary']
+  - `type`: [예: 'fill' | 'outline']
+  - `state`: [예: 'default' | 'hover' | 'active' | 'disabled']
+  - `size`: [예: 'small' | 'medium' | 'large' | 'x-large']
+  - `disabled?: boolean`
+  - `fullWidth?: boolean`
+  - `leftIcon?: ReactNode`
+  - `rightIcon?: ReactNode`
+  - `showLeftIcon?: boolean` (기본 false)
+  - `showRightIcon?: boolean` (기본 false)
+
+2) 스타일 구현
+- 디자인 시안의 간격/높이/테두리/타이포그래피를 반영할 것.
+- 상태(state)별 스타일이 명확히 분리되어야 함.
+- `small` 등 핵심 사이즈 값은 수치로 고정해 명시할 것.
+
+3) 색상 매핑
+- variant별 의미를 명확히 정의하고 고정할 것.
+  - 예: `primary=black`, `secondary=blue`, `tertiary=red`
+- `fill`/`outline` 각각에서 state별 색상이 시안과 일치해야 함.
+
+4) 토큰 사용 원칙
+- 색상/타이포그래피는 전역 토큰(`globals.css` 또는 constants)을 우선 사용.
+- 임의 hex 하드코딩은 가급적 지양하고, 불가피하면 이유를 기록할 것.
+
+5) 아이콘 렌더 규칙(아이콘형 컴포넌트인 경우)
+- `showLeftIcon && leftIcon`일 때만 왼쪽 아이콘 노출
+- `showRightIcon && rightIcon`일 때만 오른쪽 아이콘 노출
+- 아이콘 슬롯 사이즈/정렬 기준(예: 20x20)을 명시할 것
+
+체크리스트(출력 포맷)
+- [ ] 지정 경로의 TSX/CSS에 컴포넌트가 구현됨
+- [ ] variant/type/state/size 조합이 동작함
+- [ ] 디자인 시안과 색상/사이즈가 일치함
+- [ ] 전역 토큰 기반으로 스타일이 적용됨
+- [ ] (해당 시) 아이콘 불린 토글 동작이 구현됨

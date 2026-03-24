@@ -1,0 +1,30 @@
+가이드) 스토리북 기본 구성과 핵심 검증만 빠르게 맞출 때는 이 Short 템플릿을 사용.
+
+아래 조건으로 컴포넌트 Storybook 스토리를 구현할 것.
+구현 결과를 체크리스트로 반환할 것.
+
+조건-커서룰)
+- @01-common.mdc
+
+파일경로)
+- TSX: [src/.../index.tsx]
+- CSS: [src/.../styles.module.css]
+- STORIES: [src/.../index.stories.tsx]
+
+핵심요구사항)
+- CSF 형식(`title`, `component`, `args`, `argTypes`)으로 작성할 것.
+- 필수 스토리:
+  - `Playground`
+  - `Variants`
+  - `Types` (해당 시)
+  - `States`
+  - `Sizes`
+- 핵심 props를 컨트롤로 조작 가능하게 할 것.
+- (해당 시) `showLeftIcon`, `showRightIcon` 불린 토글 추가.
+- `ReactNode` props(`leftIcon/rightIcon`)는 샘플 기본값 + `control: false`.
+
+체크리스트)
+- [ ] 지정 경로 스토리 구현 완료
+- [ ] 필수 스토리 세트 포함
+- [ ] 핵심 props 컨트롤 동작
+- [ ] (해당 시) 아이콘 토글 동작

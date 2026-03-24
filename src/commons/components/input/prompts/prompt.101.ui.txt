@@ -1,0 +1,68 @@
+목표)
+- 피그마 Input 디자인을 기준으로 공통 컴포넌트 UI를 TSX/CSS로 재구현한다.
+- 기존 Input의 내용/구조(`label` + `placeholder` + `addtional_text`)는 유지한다.
+- 프로젝트 토큰 규칙을 따르는 재사용 가능한 API를 유지하고, 구현 결과를 체크리스트로 반환한다.
+
+==============================================
+
+조건-커서룰)
+- 아래 커서룰을 적용하여 작업하고, 작업 종료 시 rules 적용 결과를 체크리스트로 반환할 것.
+  - @01-common.mdc
+  - @02-wireframe.mdc
+  - @03-ui.mdc
+
+==============================================
+
+입력-디자인)
+- 활용 MCP: Figma Desktop MCP
+- 참고할 공통컴포넌트 노드 URL
+  - input states set: https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2557&t=e1xHQkpJlQYYkJLf-11
+
+산출물-파일경로)
+- TSX: `src/commons/components/input/index.tsx`
+- CSS: `src/commons/components/input/styles.module.css`
+- 하위 컴포넌트
+  - `src/commons/components/input/label/index.tsx`
+  - `src/commons/components/input/placeholder/index.tsx`
+  - `src/commons/components/input/addtional_text/index.tsx`
+
+==============================================
+
+핵심요구사항)
+1) 컴포넌트 API
+- 아래 props를 유지/지원할 것
+  - `label?: string`
+  - `required?: boolean`
+  - `state?: 'default' | 'hover' | 'filled' | 'active' | 'error' | 'disabled'`
+  - `addtionalText?: string`
+  - `addtionalTextState?: 'default' | 'success' | 'error' | 'disabled'`
+  - `disabled?: boolean`
+  - `showLeftIcon?: boolean` (기본 true)
+  - `showRightIcon?: boolean` (기본 true)
+
+2) 조합형 구조 유지
+- Input은 래퍼 컴포넌트로 구현하고 하위 3종을 조합할 것
+  - `label`
+  - `placeholder`
+  - `addtional_text`
+
+3) 스타일 구현
+- 피그마 기준 간격/높이/라운드/타이포를 반영할 것
+- 입력 필드 좌/우 아이콘은 `showLeftIcon` / `showRightIcon` 불린으로 노출 여부를 제어할 것
+- 상태별 보더/텍스트 색상 차이를 분리할 것
+
+4) 상태 및 문구 규칙
+- `default | hover | filled | active | error | disabled` 상태가 모두 동작해야 함
+- `addtional_text`는 상태별 색상을 반영해야 함
+- `error` 상태에서는 에러 톤(보더/보조문구)이 명확해야 함
+
+5) 접근성 및 토큰 사용
+- `label`과 input을 `htmlFor`/`id`로 연결할 것
+- 색상/타이포는 전역 토큰(`globals.css`) 기반으로 적용할 것
+
+체크리스트(출력 포맷)
+- [ ] `src/commons/components/input/index.tsx`에 조합형 Input 컴포넌트가 구현됨
+- [ ] `src/commons/components/input/styles.module.css`에 레이아웃 스타일이 구현됨
+- [ ] `label`, `placeholder`, `addtional_text` 하위 컴포넌트 3종을 import하여 조합함
+- [ ] state(`default | hover | filled | active | error | disabled`)가 모두 동작함
+- [ ] `showLeftIcon` / `showRightIcon`으로 좌우 아이콘 노출이 제어됨

@@ -1,0 +1,38 @@
+목표)
+- Input의 입력 영역(placeholder 표시 포함)을 독립 컴포넌트로 구현한다.
+- 피그마 공통컴포넌트와 첨부 이미지 기준으로 상태 variant를 반영한다.
+- 구현 결과(완료/미완료)를 체크리스트로 반환한다.
+
+==============================================
+
+조건-커서룰)
+- 아래 커서룰을 적용하여 작업하고, 작업 종료 시 rules 적용 결과를 체크리스트로 반환할 것.
+  - @01-common.mdc
+  - @02-wireframe.mdc
+  - @03-ui.mdc
+
+==============================================
+
+입력-디자인소스)
+- 활용 MCP: Figma Desktop MCP
+- 참고할 공통컴포넌트 노드 url: https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2603&t=e1xHQkpJlQYYkJLf-11
+
+산출물-파일경로)
+- TSX: `src/commons/components/input/placeholder/index.tsx`
+- CSS: `src/commons/components/input/placeholder/styles.module.css`
+
+==============================================
+
+핵심요구사항)
+- 네이티브 `<input>` 기반으로 구현할 것.
+- placeholder 텍스트 스타일은 상태별로 일관되게 적용할 것.
+- 상태는 `default | hover | filled | active | error | disabled`를 지원할 것.
+- 좌/우 아이콘은 `showLeftIcon` / `showRightIcon` 불린으로 노출 여부를 제어할 것(기본 true).
+- 필드 높이/패딩은 단일 스케일로 고정한다(별도 size variant 없음).
+- `disabled` 시 상호작용 차단 및 시각 상태를 명확히 표현할 것.
+
+체크리스트(출력 포맷)
+- [ ] `src/commons/components/input/placeholder/index.tsx`에 Placeholder 컴포넌트가 구현됨
+- [ ] `src/commons/components/input/placeholder/styles.module.css`에 상태 스타일이 구현됨
+- [ ] state(`default | hover | filled | active | error | disabled`)가 모두 동작함
+- [ ] 좌/우 아이콘 불린 노출이 구현됨

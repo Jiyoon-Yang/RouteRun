@@ -1,0 +1,31 @@
+가이드) 단일 컴포넌트를 빠르게 구현할 때는 이 Short 템플릿을 사용.
+
+목표)
+- 디자인 시안을 기준으로 공통 컴포넌트 UI를 구현한다.
+- 결과를 체크리스트로 반환한다.
+
+조건-커서룰)
+- @01-common.mdc
+- @02-wireframe.mdc
+- @03-ui.mdc
+
+입력)
+- 디자인 노드 URL: [URL]
+- 산출물 경로
+  - TSX: [src/.../index.tsx]
+  - CSS: [src/.../styles.module.css]
+
+핵심요구사항)
+- 컴포넌트 props(variant/type/state/size 등)를 구현할 것.
+- state별 스타일(default/hover/active/disabled)을 분리할 것.
+- 핵심 수치(예: small 높이)는 시안 기준값으로 맞출 것.
+- 색상/타이포그래피는 전역 토큰을 우선 사용할 것.
+- (해당 시) 아이콘 렌더 조건:
+  - `showLeftIcon && leftIcon`
+  - `showRightIcon && rightIcon`
+
+체크리스트)
+- [ ] 지정 경로 TSX/CSS 구현 완료
+- [ ] variant/type/state/size 동작 확인
+- [ ] 시안 대비 주요 수치/색상 일치
+- [ ] 전역 토큰 기반 적용

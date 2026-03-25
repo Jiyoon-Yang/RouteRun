@@ -1,0 +1,32 @@
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 20px;
+  color: var(--color-black-500);
+  font-family: var(--typography-body-2-ko-desktop-semibold-font-family);
+  font-size: var(--typography-body-2-ko-desktop-semibold-font-size);
+  font-weight: var(--typography-body-2-ko-desktop-semibold-font-weight);
+  line-height: var(--typography-body-2-ko-desktop-semibold-line-height);
+  letter-spacing: var(--typography-body-2-ko-desktop-semibold-letter-spacing);
+}
+
+.requiredMark {
+  color: var(--color-red-500);
+}
+
+.stateDefault {
+  color: var(--color-black-500);
+}
+
+.stateError {
+  color: var(--color-red-600);
+}
+
+.stateDisabled {
+  color: var(--color-grey-600);
+}
+
+.stateDisabled .requiredMark {
+  color: var(--color-grey-600);
+}

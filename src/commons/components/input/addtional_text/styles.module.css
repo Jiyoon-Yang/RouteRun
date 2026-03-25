@@ -1,0 +1,41 @@
+.text {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--typography-caption-1-ko-desktop-font-family);
+  font-size: var(--typography-caption-1-ko-desktop-font-size);
+  font-weight: var(--typography-caption-1-ko-desktop-font-weight);
+  line-height: var(--typography-caption-1-ko-desktop-line-height);
+  letter-spacing: var(--typography-caption-1-ko-desktop-letter-spacing);
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.stateDefault {
+  color: var(--color-grey-700);
+}
+
+.stateSuccess {
+  color: var(--color-green-600);
+}
+
+.stateError {
+  color: var(--color-red-600);
+}
+
+.stateDisabled {
+  color: var(--color-grey-500);
+}

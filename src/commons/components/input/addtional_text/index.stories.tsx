@@ -6,15 +6,17 @@ const meta = {
   component: InputAddtionalText,
   tags: ['autodocs'],
   args: {
-    message: '추가 안내 문구입니다.',
+    message: '안내 문구를 입력해주세요.',
     state: 'default',
+    showIcon: true,
   },
   argTypes: {
     message: { control: 'text' },
     state: {
       control: 'inline-radio',
-      options: ['default', 'success', 'error', 'disabled'],
+      options: ['default', 'success', 'error'],
     },
+    showIcon: { control: 'boolean' },
     className: { control: false },
   },
   parameters: {
@@ -22,7 +24,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div style={{ width: 360 }}>
+      <div style={{ width: 320 }}>
         <Story />
       </div>
     ),
@@ -36,25 +38,25 @@ export const Playground: Story = {};
 
 export const States: Story = {
   render: (args) => (
-    <div style={{ display: 'grid', gap: 12 }}>
-      <InputAddtionalText {...args} message="기본 안내 문구입니다." state="default" />
-      <InputAddtionalText {...args} message="정상적으로 입력되었습니다." state="success" />
-      <InputAddtionalText {...args} message="입력 형식을 다시 확인해 주세요." state="error" />
-      <InputAddtionalText {...args} message="현재 수정할 수 없는 항목입니다." state="disabled" />
+    <div style={{ display: 'grid', gap: 12, width: 320 }}>
+      <InputAddtionalText {...args} state="default" message="기본 안내 문구입니다." />
+      <InputAddtionalText {...args} state="success" message="사용 가능한 값입니다." />
+      <InputAddtionalText {...args} state="error" message="유효하지 않은 값입니다." />
     </div>
   ),
 };
 
-export const EmptyMessage: Story = {
+export const WithoutMessage: Story = {
   args: {
     message: '',
+    state: 'default',
   },
   render: (args) => (
-    <div>
-      <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--color-grey-600)' }}>
-        message가 비어 있으면 컴포넌트는 아무것도 렌더하지 않습니다.
-      </p>
+    <div style={{ width: 320 }}>
       <InputAddtionalText {...args} />
+      <div style={{ fontSize: 12, color: 'var(--color-grey-700)', marginTop: 8 }}>
+        message가 비어 있으면 AddtionalText는 렌더되지 않습니다.
+      </div>
     </div>
   ),
 };

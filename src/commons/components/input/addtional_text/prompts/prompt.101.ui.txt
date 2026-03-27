@@ -1,6 +1,8 @@
+가이드) Input 하단 부가 문구 컴포넌트를 빠르게 구현할 때 사용하는 템플릿.
+
 목표)
-- Input 하단 부가 문구(addtional_text)를 독립 컴포넌트로 구현한다.
-- 피그마 공통컴포넌트와 첨부 이미지 기준으로 안내/에러 상태를 반영한다.
+- Input 하단 부가 문구(`addtional_text`)를 독립 컴포넌트로 구현한다.
+- 피그마 공통컴포넌트 기준으로 상태별 스타일을 반영한다.
 - 구현 결과(완료/미완료)를 체크리스트로 반환한다.
 
 ==============================================
@@ -15,8 +17,7 @@
 
 입력-디자인소스)
 - 활용 MCP: Figma Desktop MCP
-- 참고 자료: https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2656&t=e1xHQkpJlQYYkJLf-11
-(하단 안내 텍스트/에러 텍스트 색상)
+- 참고 자료: https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2656&m=dev
 
 산출물-파일경로)
 - TSX: `src/commons/components/input/addtional_text/index.tsx`
@@ -26,12 +27,14 @@
 
 핵심요구사항)
 - 부가 문구 텍스트는 상태별 스타일을 지원할 것.
-- 상태는 최소 `default | success | error | disabled`를 지원할 것.
-- `message` props로 문구를 전달받고, 빈 문자열이면 렌더링 생략 가능하게 할 것.
-- Input 조합 컴포넌트에서 재사용 가능한 구조로 구현할 것.
+- 상태는 `default | success | error`를 지원할 것.
+- 아이콘 노출은 `showIcon` boolean props로 제어할 수 있게 구현할 것.
+- `message` props로 문구를 전달받고, 빈 문자열이면 렌더링을 생략할 수 있게 구현할 것.
+- Input 조합 컴포넌트에서 재사용 가능한 단일 책임 구조로 구현할 것.
 
 체크리스트(출력 포맷)
 - [ ] `src/commons/components/input/addtional_text/index.tsx`에 AddtionalText 컴포넌트가 구현됨
 - [ ] `src/commons/components/input/addtional_text/styles.module.css`에 상태 스타일이 구현됨
-- [ ] state(`default | success | error | disabled`)가 모두 동작함
+- [ ] state(`default | success | error`)가 모두 동작함
+- [ ] `showIcon` true/false에 따라 아이콘 노출이 동작함
 - [ ] message 전달/미전달 케이스가 정상 동작함

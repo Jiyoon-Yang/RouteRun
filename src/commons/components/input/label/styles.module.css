@@ -1,32 +1,81 @@
 .label {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  min-height: 20px;
-  color: var(--color-black-500);
-  font-family: var(--typography-body-2-ko-desktop-semibold-font-family);
-  font-size: var(--typography-body-2-ko-desktop-semibold-font-size);
-  font-weight: var(--typography-body-2-ko-desktop-semibold-font-weight);
-  line-height: var(--typography-body-2-ko-desktop-semibold-line-height);
-  letter-spacing: var(--typography-body-2-ko-desktop-semibold-letter-spacing);
+  gap: 4px;
+  margin: 0;
+  color: var(--color-grey-800);
+  font-family: var(--typography-body-2-ko-desktop-medium-font-family);
+  font-size: var(--typography-body-2-ko-desktop-medium-font-size);
+  font-weight: var(--typography-body-2-ko-desktop-medium-font-weight);
+  line-height: var(--typography-body-2-ko-desktop-medium-line-height);
+  letter-spacing: var(--typography-body-2-ko-desktop-medium-letter-spacing);
 }
 
-.requiredMark {
-  color: var(--color-red-500);
+.label[data-type='optional']::after {
+  content: ' (선택)';
+  color: var(--color-grey-600);
 }
 
-.stateDefault {
-  color: var(--color-black-500);
-}
-
-.stateError {
+.label[data-type='required']::after {
+  content: ' *';
   color: var(--color-red-600);
 }
 
-.stateDisabled {
+.icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--color-grey-600);
+  flex-shrink: 0;
 }
 
-.stateDisabled .requiredMark {
-  color: var(--color-grey-600);
+.icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.iconWrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.iconButton:focus-visible {
+  outline: 2px solid var(--color-blue-600);
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+
+.tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  max-width: 220px;
+  min-width: 120px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--color-grey-900);
+  color: var(--color-white);
+  white-space: normal;
+  font-family: var(--typography-caption-1-ko-desktop-regular-font-family);
+  font-size: var(--typography-caption-1-ko-desktop-regular-font-size);
+  font-weight: var(--typography-caption-1-ko-desktop-regular-font-weight);
+  line-height: var(--typography-caption-1-ko-desktop-regular-line-height);
+  letter-spacing: var(--typography-caption-1-ko-desktop-regular-letter-spacing);
+  z-index: 1;
 }

@@ -23,18 +23,6 @@ function cn(...classNames: Array<string | false | null | undefined>) {
   return classNames.filter(Boolean).join(' ');
 }
 
-function mapLabelState(state: InputState): 'default' | 'error' | 'disabled' {
-  if (state === 'error') {
-    return 'error';
-  }
-
-  if (state === 'disabled') {
-    return 'disabled';
-  }
-
-  return 'default';
-}
-
 function mapAddtionalTextState(
   state: InputState,
   explicitState?: InputAddtionalTextState,
@@ -74,12 +62,9 @@ export default function Input({
   return (
     <div className={cn(styles.container, className)}>
       {label && (
-        <InputLabel
-          htmlFor={inputId}
-          text={label}
-          required={required}
-          state={mapLabelState(inputState)}
-        />
+        <InputLabel htmlFor={inputId} type={required ? 'required' : 'none'}>
+          {label}
+        </InputLabel>
       )}
 
       <InputPlaceholder

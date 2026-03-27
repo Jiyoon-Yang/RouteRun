@@ -7,7 +7,6 @@ export interface LabelProps {
   children: string;
   htmlFor?: string;
   type?: LabelType;
-  icon?: boolean;
   tooltip?: string;
   tooltipTrigger?: 'hover' | 'click' | 'both';
   className?: string;
@@ -21,7 +20,6 @@ export default function Label({
   children,
   htmlFor,
   type = 'none',
-  icon = false,
   tooltip,
   tooltipTrigger = 'hover',
   className,
@@ -30,7 +28,7 @@ export default function Label({
   const wrapperRef = useRef<HTMLSpanElement>(null);
   const [isHoverOpen, setIsHoverOpen] = useState(false);
   const [isClickOpen, setIsClickOpen] = useState(false);
-  const showInfoIcon = type === 'info' && icon;
+  const showInfoIcon = type === 'info';
   const hasTooltip = showInfoIcon && Boolean(tooltip?.trim());
   const supportsHover = tooltipTrigger === 'hover' || tooltipTrigger === 'both';
   const supportsClick = tooltipTrigger === 'click' || tooltipTrigger === 'both';

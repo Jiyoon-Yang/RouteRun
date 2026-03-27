@@ -9,7 +9,6 @@ const meta = {
     children: '이메일',
     htmlFor: 'email',
     type: 'none',
-    icon: false,
     tooltip: '입력 형식 안내 문구입니다.',
     tooltipTrigger: 'hover',
   },
@@ -20,7 +19,6 @@ const meta = {
       control: 'inline-radio',
       options: ['none', 'optional', 'required', 'info'],
     },
-    icon: { control: 'boolean' },
     tooltip: { control: 'text' },
     tooltipTrigger: {
       control: 'inline-radio',
@@ -64,17 +62,14 @@ export const Types: Story = {
   ),
 };
 
-export const Icon: Story = {
+export const InfoIcon: Story = {
   render: (args) => (
     <div style={{ display: 'grid', gap: 12, width: 320 }}>
-      <Label {...args} type="none" icon>
-        none + icon(true) (아이콘 미노출)
+      <Label {...args} type="none">
+        none (아이콘 미노출)
       </Label>
-      <Label {...args} type="info" icon={false}>
-        아이콘 OFF
-      </Label>
-      <Label {...args} type="info" icon>
-        아이콘 ON
+      <Label {...args} type="info">
+        info (아이콘 자동 노출)
       </Label>
     </div>
   ),
@@ -83,7 +78,6 @@ export const Icon: Story = {
 export const InfoTooltipHover: Story = {
   args: {
     type: 'info',
-    icon: true,
     tooltip: '닉네임은 2자 이상 12자 이하로 입력해주세요.',
     tooltipTrigger: 'hover',
   },
@@ -92,7 +86,6 @@ export const InfoTooltipHover: Story = {
 export const InfoTooltipClick: Story = {
   args: {
     type: 'info',
-    icon: true,
     tooltip: '영문/숫자 조합을 권장합니다.',
     tooltipTrigger: 'click',
   },
@@ -101,7 +94,6 @@ export const InfoTooltipClick: Story = {
 export const InfoTooltipBoth: Story = {
   args: {
     type: 'info',
-    icon: true,
     tooltip: 'hover 또는 click으로 툴팁을 열 수 있습니다.',
     tooltipTrigger: 'both',
   },

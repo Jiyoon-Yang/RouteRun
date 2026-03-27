@@ -1,37 +1,74 @@
+사용법)
+- 이 파일은 `label` 컴포넌트 구현용 UI 프롬프트다.
+- Figma Desktop MCP로 `label` 링크를 기준으로 필요한 정보만 확인해 구현한다.
+- 피그마에 없는 축/옵션은 추가하지 않고, 구현 범위 내 체크리스트만 반환한다.
+
 목표)
-- Input 상단 라벨 텍스트를 독립 컴포넌트로 구현한다.
-- 피그마 공통컴포넌트와 첨부 이미지를 기준으로 타이포/간격/상태 표현을 반영한다.
+- Input 상단 라벨 텍스트를 독립 공통 컴포넌트로 구현한다.
+- 피그마 `label` 디자인 기준으로 타이포/간격/타입 표현을 반영한다.
 - 구현 결과(완료/미완료)를 체크리스트로 반환한다.
 
 ==============================================
 
 조건-커서룰)
-- 아래 커서룰을 적용하여 작업하고, 작업 종료 시 rules 적용 결과를 체크리스트로 반환할 것.
+- 아래 커서룰을 적용해 작업하고, 종료 시 적용 결과를 체크리스트로 반환.
   - @01-common.mdc
   - @02-wireframe.mdc
   - @03-ui.mdc
 
 ==============================================
 
-입력-디자인소스)
+입력-디자인)
 - 활용 MCP: Figma Desktop MCP
-- 참고할 공통컴포넌트 노드 url: https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=149-8593&t=e1xHQkpJlQYYkJLf-11
-(라벨 위치/스타일/required 표기 포함)
+- 참고 디자인 노드 URL
+  - label: https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=149-8593&m=dev
+  - label-info: https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=166-10903&m=dev
+
+==============================================
 
 산출물-파일경로)
 - TSX: `src/commons/components/input/label/index.tsx`
 - CSS: `src/commons/components/input/label/styles.module.css`
+- 컴포넌트 이름: `Label`
+- 컴포넌트 역할: `Input Label`
 
 ==============================================
 
 핵심요구사항)
-- `label` 요소 기반으로 구현하고 `htmlFor`를 props로 받아 연결 가능하게 할 것.
-- `required` 옵션 지원(`*` 표시 또는 스타일 토큰 반영).
-- 상태는 최소 `default | error | disabled`를 지원할 것.
-- 라벨 타이포는 단일 스케일로 고정한다(별도 size variant 없음).
-- Input 조합 컴포넌트에서 재사용 가능한 단일 책임 컴포넌트로 구현할 것.
+1) 축 설계
+- 타입 축: `type` = 'none' | 'optional' | 'required' | 'info'
+- 아이콘 축: `icon` = boolean
+- 툴팁 축: `tooltip`(string), `tooltipTrigger` = 'hover' | 'click' | 'both'
+- 사이즈 축은 두지 않고 단일 타이포 스케일로 고정.
+
+2) 컴포넌트 API 원칙
+- `label` 요소 기반으로 구현.
+- `htmlFor`를 props로 받아 input과 연결 가능하게 구현.
+- `type` 값에 따라 보조 표기/의미를 반영:
+  - `none`: 보조 표기 없음
+  - `optional`: 선택 표기
+  - `required`: `*` 표기
+  - `info`: 정보성 타입 표현
+- `icon`은 boolean으로 받고, `type='info' && icon===true`일 때만 아이콘을 노출.
+- 툴팁은 `type='info' && icon===true && tooltip`일 때만 노출.
+- `tooltipTrigger` 값에 따라 트리거 동작을 분기:
+  - `hover`: 마우스 오버/포커스 시 노출
+  - `click`: 클릭 토글로 노출
+  - `both`: hover + click 모두 지원
+- 타입은 유니온 타입 우선, `any` 사용 금지.
+
+3) 스타일 구현 원칙
+- 피그마 기준 타이포/간격/색상/타입 표현을 반영.
+- 타입(type)별 스타일을 명확히 분리.
+- Input 조합 컴포넌트에서 재사용 가능한 단일 책임 구조로 유지.
+
+4) 토큰 원칙
+- 색상/타이포그래피는 전역 토큰 우선 사용.
+- 임의 hex 하드코딩은 지양하고, 불가피하면 이유를 남김.
 
 체크리스트(출력 포맷)
-- [ ] `src/commons/components/input/label/index.tsx`에 Label 컴포넌트가 구현됨
-- [ ] `src/commons/components/input/label/styles.module.css`에 상태 스타일이 구현됨
-- [ ] state(`default | error | disabled`)가 모두 동작함
+- [ ] `src/commons/components/input/label/index.tsx` 구현 완료
+- [ ] `src/commons/components/input/label/styles.module.css` 구현 완료
+- [ ] type(`none | optional | required | info`) 동작 확인
+- [ ] `htmlFor`/`type`/`icon`/`tooltip`/`tooltipTrigger` props 동작 확인
+- [ ] 전역 토큰 기반 스타일 적용

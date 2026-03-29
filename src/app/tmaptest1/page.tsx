@@ -12,7 +12,7 @@ export default function RouteDetail() {
   const mapInstance = useRef<any>(null);
   const [route, setRoute] = useState<any>(null);
   const elementsRef = useRef<any[]>([]); // 라인과 마커들을 관리 (초기화용)
-  const TMAP_APP_KEY = '9Dm1A8YKey4pSCcjKTc6m98e9OHNJHpm5iBZAEDW';
+  const tmapAppKey = process.env.NEXT_PUBLIC_TMAP_API_KEY ?? '';
 
   useEffect(() => {
     // 1. 로컬스토리지에서 데이터 가져오기 (가장 최근 등록된 코스 기준)
@@ -53,6 +53,12 @@ export default function RouteDetail() {
     const passList = waypoints.map((wp: any) => `${wp.lng},${wp.lat}`).join('_');
 
     try {
+      if (!tmapAppKey) {
+        alert(
+          'T맵 API 키가 설정되지 않았습니다. .env.local에 NEXT_PUBLIC_TMAP_API_KEY를 확인하세요.',
+        );
+        return;
+      }
       // 3. Tmap API (보행자 경로) 호출
       const response = await fetch(
         'https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json',
@@ -60,7 +66,7 @@ export default function RouteDetail() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            appKey: TMAP_APP_KEY,
+            appKey: tmapAppKey,
           },
           body: JSON.stringify({
             startX: start.lng,

@@ -24,7 +24,7 @@ export default function RunRouteMap() {
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<string[]>([]);
 
-  const TMAP_APP_KEY = '9Dm1A8YKey4pSCcjKTc6m98e9OHNJHpm5iBZAEDW';
+  const tmapAppKey = process.env.NEXT_PUBLIC_TMAP_API_KEY ?? '';
 
   useEffect(() => {
     if (window.Tmapv2 && !mapInstance.current) {
@@ -58,6 +58,12 @@ export default function RunRouteMap() {
   }, []);
 
   const calculateRoute = async () => {
+    if (!tmapAppKey) {
+      alert(
+        'T맵 API 키가 설정되지 않았습니다. .env.local에 NEXT_PUBLIC_TMAP_API_KEY를 확인하세요.',
+      );
+      return;
+    }
     if (coords.length < 2) {
       alert('출발지와 도착지를 지도에 찍어주세요.');
       return;
@@ -72,7 +78,7 @@ export default function RunRouteMap() {
         'https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', appKey: TMAP_APP_KEY },
+          headers: { 'Content-Type': 'application/json', appKey: tmapAppKey },
           body: JSON.stringify({
             startX: start.lng,
             startY: start.lat,

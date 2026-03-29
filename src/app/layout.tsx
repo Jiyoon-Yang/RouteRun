@@ -25,7 +25,9 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
-        <script src="https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=9Dm1A8YKey4pSCcjKTc6m98e9OHNJHpm5iBZAEDW" />
+        <script
+          src={`https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=${process.env.NEXT_PUBLIC_TMAP_API_KEY}`}
+        />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
     </html>

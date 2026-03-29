@@ -1,7 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import styles from './styles.module.css';
+import type { LabelType } from './types';
 
-export type LabelType = 'none' | 'optional' | 'required' | 'info';
+export type { LabelType } from './types';
 
 export interface LabelProps {
   children: string;
@@ -106,7 +107,14 @@ export default function Label({
           >
             <span className={styles.icon} aria-hidden="true">
               <svg viewBox="0 0 20 20" focusable="false">
-                <circle cx="10" cy="10" r="7.2" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                <circle
+                  cx="10"
+                  cy="10"
+                  r="7.2"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                />
                 <path
                   d="M10 8.1V12"
                   fill="none"
@@ -128,3 +136,10 @@ export default function Label({
     </label>
   );
 }
+
+export { LabelCompound } from './compound';
+export type {
+  LabelCompoundInfoProps,
+  LabelCompoundRootProps,
+  LabelCompoundTextProps,
+} from './compound';

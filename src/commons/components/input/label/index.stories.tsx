@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import Label from './index';
+import Label, { LabelCompound } from './index';
 
 const meta = {
   title: 'Commons/Input/Label',
@@ -97,4 +97,31 @@ export const InfoTooltipBoth: Story = {
     tooltip: 'hover 또는 click으로 툴팁을 열 수 있습니다.',
     tooltipTrigger: 'both',
   },
+};
+
+/** Compound: Root / Text / Info 를 조립하는 사용 예 (기본 Label 과 동일 UI) */
+export const CompoundPattern: Story = {
+  render: () => (
+    <div style={{ display: 'grid', gap: 16, width: 320 }}>
+      <LabelCompound.Root htmlFor="compound-none" type="none">
+        <LabelCompound.Text>none (텍스트만)</LabelCompound.Text>
+      </LabelCompound.Root>
+
+      <LabelCompound.Root htmlFor="compound-opt" type="optional">
+        <LabelCompound.Text>optional 라벨</LabelCompound.Text>
+      </LabelCompound.Root>
+
+      <LabelCompound.Root htmlFor="compound-req" type="required">
+        <LabelCompound.Text>required 라벨</LabelCompound.Text>
+      </LabelCompound.Root>
+
+      <LabelCompound.Root htmlFor="compound-info" type="info">
+        <LabelCompound.Text>info 라벨</LabelCompound.Text>
+        <LabelCompound.Info
+          tooltip="Compound 패턴에서는 Info 를 명시적으로 배치합니다."
+          tooltipTrigger="hover"
+        />
+      </LabelCompound.Root>
+    </div>
+  ),
 };

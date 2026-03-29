@@ -37,3 +37,7 @@
 .stateError {
   color: var(--color-red-600);
 }
+
+.stateDisabled {
+  color: var(--color-grey-500);
+}

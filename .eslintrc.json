@@ -1,3 +1,29 @@
 {
-  "extends": ["next/core-web-vitals", "next/typescript"]
+  "extends": [
+    "next/core-web-vitals", // Next.js 권장 규칙
+    "eslint:recommended", // 일반적인 JS 에러 방지
+    "plugin:@typescript-eslint/recommended", // TS 타입 관련 체크
+    "plugin:prettier/recommended" // Prettier와 충돌 방지 및 Prettier 에러를 ESLint로 표시
+  ],
+  "rules": {
+    "no-unused-vars": "off", // TS 규칙과 중복되므로 끔
+    "@typescript-eslint/no-unused-vars": ["error"], // 사용하지 않는 변수 금지
+    "@typescript-eslint/no-explicit-any": "warn", // any 사용 지양 (경고)
+    "react/self-closing-comp": "error", // 빈 태그는 <div /> 형태로 강제
+    "import/order": [
+      // 임포트 순서 정렬
+      "error",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          ["parent", "sibling"],
+          "index"
+        ],
+        "newlines-between": "always",
+        "alphabetize": { "order": "asc", "caseInsensitive": true }
+      }
+    ]
+  }
 }

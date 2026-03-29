@@ -1,4 +1,5 @@
 import { ButtonHTMLAttributes, ReactNode } from 'react';
+
 import styles from './styles.module.css';
 
 type ButtonVariant = 'primary' | 'secondary' | 'tertiary';
@@ -7,8 +8,10 @@ type ButtonState = 'default' | 'hover' | 'active' | 'disabled';
 type ButtonSize = 'small' | 'medium' | 'large' | 'x-large';
 type NativeButtonType = 'button' | 'submit' | 'reset';
 
-export interface ButtonProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type' | 'disabled'> {
+export interface ButtonProps extends Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  'type' | 'disabled'
+> {
   children: ReactNode;
   variant?: ButtonVariant;
   type?: ButtonType;

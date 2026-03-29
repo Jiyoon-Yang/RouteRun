@@ -1,4 +1,5 @@
 import { InputHTMLAttributes } from 'react';
+
 import styles from './styles.module.css';
 
 export type InputPlaceholderState =
@@ -9,8 +10,10 @@ export type InputPlaceholderState =
   | 'error'
   | 'disabled';
 
-export interface InputPlaceholderProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size' | 'disabled'> {
+export interface InputPlaceholderProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'size' | 'disabled'
+> {
   state?: InputPlaceholderState;
   disabled?: boolean;
   showLeftIcon?: boolean;
@@ -62,12 +65,7 @@ export default function InputPlaceholder({
   return (
     <div className={cn(styles.field, STATE_CLASS_MAP[state], className)}>
       {showLeftIcon ? <FieldIcon /> : null}
-      <input
-        {...rest}
-        disabled={isDisabled}
-        aria-disabled={isDisabled}
-        className={styles.input}
-      />
+      <input {...rest} disabled={isDisabled} aria-disabled={isDisabled} className={styles.input} />
       {showRightIcon ? <FieldIcon /> : null}
     </div>
   );

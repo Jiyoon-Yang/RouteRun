@@ -15,136 +15,135 @@ export type TypographyTokenValue = {
 //   (추후 모바일 값이 오면 동일 토큰명을 덮어쓰면 됩니다.)
 export const TYPOGRAPHY_TOKENS = {
   // Heading
-  "heading-1-ko-desktop": {
+  'heading-1-ko-desktop': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
-    fontSize: "24px",
-    lineHeight: "30px",
+    fontSize: '24px',
+    lineHeight: '30px',
     fontWeight: 600,
-    letterSpacing: "0px",
+    letterSpacing: '0px',
   },
-  "heading-2-ko-desktop": {
+  'heading-2-ko-desktop': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
-    fontSize: "20px",
-    lineHeight: "26px",
+    fontSize: '20px',
+    lineHeight: '26px',
     fontWeight: 600,
-    letterSpacing: "0px",
+    letterSpacing: '0px',
   },
-  "heading-3-ko-desktop-semibold": {
+  'heading-3-ko-desktop-semibold': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
-    fontSize: "18px",
-    lineHeight: "22px",
+    fontSize: '18px',
+    lineHeight: '22px',
     fontWeight: 600,
-    letterSpacing: "0px",
+    letterSpacing: '0px',
   },
-  "heading-3-ko-desktop-regular": {
+  'heading-3-ko-desktop-regular': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
-    fontSize: "18px",
-    lineHeight: "22px",
+    fontSize: '18px',
+    lineHeight: '22px',
     fontWeight: 400,
-    letterSpacing: "0px",
+    letterSpacing: '0px',
   },
 
   // Body
-  "body-1-ko-desktop": {
+  'body-1-ko-desktop': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
-    fontSize: "16px",
-    lineHeight: "24px",
+    fontSize: '16px',
+    lineHeight: '24px',
     fontWeight: 600,
-    letterSpacing: "0px",
+    letterSpacing: '0px',
   },
-  "body-2-ko-desktop-semibold": {
+  'body-2-ko-desktop-semibold': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
-    fontSize: "14px",
-    lineHeight: "20px",
+    fontSize: '14px',
+    lineHeight: '20px',
     fontWeight: 600,
-    letterSpacing: "0px",
+    letterSpacing: '0px',
   },
-  "body-2-ko-desktop-regular": {
+  'body-2-ko-desktop-regular': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
-    fontSize: "14px",
-    lineHeight: "20px",
+    fontSize: '14px',
+    lineHeight: '20px',
     fontWeight: 400,
-    letterSpacing: "0px",
+    letterSpacing: '0px',
   },
 
   // Caption
-  "caption-1-ko-desktop": {
+  'caption-1-ko-desktop': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
-    fontSize: "12px",
-    lineHeight: "18px",
+    fontSize: '12px',
+    lineHeight: '18px',
     fontWeight: 500,
-    letterSpacing: "0px",
+    letterSpacing: '0px',
   },
 
   // Mobile (기본값: desktop과 동일. 추후 이미지/스펙이 오면 덮어쓰기)
-  "heading-1-ko-mobile": {
+  'heading-1-ko-mobile': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
-    fontSize: "24px",
-    lineHeight: "30px",
+    fontSize: '24px',
+    lineHeight: '30px',
     fontWeight: 600,
-    letterSpacing: "0px",
+    letterSpacing: '0px',
   },
-  "heading-2-ko-mobile": {
+  'heading-2-ko-mobile': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
-    fontSize: "20px",
-    lineHeight: "26px",
+    fontSize: '20px',
+    lineHeight: '26px',
     fontWeight: 600,
-    letterSpacing: "0px",
+    letterSpacing: '0px',
   },
-  "heading-3-ko-mobile-semibold": {
+  'heading-3-ko-mobile-semibold': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
-    fontSize: "18px",
-    lineHeight: "22px",
+    fontSize: '18px',
+    lineHeight: '22px',
     fontWeight: 600,
-    letterSpacing: "0px",
+    letterSpacing: '0px',
   },
-  "heading-3-ko-mobile-regular": {
+  'heading-3-ko-mobile-regular': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
-    fontSize: "18px",
-    lineHeight: "22px",
+    fontSize: '18px',
+    lineHeight: '22px',
     fontWeight: 400,
-    letterSpacing: "0px",
+    letterSpacing: '0px',
   },
-  "body-1-ko-mobile": {
+  'body-1-ko-mobile': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
-    fontSize: "16px",
-    lineHeight: "24px",
+    fontSize: '16px',
+    lineHeight: '24px',
     fontWeight: 600,
-    letterSpacing: "0px",
+    letterSpacing: '0px',
   },
-  "body-2-ko-mobile-semibold": {
+  'body-2-ko-mobile-semibold': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
-    fontSize: "14px",
-    lineHeight: "20px",
+    fontSize: '14px',
+    lineHeight: '20px',
     fontWeight: 600,
-    letterSpacing: "0px",
+    letterSpacing: '0px',
   },
-  "body-2-ko-mobile-regular": {
+  'body-2-ko-mobile-regular': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
-    fontSize: "14px",
-    lineHeight: "20px",
+    fontSize: '14px',
+    lineHeight: '20px',
     fontWeight: 400,
-    letterSpacing: "0px",
+    letterSpacing: '0px',
   },
-  "caption-1-ko-mobile": {
+  'caption-1-ko-mobile': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
-    fontSize: "12px",
-    lineHeight: "18px",
+    fontSize: '12px',
+    lineHeight: '18px',
     fontWeight: 500,
-    letterSpacing: "0px",
+    letterSpacing: '0px',
   },
 } as const satisfies Record<string, TypographyTokenValue>;
 
 export type TypographyTokenName = keyof typeof TYPOGRAPHY_TOKENS;
 
 export type TypographyCssVarPart =
-  | "font-family"
-  | "font-size"
-  | "line-height"
-  | "font-weight"
-  | "letter-spacing";
+  | 'font-family'
+  | 'font-size'
+  | 'line-height'
+  | 'font-weight'
+  | 'letter-spacing';
 
 export function cssTypographyVar(token: TypographyTokenName, part: TypographyCssVarPart) {
   return `var(--typography-${token}-${part})` as const;
 }
-

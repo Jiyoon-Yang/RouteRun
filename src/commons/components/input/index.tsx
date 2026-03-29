@@ -1,14 +1,16 @@
 import { InputHTMLAttributes, useId } from 'react';
-import InputAddtionalText, {
-  InputAddtionalTextState,
-} from './addtional_text';
+
+import InputAddtionalText, { InputAddtionalTextState } from './addtional_text';
 import InputLabel from './label';
 import InputPlaceholder, { InputPlaceholderState } from './placeholder';
 import styles from './styles.module.css';
 
 export type InputState = InputPlaceholderState;
 
-export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size' | 'disabled'> {
+export interface InputProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'size' | 'disabled'
+> {
   label?: string;
   required?: boolean;
   state?: InputState;

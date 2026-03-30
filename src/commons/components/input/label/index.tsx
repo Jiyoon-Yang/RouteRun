@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+
 import styles from './styles.module.css';
 import type { LabelType } from './types';
 

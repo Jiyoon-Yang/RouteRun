@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+
 import InputPlaceholder from './index';
 
 const meta = {
@@ -51,7 +52,12 @@ export const IconVisibility: Story = {
       <InputPlaceholder {...args} placeholder="양쪽 모두" showLeftIcon showRightIcon />
       <InputPlaceholder {...args} placeholder="왼쪽만" showLeftIcon showRightIcon={false} />
       <InputPlaceholder {...args} placeholder="오른쪽만" showLeftIcon={false} showRightIcon />
-      <InputPlaceholder {...args} placeholder="둘 다 숨김" showLeftIcon={false} showRightIcon={false} />
+      <InputPlaceholder
+        {...args}
+        placeholder="둘 다 숨김"
+        showLeftIcon={false}
+        showRightIcon={false}
+      />
     </div>
   ),
 };

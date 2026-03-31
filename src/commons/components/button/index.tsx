@@ -9,6 +9,8 @@ interface ButtonProps {
   leftIcon?: React.ReactNode; // 왼쪽 아이콘 (선택 사항)
   rightIcon?: React.ReactNode; // 오른쪽 아이콘 (선택 사항)
   disabled?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
   onClick?: () => void;
 }
 
@@ -21,6 +23,8 @@ export const Button = ({
   leftIcon,
   rightIcon,
   disabled,
+  className,
+  style,
   onClick,
 }: ButtonProps) => {
   const iconSize = {
@@ -38,11 +42,18 @@ export const Button = ({
     ${styles[borderRadius]}
     ${styles[size]}
     ${styles[color]}
+    ${className ?? ''}
     ${disabled ? styles.disabled : ''}
   `;
 
   return (
-    <button type="button" className={buttonClass} onClick={onClick} disabled={disabled}>
+    <button
+      type="button"
+      className={buttonClass}
+      style={style}
+      onClick={onClick}
+      disabled={disabled}
+    >
       {leftIcon && <span className={iconClass}>{leftIcon}</span>}
       {children}
       {rightIcon && <span className={iconClass}>{rightIcon}</span>}

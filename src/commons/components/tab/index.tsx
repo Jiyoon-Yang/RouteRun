@@ -16,7 +16,7 @@ export const TabButton = ({ children, variant, onClick, isActive }: TabButtonPro
   `;
 
   return (
-    <button type='button' className={buttonClass} onClick={onClick}>
+    <button type="button" className={buttonClass} onClick={onClick}>
       {children}
     </button>
   );

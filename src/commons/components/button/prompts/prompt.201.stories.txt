@@ -23,35 +23,34 @@
 
 2) 컨트롤 항목
 - 아래 항목은 컨트롤 가능해야 함
-  - `variant` (`primary | secondary | tertiary`)
-  - `type` (`fill | outline`)
-  - `state` (`default | hover | active | disabled`)
-  - `size` (`small | medium | large | x-large`)
-  - `fullWidth` (boolean)
-  - `nativeType` (`button | submit | reset`)
+  - `variant` (`fill | outline`)
+  - `borderRadius` ('r12' | 'r16')
+  - `size` (`small | medium | large | Xlarge`)
+  - `color` ('blue' | 'red' | 'dark')
   - `disabled` (boolean)
   - `showLeftIcon` (boolean)
   - `showRightIcon` (boolean)
-- `leftIcon`, `rightIcon`은 샘플 아이콘을 기본값으로 제공하되, 컨트롤 UI는 비활성화할 것
+  - `showLeftIcon`, `showRightIcon`은 값에 따라 실제 `leftIcon`, `rightIcon` Props에 샘플 아이콘이 전달되도록 `render` 함수를 구현할 것
 
 3) 필수 스토리 구성
 - `Playground`
-- `FullWidth`
-- `Variants`
-- `Types` (fill / outline 비교)
-- `States`
+- `FullWidth`(`size="Xlarge"`를 적용하여 너비 확인)
+- `Variants` (fill / outline 비교)
+- `Colors`: `blue`, `red`, `dark` 컬러를 한 화면에서 비교
+- `States`: Default, Hover, Active, Disabled 상태 비교
 - `Sizes`
 
 4) 의도 고정
-- 현재 프로젝트 기준 variant 의미를 유지할 것
+- 스토리 설명(description) 또는 섹션 구분을 통해 아래 의미를 명시할 것:
   - `primary = black`
   - `secondary = blue`
   - `tertiary = red`
+- 위 primary/secondary/tertiary는 `variant`가 아니라 `color` 의미 체계임
 - 스토리만 봐도 타입/상태/사이즈/아이콘 토글 동작을 모두 검증할 수 있어야 함
 
 체크리스트(출력 포맷)
 - [ ] `src/commons/components/button/index.stories.tsx`에 스토리가 구현됨
-- [ ] 필수 스토리(Playground/FullWidth/Variants/Types/States/Sizes)가 모두 있음
+- [ ] 필수 스토리(Playground/FullWidth/Variants/Colors/States/Sizes)가 모두 있음
 - [ ] `showLeftIcon`, `showRightIcon` 불린 토글이 컨트롤에 있음
-- [ ] `leftIcon`, `rightIcon` 샘플 아이콘 기본값이 설정됨
-- [ ] 현재 variant 의미(primary=black, secondary=blue, tertiary=red)가 스토리에서 확인 가능함
+- [ ] `leftIcon`, `rightIcon` 샘플 아이콘 기본값이 설정 및 컨트롤 숨김 처리
+- [ ] 현재 color 의미(primary=black, secondary=blue, tertiary=red)가 스토리에서 확인 가능함

@@ -151,6 +151,12 @@
   --typography-body-2-ko-desktop-semibold-font-weight: 600;
   --typography-body-2-ko-desktop-semibold-letter-spacing: 0px;
 
+  --typography-body-2-ko-desktop-bold-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-body-2-ko-desktop-bold-font-size: 14px;
+  --typography-body-2-ko-desktop-bold-line-height: 20px;
+  --typography-body-2-ko-desktop-bold-font-weight: 700;
+  --typography-body-2-ko-desktop-bold-letter-spacing: 0px;
+
   --typography-body-2-ko-desktop-regular-font-family: "Pretendard", Arial, Helvetica, sans-serif;
   --typography-body-2-ko-desktop-regular-font-size: 14px;
   --typography-body-2-ko-desktop-regular-line-height: 20px;
@@ -199,6 +205,12 @@
   --typography-body-2-ko-mobile-semibold-line-height: 20px;
   --typography-body-2-ko-mobile-semibold-font-weight: 600;
   --typography-body-2-ko-mobile-semibold-letter-spacing: 0px;
+
+  --typography-body-2-ko-mobile-bold-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-body-2-ko-mobile-bold-font-size: 14px;
+  --typography-body-2-ko-mobile-bold-line-height: 20px;
+  --typography-body-2-ko-mobile-bold-font-weight: 700;
+  --typography-body-2-ko-mobile-bold-letter-spacing: 0px;
 
   --typography-body-2-ko-mobile-regular-font-family: "Pretendard", Arial, Helvetica, sans-serif;
   --typography-body-2-ko-mobile-regular-font-size: 14px;

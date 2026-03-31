@@ -59,6 +59,13 @@ export const TYPOGRAPHY_TOKENS = {
     fontWeight: 600,
     letterSpacing: '0px',
   },
+  'body-2-ko-desktop-bold': {
+    fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
+    fontSize: '14px',
+    lineHeight: '20px',
+    fontWeight: 700,
+    letterSpacing: '0px',
+  },
   'body-2-ko-desktop-regular': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
     fontSize: '14px',
@@ -117,6 +124,13 @@ export const TYPOGRAPHY_TOKENS = {
     fontSize: '14px',
     lineHeight: '20px',
     fontWeight: 600,
+    letterSpacing: '0px',
+  },
+  'body-2-ko-mobile-bold': {
+    fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
+    fontSize: '14px',
+    lineHeight: '20px',
+    fontWeight: 700,
     letterSpacing: '0px',
   },
   'body-2-ko-mobile-regular': {

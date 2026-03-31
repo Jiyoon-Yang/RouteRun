@@ -1,20 +1,31 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 
-import Button from './index';
+import { Button } from './index';
 
-function PlusIcon() {
+type ButtonProps = React.ComponentProps<typeof Button>;
+type ButtonStoryArgs = ButtonProps & {
+  showLeftIcon: boolean;
+  showRightIcon: boolean;
+};
+
+const variantOptions: ButtonProps['variant'][] = ['fill', 'outline'];
+const borderRadiusOptions: ButtonProps['borderRadius'][] = ['r12', 'r16'];
+const sizeOptions: ButtonProps['size'][] = ['small', 'medium', 'large', 'Xlarge'];
+const colorOptions: ButtonProps['color'][] = ['blue', 'red', 'dark'];
+
+const sampleLeftIcon = <span aria-hidden>◀</span>;
+const sampleRightIcon = <span aria-hidden>▶</span>;
+
+const withIconToggle = (args: ButtonStoryArgs) => {
+  const { showLeftIcon, showRightIcon, ...buttonArgs } = args;
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M10 6.5V13.5M6.5 10H13.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
+    <Button
+      {...buttonArgs}
+      leftIcon={showLeftIcon ? sampleLeftIcon : undefined}
+      rightIcon={showRightIcon ? sampleRightIcon : undefined}
+    />
   );
-}
+};
 
 const meta = {
   title: 'Commons/Button',
@@ -22,62 +33,74 @@ const meta = {
   tags: ['autodocs'],
   args: {
     children: '버튼',
-    variant: 'primary',
-    type: 'fill',
-    state: 'default',
+    variant: 'fill',
+    borderRadius: 'r12',
     size: 'medium',
-    fullWidth: false,
-    nativeType: 'button',
+    color: 'dark',
     disabled: false,
     showLeftIcon: false,
     showRightIcon: false,
-    leftIcon: <PlusIcon />,
-    rightIcon: <PlusIcon />,
+    leftIcon: sampleLeftIcon,
+    rightIcon: sampleRightIcon,
   },
   argTypes: {
+    children: {
+      control: 'text',
+    },
     variant: {
       control: 'inline-radio',
-      options: ['primary', 'secondary', 'tertiary'],
+      options: variantOptions,
     },
-    type: {
+    borderRadius: {
       control: 'inline-radio',
-      options: ['fill', 'outline'],
-    },
-    state: {
-      control: 'inline-radio',
-      options: ['default', 'hover', 'active', 'disabled'],
+      options: borderRadiusOptions,
     },
     size: {
       control: 'inline-radio',
-      options: ['small', 'medium', 'large', 'x-large'],
+      options: sizeOptions,
     },
-    fullWidth: {
-      control: 'boolean',
-    },
-    nativeType: {
+    color: {
       control: 'inline-radio',
-      options: ['button', 'submit', 'reset'],
+      options: colorOptions,
+      description:
+        '색상 의미 체계: primary = black(dark), secondary = blue, tertiary = red (variant가 아닌 color 기준)',
     },
     disabled: {
       control: 'boolean',
     },
     showLeftIcon: {
       control: 'boolean',
+      description: '토글 ON 시 leftIcon 샘플 아이콘을 전달합니다.',
     },
     showRightIcon: {
       control: 'boolean',
+      description: '토글 ON 시 rightIcon 샘플 아이콘을 전달합니다.',
     },
     leftIcon: {
-      control: false,
+      table: {
+        disable: true,
+      },
     },
     rightIcon: {
-      control: false,
+      table: {
+        disable: true,
+      },
+    },
+    onClick: {
+      action: 'click',
     },
   },
   parameters: {
     layout: 'centered',
+    docs: {
+      description: {
+        component:
+          'Button 컬러 의미 체계: primary = black(dark), secondary = blue, tertiary = red. 이는 variant(fill/outline)가 아니라 color 의미 분류입니다.',
+      },
+    },
   },
-} satisfies Meta<typeof Button>;
+  render: withIconToggle,
+} satisfies Meta<ButtonStoryArgs>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -86,79 +109,135 @@ export const Playground: Story = {};
 
 export const FullWidth: Story = {
   args: {
-    fullWidth: true,
-    children: '전체 너비 버튼',
+    size: 'Xlarge',
+    children: 'Full Width (Xlarge)',
   },
-  render: (args) => (
-    <div style={{ width: 320 }}>
-      <Button {...args} />
-    </div>
-  ),
+  render: (args) => {
+    const { showLeftIcon, showRightIcon, ...buttonArgs } = args;
+    return (
+      <div style={{ width: 360 }}>
+        <Button
+          {...buttonArgs}
+          leftIcon={showLeftIcon ? sampleLeftIcon : undefined}
+          rightIcon={showRightIcon ? sampleRightIcon : undefined}
+        />
+      </div>
+    );
+  },
 };
 
 export const Variants: Story = {
   render: (args) => (
-    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-      <Button {...args} variant="primary">
-        Primary
-      </Button>
-      <Button {...args} variant="secondary">
-        Secondary
-      </Button>
-      <Button {...args} variant="tertiary">
-        Tertiary
-      </Button>
+    <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+      {variantOptions.map((variant) => (
+        <Button
+          key={variant}
+          {...args}
+          variant={variant}
+          leftIcon={args.showLeftIcon ? sampleLeftIcon : undefined}
+          rightIcon={args.showRightIcon ? sampleRightIcon : undefined}
+        >
+          {variant}
+        </Button>
+      ))}
+    </div>
+  ),
+};
+
+export const Colors: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'color 비교: dark(primary), blue(secondary), red(tertiary). 의미 분류를 한 화면에서 확인합니다.',
+      },
+    },
+  },
+  render: (args) => (
+    <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+      {colorOptions.map((color) => (
+        <Button
+          key={color}
+          {...args}
+          color={color}
+          leftIcon={args.showLeftIcon ? sampleLeftIcon : undefined}
+          rightIcon={args.showRightIcon ? sampleRightIcon : undefined}
+        >
+          {color === 'dark'
+            ? 'primary (dark)'
+            : color === 'blue'
+              ? 'secondary (blue)'
+              : 'tertiary (red)'}
+        </Button>
+      ))}
     </div>
   ),
 };
 
 export const States: Story = {
+  args: {
+    color: 'dark',
+    variant: 'fill',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Default / Hover(시뮬레이션) / Active(시뮬레이션) / Disabled 상태를 비교합니다. Hover/Active는 각 버튼에 마우스를 올리거나 클릭하여 즉시 검증할 수 있습니다.',
+      },
+    },
+  },
   render: (args) => (
-    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-      <Button {...args} state="default">
-        Default
-      </Button>
-      <Button {...args} state="hover">
-        Hover
-      </Button>
-      <Button {...args} state="active">
-        Active
-      </Button>
-      <Button {...args} state="disabled">
-        Disabled
-      </Button>
-    </div>
-  ),
-};
-
-export const Types: Story = {
-  render: (args) => (
-    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-      <Button {...args} type="fill">
-        Fill
-      </Button>
-      <Button {...args} type="outline">
-        Outline
-      </Button>
+    <div style={{ display: 'grid', gap: 12 }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <Button
+          {...args}
+          leftIcon={args.showLeftIcon ? sampleLeftIcon : undefined}
+          rightIcon={args.showRightIcon ? sampleRightIcon : undefined}
+        >
+          Default
+        </Button>
+        <Button
+          {...args}
+          leftIcon={args.showLeftIcon ? sampleLeftIcon : undefined}
+          rightIcon={args.showRightIcon ? sampleRightIcon : undefined}
+        >
+          Hover (시뮬레이션)
+        </Button>
+        <Button
+          {...args}
+          leftIcon={args.showLeftIcon ? sampleLeftIcon : undefined}
+          rightIcon={args.showRightIcon ? sampleRightIcon : undefined}
+        >
+          Active (시뮬레이션)
+        </Button>
+        <Button
+          {...args}
+          disabled
+          leftIcon={args.showLeftIcon ? sampleLeftIcon : undefined}
+          rightIcon={args.showRightIcon ? sampleRightIcon : undefined}
+        >
+          Disabled
+        </Button>
+      </div>
     </div>
   ),
 };
 
 export const Sizes: Story = {
   render: (args) => (
-    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-      <Button {...args} size="small">
-        Small
-      </Button>
-      <Button {...args} size="medium">
-        Medium
-      </Button>
-      <Button {...args} size="large">
-        Large
-      </Button>
-      <Button {...args} size="x-large">
-        X-Large
-      </Button>
+    <div style={{ display: 'grid', gap: 12 }}>
+      {sizeOptions.map((size) => (
+        <Button
+          key={size}
+          {...args}
+          size={size}
+          leftIcon={args.showLeftIcon ? sampleLeftIcon : undefined}
+          rightIcon={args.showRightIcon ? sampleRightIcon : undefined}
+        >
+          {size}
+        </Button>
+      ))}
     </div>
   ),
 };

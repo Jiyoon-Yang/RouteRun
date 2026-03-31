@@ -1,97 +1,51 @@
-import { ButtonHTMLAttributes, ReactNode } from 'react';
-
 import styles from './styles.module.css';
 
-type ButtonVariant = 'primary' | 'secondary' | 'tertiary';
-type ButtonType = 'fill' | 'outline';
-type ButtonState = 'default' | 'hover' | 'active' | 'disabled';
-type ButtonSize = 'small' | 'medium' | 'large' | 'x-large';
-type NativeButtonType = 'button' | 'submit' | 'reset';
-
-export interface ButtonProps extends Omit<
-  ButtonHTMLAttributes<HTMLButtonElement>,
-  'type' | 'disabled'
-> {
-  children: ReactNode;
-  variant?: ButtonVariant;
-  type?: ButtonType;
-  state?: ButtonState;
-  size?: ButtonSize;
-  fullWidth?: boolean;
-  nativeType?: NativeButtonType;
+interface ButtonProps {
+  children: React.ReactNode;
+  variant: 'fill' | 'outline';
+  borderRadius: 'r12' | 'r16';
+  size: 'small' | 'medium' | 'large' | 'Xlarge';
+  color: 'blue' | 'red' | 'dark';
+  leftIcon?: React.ReactNode; // 왼쪽 아이콘 (선택 사항)
+  rightIcon?: React.ReactNode; // 오른쪽 아이콘 (선택 사항)
   disabled?: boolean;
-  leftIcon?: ReactNode;
-  rightIcon?: ReactNode;
-  showLeftIcon?: boolean;
-  showRightIcon?: boolean;
+  onClick?: () => void;
 }
 
-const VARIANT_CLASS_MAP: Record<ButtonVariant, string> = {
-  primary: styles.variantPrimary,
-  secondary: styles.variantSecondary,
-  tertiary: styles.variantTertiary,
-};
-
-const TYPE_CLASS_MAP: Record<ButtonType, string> = {
-  fill: styles.typeFill,
-  outline: styles.typeOutline,
-};
-
-const STATE_CLASS_MAP: Record<ButtonState, string> = {
-  default: styles.stateDefault,
-  hover: styles.stateHover,
-  active: styles.stateActive,
-  disabled: styles.stateDisabled,
-};
-
-const SIZE_CLASS_MAP: Record<ButtonSize, string> = {
-  small: styles.sizeSmall,
-  medium: styles.sizeMedium,
-  large: styles.sizeLarge,
-  'x-large': styles.sizeXLarge,
-};
-
-function cn(...classNames: Array<string | false | null | undefined>) {
-  return classNames.filter(Boolean).join(' ');
-}
-
-export default function Button({
+export const Button = ({
   children,
-  variant = 'primary',
-  type = 'fill',
-  state = 'default',
-  size = 'medium',
-  fullWidth = false,
-  nativeType = 'button',
-  disabled = false,
+  variant,
+  borderRadius,
+  size,
+  color,
   leftIcon,
   rightIcon,
-  showLeftIcon = false,
-  showRightIcon = false,
-  className,
-  ...rest
-}: ButtonProps) {
-  const isDisabled = state === 'disabled' || disabled;
+  disabled,
+  onClick,
+}: ButtonProps) => {
+  const iconSize = {
+    small: styles.iconSmall,
+    medium: styles.iconMedium,
+    large: styles.iconLarge,
+    Xlarge: styles.iconXLarge,
+  } as const;
+
+  const iconClass = `${styles.iconBase} ${iconSize[size]}`;
+
+  const buttonClass = `
+    ${styles.base} 
+    ${styles[variant]}
+    ${styles[borderRadius]}
+    ${styles[size]}
+    ${styles[color]}
+    ${disabled ? styles.disabled : ''}
+  `;
 
   return (
-    <button
-      {...rest}
-      type={nativeType}
-      disabled={isDisabled}
-      aria-disabled={isDisabled}
-      className={cn(
-        styles.button,
-        VARIANT_CLASS_MAP[variant],
-        TYPE_CLASS_MAP[type],
-        STATE_CLASS_MAP[state],
-        SIZE_CLASS_MAP[size],
-        fullWidth && styles.fullWidth,
-        className,
-      )}
-    >
-      {showLeftIcon && leftIcon ? <span className={styles.icon}>{leftIcon}</span> : null}
-      <span className={styles.label}>{children}</span>
-      {showRightIcon && rightIcon ? <span className={styles.icon}>{rightIcon}</span> : null}
+    <button type="button" className={buttonClass} onClick={onClick} disabled={disabled}>
+      {leftIcon && <span className={iconClass}>{leftIcon}</span>}
+      {children}
+      {rightIcon && <span className={iconClass}>{rightIcon}</span>}
     </button>
   );
-}
+};

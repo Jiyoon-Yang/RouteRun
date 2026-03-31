@@ -37,7 +37,6 @@
 핵심요구사항)
 1) 축 설계
 - 타입 축: `type` = 'none' | 'optional' | 'required' | 'info'
-- 아이콘 축: `icon` = boolean
 - 툴팁 축: `tooltip`(string), `tooltipTrigger` = 'hover' | 'click' | 'both'
 - 사이즈 축은 두지 않고 단일 타이포 스케일로 고정.
 
@@ -49,8 +48,8 @@
   - `optional`: 선택 표기
   - `required`: `*` 표기
   - `info`: 정보성 타입 표현
-- `icon`은 boolean으로 받고, `type='info' && icon===true`일 때만 아이콘을 노출.
-- 툴팁은 `type='info' && icon===true && tooltip`일 때만 노출.
+- 아이콘은 `type='info'`일 때 자동 노출.
+- 툴팁은 `type='info' && tooltip`일 때만 노출.
 - `tooltipTrigger` 값에 따라 트리거 동작을 분기:
   - `hover`: 마우스 오버/포커스 시 노출
   - `click`: 클릭 토글로 노출
@@ -70,5 +69,5 @@
 - [ ] `src/commons/components/input/label/index.tsx` 구현 완료
 - [ ] `src/commons/components/input/label/styles.module.css` 구현 완료
 - [ ] type(`none | optional | required | info`) 동작 확인
-- [ ] `htmlFor`/`type`/`icon`/`tooltip`/`tooltipTrigger` props 동작 확인
+- [ ] `htmlFor`/`type`/`tooltip`/`tooltipTrigger` props 동작 확인
 - [ ] 전역 토큰 기반 스타일 적용

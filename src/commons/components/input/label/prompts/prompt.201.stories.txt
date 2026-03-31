@@ -2,7 +2,7 @@
 
 목표)
 - `src/commons/components/input/label/index.tsx` 구현을 검증할 수 있는 스토리를 작성한다.
-- 타입(`none | optional | required | info`), `icon` 토글, 툴팁(`tooltip`, `tooltipTrigger`)과 `htmlFor` 전달 케이스를 빠르게 확인 가능하게 구성한다.
+- 타입(`none | optional | required | info`), 툴팁(`tooltip`, `tooltipTrigger`)과 `htmlFor` 전달 케이스를 빠르게 확인 가능하게 구성한다.
 - 구현 결과를 체크리스트로 반환한다.
 
 ==============================================
@@ -30,7 +30,6 @@
   - `children` (text)
   - `htmlFor` (text)
   - `type` (`none | optional | required | info`)
-  - `icon` (boolean)
   - `tooltip` (text)
   - `tooltipTrigger` (`hover | click | both`)
 - `className`은 `control: false`로 비활성화할 것.
@@ -38,18 +37,18 @@
 3) 필수 스토리 세트
 - `Playground`
 - `Types` (`none/optional/required/info` 비교)
-- `Icon` (`type='info'`에서 `icon=true/false` 비교)
+- `InfoIcon` (`type='none'`과 `type='info'` 아이콘 노출 비교)
 - `InfoTooltipHover`
 - `InfoTooltipClick`
 - `InfoTooltipBoth`
 
 4) 검증 가능성
-- 스토리만으로 타입별 표현, 필수표시(`*`), `type='info'` 아이콘 토글, 툴팁 트리거 동작을 빠르게 검증할 수 있어야 함.
-- 피그마에 없는 상태/옵션은 추가하지 않을 것.
+- 스토리만으로 타입별 표현, 필수표시(`*`), `type='info'` 아이콘 노출, 툴팁 트리거 동작을 빠르게 검증할 수 있어야 함.
+- 피그마에 없는 상태/옵션은 추가하지 않을 것.    
 
 체크리스트(출력 포맷)
 - [ ] `src/commons/components/input/label/index.stories.tsx`에 스토리가 구현됨
-- [ ] `Playground/Types/Icon/InfoTooltip*` 스토리가 포함됨
-- [ ] `children`, `htmlFor`, `type`, `icon`, `tooltip`, `tooltipTrigger` 컨트롤이 동작함
+- [ ] `Playground/Types/InfoIcon/InfoTooltip*` 스토리가 포함됨
+- [ ] `children`, `htmlFor`, `type`, `tooltip`, `tooltipTrigger` 컨트롤이 동작함
 - [ ] `type='required'`에서 필수표시(`*`) 동작이 확인됨
 - [ ] `type='info'`에서 hover/click 툴팁 동작이 확인됨

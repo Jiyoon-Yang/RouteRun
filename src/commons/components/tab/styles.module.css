@@ -5,6 +5,15 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  align-self: stretch;
+
+  /* Body/B2 */
+  font-family: Pretendard;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 20px;
+
   cursor: pointer;
 }
 
@@ -23,6 +32,7 @@
 .green:active,
 .green.active {
   border-radius: 9999px;
+  border: 2px solid transparent;
   background: var(--color-green-500);
   color: var(--color-white-500);
   text-align: center;
@@ -43,6 +53,7 @@
 .blue:active,
 .blue.active {
   border-radius: 9999px;
+  border: 2px solid transparent;
   background: var(--color-blue-500);
   color: var(--color-white-500);
   text-align: center;
@@ -64,6 +75,7 @@
 .orange:active,
 .orange.active {
   border-radius: 9999px;
+  border: 2px solid transparent;
   background: var(--color-orange-500);
   color: var(--color-white-500);
   text-align: center;
@@ -84,6 +96,7 @@
 .red:active,
 .red.active {
   border-radius: 9999px;
+  border: 2px solid transparent;
   background: var(--color-red-500);
   color: var(--color-white-500);
   text-align: center;

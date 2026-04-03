@@ -1,103 +1,277 @@
-.field {
-  width: 100%;
-  border: 1px solid var(--color-grey-300);
-  border-radius: 12px;
-  background-color: var(--color-white-100);
+/* Placeholder 필드 — Figma 139:2603
+   - 버튼과 같이: 한 덩어리(.base.primary) 안에서 default → hover → focus → … 순으로 읽기
+   - :hover / :focus-within = 실제 마우스·포커스, .stateHover / .stateFocus = 스토리북에서 동일 스타일 고정용(같은 규칙에 쉼표로 묶음) */
+
+/* 공통 레이아웃 */
+.base {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  min-height: 48px;
+
+  width: 100%;
+  height: 48px;
   padding: 12px 16px;
-  box-sizing: border-box;
-  transition:
-    border-color 120ms ease,
-    background-color 120ms ease,
-    color 120ms ease;
+
+  border-radius: 12px;
+  border: 1px solid transparent;
 }
 
 .input {
   flex: 1;
-  min-width: 0;
+  width: 0;
+
   border: 0;
   outline: none;
-  background-color: transparent;
-  color: var(--color-black-500);
-  font-family: var(--typography-body-2-ko-desktop-regular-font-family);
-  font-size: var(--typography-body-2-ko-desktop-regular-font-size);
-  font-weight: var(--typography-body-2-ko-desktop-regular-font-weight);
-  line-height: var(--typography-body-2-ko-desktop-regular-line-height);
-  letter-spacing: var(--typography-body-2-ko-desktop-regular-letter-spacing);
+  background: transparent;
+
+  padding: 0;
+
+  font-family: var(--typography-body-1-ko-desktop-font-family);
+  font-size: var(--typography-body-1-ko-desktop-font-size);
+  line-height: var(--typography-body-1-ko-desktop-line-height);
+  font-weight: 400;
+  letter-spacing: -0.2px;
 }
 
-.input::placeholder {
-  color: var(--color-grey-500);
-}
-
-.stateDefault {
-  border-color: var(--color-grey-300);
-}
-
-.stateHover {
-  border-color: var(--color-grey-600);
-  background-color: var(--color-grey-50);
-}
-
-.stateFilled {
-  border-color: var(--color-grey-300);
-  background-color: var(--color-white-100);
-}
-
-.stateFilled .input {
-  color: var(--color-black-500);
-}
-
-.stateActive {
-  border-color: var(--color-green-500);
-  background-color: var(--color-white-100);
-}
-
-.stateError {
-  border-color: var(--color-red-500);
-}
-
-.stateDisabled {
-  border-color: var(--color-grey-200);
-  background-color: var(--color-grey-50);
-  color: var(--color-grey-500);
-  cursor: not-allowed;
-}
-
-.stateDisabled .input {
-  color: var(--color-grey-500);
-}
-
-.stateDisabled .input::placeholder {
-  color: var(--color-grey-500);
-}
-
-.iconSlot {
-  width: 20px;
-  height: 20px;
+.iconLeft,
+.iconRight {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-}
-
-.icon {
-  width: 20px;
-  height: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-grey-700);
-}
-
-.icon svg {
+  padding: 3px;
   width: 20px;
   height: 20px;
 }
 
-.stateDisabled .icon {
-  color: var(--color-grey-500);
+.iconLeft > svg,
+.iconLeft > img,
+.iconRight > svg,
+.iconRight > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.iconLeft > svg,
+.iconRight > svg {
+  color: inherit;
+  flex-shrink: 0;
+}
+
+/* Primary */
+.base.primary {
+  background: var(--color-grey-50);
+  border-color: var(--color-grey-200);
+}
+
+.base.primary .input {
+  color: var(--color-grey-600);
+}
+
+.base.primary .input::placeholder {
+  color: var(--color-grey-600);
+  opacity: 1;
+}
+
+.base.primary .iconLeft,
+.base.primary .iconRight {
+  color: var(--color-dark_grey-500);
+}
+
+.base.primary.stateFilled {
+  background: var(--color-white-500);
+  border-color: var(--color-grey-200);
+}
+
+.base.primary.stateFilled .input,
+.base.primary.stateFilled .input::placeholder {
+  color: var(--color-light_black-900);
+}
+
+.base.primary.stateFilled .iconLeft,
+.base.primary.stateFilled .iconRight {
+  color: var(--color-dark_grey-500);
+}
+
+.base.primary:hover:not(.stateError):not(.stateDisabled),
+.base.primary.stateHover {
+  background: var(--color-white-500);
+  border-color: var(--color-grey-600);
+}
+
+.base.primary:hover:not(.stateError):not(.stateDisabled) .input,
+.base.primary:hover:not(.stateError):not(.stateDisabled) .input::placeholder,
+.base.primary.stateHover .input,
+.base.primary.stateHover .input::placeholder {
+  color: var(--color-grey-600);
+}
+
+.base.primary:hover:not(.stateError):not(.stateDisabled) .iconLeft,
+.base.primary:hover:not(.stateError):not(.stateDisabled) .iconRight,
+.base.primary.stateHover .iconLeft,
+.base.primary.stateHover .iconRight {
+  color: var(--color-dark_grey-500);
+}
+
+.base.primary:focus-within:not(.stateError):not(.stateDisabled),
+.base.primary.stateFocus {
+  background: var(--color-white-500);
+  border-color: var(--color-green-500);
+}
+
+.base.primary:focus-within:not(.stateError):not(.stateDisabled) .input,
+.base.primary:focus-within:not(.stateError):not(.stateDisabled) .input::placeholder,
+.base.primary.stateFocus .input,
+.base.primary.stateFocus .input::placeholder {
+  color: var(--color-light_black-900);
+}
+
+.base.primary:focus-within:not(.stateError):not(.stateDisabled) .iconLeft,
+.base.primary:focus-within:not(.stateError):not(.stateDisabled) .iconRight,
+.base.primary.stateFocus .iconLeft,
+.base.primary.stateFocus .iconRight {
+  color: var(--color-light_black-900);
+}
+
+.base.primary.stateError {
+  background: var(--color-grey-50);
+  border-color: var(--color-red-600);
+}
+
+.base.primary.stateError .input,
+.base.primary.stateError .input::placeholder {
+  color: var(--color-grey-600);
+}
+
+.base.primary.stateError .iconLeft,
+.base.primary.stateError .iconRight {
+  color: var(--color-dark_grey-500);
+}
+
+.base.primary.stateDisabled {
+  background: var(--color-grey-100);
+  border-color: var(--color-grey-200);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.base.primary.stateDisabled .input,
+.base.primary.stateDisabled .input::placeholder {
+  color: var(--color-grey-600);
+}
+
+.base.primary.stateDisabled .iconLeft,
+.base.primary.stateDisabled .iconRight {
+  color: var(--color-grey-600);
+}
+
+/* Secondary */
+.base.secondary {
+  background: var(--color-grey-50);
+  border-color: var(--color-grey-200);
+}
+
+.base.secondary .input {
+  color: var(--color-grey-600);
+}
+
+.base.secondary .input::placeholder {
+  color: var(--color-grey-600);
+  opacity: 1;
+}
+
+.base.secondary .iconLeft,
+.base.secondary .iconRight {
+  color: var(--color-dark_grey-500);
+}
+
+.base.secondary.stateFilled {
+  background: var(--color-white-500);
+  border-color: var(--color-grey-200);
+}
+
+.base.secondary.stateFilled .input,
+.base.secondary.stateFilled .input::placeholder {
+  color: var(--color-light_black-900);
+}
+
+.base.secondary.stateFilled .iconLeft,
+.base.secondary.stateFilled .iconRight {
+  color: var(--color-dark_grey-500);
+}
+
+.base.secondary:hover:not(.stateError):not(.stateDisabled),
+.base.secondary.stateHover {
+  background: var(--color-grey-100);
+  border-color: var(--color-grey-600);
+}
+
+.base.secondary:hover:not(.stateError):not(.stateDisabled) .input,
+.base.secondary:hover:not(.stateError):not(.stateDisabled) .input::placeholder,
+.base.secondary.stateHover .input,
+.base.secondary.stateHover .input::placeholder {
+  color: var(--color-grey-600);
+}
+
+.base.secondary:hover:not(.stateError):not(.stateDisabled) .iconLeft,
+.base.secondary:hover:not(.stateError):not(.stateDisabled) .iconRight,
+.base.secondary.stateHover .iconLeft,
+.base.secondary.stateHover .iconRight {
+  color: var(--color-dark_grey-500);
+}
+
+.base.secondary:focus-within:not(.stateError):not(.stateDisabled),
+.base.secondary.stateFocus {
+  background: var(--color-grey-50);
+  border-color: var(--color-light_black-700);
+}
+
+.base.secondary:focus-within:not(.stateError):not(.stateDisabled) .input,
+.base.secondary:focus-within:not(.stateError):not(.stateDisabled) .input::placeholder,
+.base.secondary.stateFocus .input,
+.base.secondary.stateFocus .input::placeholder {
+  color: var(--color-light_black-900);
+}
+
+.base.secondary:focus-within:not(.stateError):not(.stateDisabled) .iconLeft,
+.base.secondary:focus-within:not(.stateError):not(.stateDisabled) .iconRight,
+.base.secondary.stateFocus .iconLeft,
+.base.secondary.stateFocus .iconRight {
+  color: var(--color-light_black-900);
+}
+
+.base.secondary.stateError {
+  background: var(--color-grey-50);
+  border-color: var(--color-red-600);
+}
+
+.base.secondary.stateError .input,
+.base.secondary.stateError .input::placeholder {
+  color: var(--color-grey-600);
+}
+
+.base.secondary.stateError .iconLeft,
+.base.secondary.stateError .iconRight {
+  color: var(--color-dark_grey-500);
+}
+
+.base.secondary.stateDisabled {
+  background: var(--color-grey-100);
+  border-color: var(--color-grey-200);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.base.secondary.stateDisabled .input,
+.base.secondary.stateDisabled .input::placeholder {
+  color: var(--color-grey-600);
+}
+
+.base.secondary.stateDisabled .iconLeft,
+.base.secondary.stateDisabled .iconRight {
+  color: var(--color-grey-600);
 }

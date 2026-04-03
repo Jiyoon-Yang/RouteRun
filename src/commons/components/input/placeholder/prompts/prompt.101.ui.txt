@@ -15,24 +15,37 @@
 
 입력-디자인소스)
 - 활용 MCP: Figma Desktop MCP
-- 참고할 공통컴포넌트 노드 url: https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2603&t=e1xHQkpJlQYYkJLf-11
+- 참고할 공통컴포넌트 노드 url:https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2603&m=dev
 
 산출물-파일경로)
 - TSX: `src/commons/components/input/placeholder/index.tsx`
 - CSS: `src/commons/components/input/placeholder/styles.module.css`
+- (공통 아이콘) `src/commons/icons/lucide_field_icon.tsx` — 팀 아이콘 라이브러리(`package.json`) 기준 필드용 래퍼
 
 ==============================================
 
 핵심요구사항)
-- 네이티브 `<input>` 기반으로 구현할 것.
-- placeholder 텍스트 스타일은 상태별로 일관되게 적용할 것.
-- 상태는 `default | hover | filled | active | error | disabled`를 지원할 것.
-- 좌/우 아이콘은 `showLeftIcon` / `showRightIcon` 불린으로 노출 여부를 제어할 것(기본 true).
-- 필드 높이/패딩은 단일 스케일로 고정한다(별도 size variant 없음).
-- `disabled` 시 상호작용 차단 및 시각 상태를 명확히 표현할 것.
+- API: `placeholder`, `value?`, `state`, `variant`, `showLeftIcon?`, `showRightIcon?`, `leftIcon?`, `rightIcon?`, `disabled?`.
+- `showLeftIcon` / `showRightIcon` 기본값은 true.
+- `state`: `default | hover | focus | filled | error | disabled`.
+- `variant`: `primary | secondary`.
+- `disabled === true`이면 항상 `disabled` 상태로 처리한다.
+- `state === 'filled'`일 때만 input value에 `value ?? placeholder`를 넣는다.
+- 그 외 상태에서는 input value는 빈 문자열(placeholder 문구만 보임).
+- 루트 `className`은 `styles.base` + `styles.primary`|`styles.secondary` + (선택) `styles.stateHover` 등 **상태 모듈 클래스**를 한곳에서 조합한다. `effectiveState`에 따라 `STATE_CLASS` 맵으로 `stateHover`·`stateFocus`·`stateFilled`·`stateError`·`stateDisabled`를 붙인다(`default`는 추가 클래스 없음).
+- 루트에 `data-variant`, `data-state`는(선택) 디버그·스토리용. `state === 'error'`일 때는 `aria-invalid`를 루트에 부여한다.
+- input은 `readOnly`(프리뷰·스토리북용).
+- 색·타이포는 `src/app/globals.css` 토큰(`var(--color-*)`, `--typography-body-1-ko-desktop-*`)으로 맞춘다.
+- 필드 높이·패딩·라운드는 단일 스케일이다(size variant 없음).
+- `styles.module.css`는 commons **button**과 같이 variant 섹션마다 **default → (filled) → :hover → :focus-within → error → disabled** 순으로 읽히게 쓴다. 실제 상호작용은 `:hover:not(.stateError):not(.stateDisabled)`, `:focus-within:not(...)` 로 두고, 스토리북 고정용으로 `.stateHover`·`.stateFocus` 등을 **같은 선언 블록에 쉼표로 묶는다**. 색은 `var(--color-…)` 직접 기입.
+- 아이콘은 팀에서 사용하는 아이콘 라이브러리를 우선 사용한다. 필드 슬롯에는 `FieldLucideIcon`(`src/commons/icons/`)으로 크기·선 두께를 통일할 것.
+- `disabled`일 때 input `disabled` + 포인터 차단 등 비활성 표현이 분명하다.
 
 체크리스트(출력 포맷)
-- [ ] `src/commons/components/input/placeholder/index.tsx`에 Placeholder 컴포넌트가 구현됨
-- [ ] `src/commons/components/input/placeholder/styles.module.css`에 상태 스타일이 구현됨
-- [ ] state(`default | hover | filled | active | error | disabled`)가 모두 동작함
-- [ ] 좌/우 아이콘 불린 노출이 구현됨
+- [ ] `index.tsx`: Placeholder 구현, `FieldLucideIcon` 등 commons icons re-export, 루트 `className`은 `styles.base` + `styles[variant]` + `STATE_CLASS[effectiveState]`
+- [ ] `src/commons/icons/lucide_field_icon.tsx`: `FieldLucideIcon`(크기·선 두께)
+- [ ] `styles.module.css`: `var(--color-*)` 직접 기입, `.base.primary.state*` 복합 선택자, 섹션 주석
+- [ ] `state` 전 구간 + `disabled` prop 연동
+- [ ] `filled`일 때만 `value ?? placeholder` 표시
+- [ ] `showLeftIcon` / `showRightIcon` + `leftIcon` / `rightIcon`으로 노출 제어
+- [ ] 루트에 `data-variant`, `data-state`, 에러 시 `aria-invalid`

@@ -1,0 +1,57 @@
+아래 조건을 모두 적용하여 `Placeholder` 스토리를 구현할 것.
+구현 후 결과를 체크리스트로 반환할 것.
+
+==============================================
+
+조건-커서룰)
+- 아래 커서룰을 적용하고, 작업 종료 시 적용 결과를 체크리스트로 반환할 것.
+  - @01-common.mdc
+
+==============================================
+
+조건-파일경로)
+- 참고 TSX: `src/commons/components/input/placeholder/index.tsx`
+- 참고 CSS: `src/commons/components/input/placeholder/styles.module.css`
+- 구현 STORIES: `src/commons/components/input/placeholder/index.stories.tsx`
+- 스토리 아이콘 에셋(Figma node 139-2603, 좌·우 동일 `icon_placeholder`): `public/storybook-assets/input-placeholder/figma-icon-left.svg`
+
+==============================================
+
+핵심요구사항)
+1) 기본 설정
+- Storybook CSF 형식으로 작성할 것
+- `title`, `component`, `tags`, `args`, `argTypes`, `parameters.layout`를 포함할 것
+
+2) 컨트롤 항목
+- 아래 항목은 컨트롤 가능해야 함
+  - `placeholder` (text)
+  - `value` (text)
+  - `state` (`default | hover | focus | filled | error | disabled`)
+  - `variant` (`primary | secondary`)
+  - `disabled` (boolean)
+  - `showLeftIcon` (boolean)
+  - `showRightIcon` (boolean)
+- `showLeftIcon`, `showRightIcon`은 값에 따라 실제 `leftIcon`, `rightIcon` Props에 위 Figma export SVG(`<img src="/storybook-assets/...">`)가 전달되도록 `render`를 구현할 것
+- `leftIcon`, `rightIcon`은 controls 테이블에서 숨길 것(`table.disable`)
+
+3) 필수 스토리 구성
+- `Playground`
+- `FullWidth` (컨테이너 너비를 넓혀 필드 `width: 100%` 동작 확인)
+- `Variants` (`primary` / `secondary` 한 화면 비교, 동일 `state`)
+- `States` (`state` 전 구간을 한 화면에서 비교. 컴포넌트는 size variant 없음)
+- `Filled` (`state === 'filled'`일 때 `value ?? placeholder`가 input에 보이는지 확인)
+- `Disabled` (`disabled` prop 또는 `state === 'disabled'`로 비활성 표현 확인)
+
+4) 의도 고정
+- 스토리 설명(description) 또는 주석으로 아래를 명시할 것
+  - `state`는 CSS 클래스 기반 시각 프리뷰용(실제 `:hover`가 아닌 prop으로 고정)
+  - `disabled === true`이면 `state`와 무관하게 비활성 처리됨
+  - `filled`일 때만 입력값 영역에 문자열이 채워짐
+- 스토리만 봐도 variant / state / 아이콘 토글 / filled·disabled를 검증할 수 있어야 함
+
+체크리스트(출력 포맷)
+- [ ] `src/commons/components/input/placeholder/index.stories.tsx`에 스토리가 구현됨
+- [ ] 필수 스토리(Playground/FullWidth/Variants/States/Filled/Disabled)가 모두 있음
+- [ ] `showLeftIcon`, `showRightIcon` 불린 토글이 컨트롤에 있음
+- [ ] `leftIcon`, `rightIcon`은 Figma SVG 샘플로 연결되고 controls에서 숨김 처리됨
+- [ ] `state`·`variant`·`filled`·`disabled` 의도가 스토리/설명에서 확인 가능함

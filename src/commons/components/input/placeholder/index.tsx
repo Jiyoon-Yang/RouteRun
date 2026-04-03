@@ -1,72 +1,73 @@
-import { InputHTMLAttributes } from 'react';
-
 import styles from './styles.module.css';
 
-export type InputPlaceholderState =
-  | 'default'
-  | 'hover'
-  | 'filled'
-  | 'active'
-  | 'error'
-  | 'disabled';
+export { FieldLucideIcon, FIELD_LUCIDE_ICON_SIZE, FIELD_LUCIDE_STROKE_WIDTH } from '../../../icons';
+export type { FieldLucideIconProps } from '../../../icons';
 
-export interface InputPlaceholderProps extends Omit<
-  InputHTMLAttributes<HTMLInputElement>,
-  'size' | 'disabled'
-> {
-  state?: InputPlaceholderState;
-  disabled?: boolean;
-  showLeftIcon?: boolean;
-  showRightIcon?: boolean;
+export type PlaceholderState = 'default' | 'hover' | 'focus' | 'filled' | 'error' | 'disabled';
+export type PlaceholderVariant = 'primary' | 'secondary';
+
+export interface PlaceholderProps {
+  // placeholder (`state === 'filled'`이면 value로 표시, placeholder 문구는 숨김)
+  placeholder: string;
+  // `state === 'filled'`일 때 input value (없으면 placeholder 문자열 사용)
+  value?: string;
+  state: PlaceholderState; // 시각 상태
+  variant: PlaceholderVariant; // primary | secondary 스타일 축
+  showLeftIcon?: boolean; // 좌측 아이콘 노출 (기본 true)
+  showRightIcon?: boolean; // 우측 아이콘 노출 (기본 true)
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  disabled?: boolean; // true면 disabled 스타일·동작
 }
 
-function FieldIcon() {
-  return (
-    <span className={styles.iconSlot} aria-hidden="true">
-      <span className={styles.icon}>
-        <svg viewBox="0 0 20 20" focusable="false">
-          <path
-            d="M8 4H4v4M12 4h4v4M8 16H4v-4M12 16h4v-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
-    </span>
-  );
-}
-
-const STATE_CLASS_MAP: Record<InputPlaceholderState, string> = {
-  default: styles.stateDefault,
+const STATE_CLASS: Record<PlaceholderState, string | undefined> = {
+  default: undefined,
   hover: styles.stateHover,
+  focus: styles.stateFocus,
   filled: styles.stateFilled,
-  active: styles.stateActive,
   error: styles.stateError,
   disabled: styles.stateDisabled,
 };
 
-function cn(...classNames: Array<string | false | null | undefined>) {
-  return classNames.filter(Boolean).join(' ');
-}
-
-export default function InputPlaceholder({
-  state = 'default',
-  disabled = false,
+export const Placeholder = ({
+  placeholder,
+  value,
+  state,
+  variant,
   showLeftIcon = true,
   showRightIcon = true,
-  className,
-  ...rest
-}: InputPlaceholderProps) {
-  const isDisabled = state === 'disabled' || disabled;
+  leftIcon,
+  rightIcon,
+  disabled,
+}: PlaceholderProps) => {
+  const effectiveState: PlaceholderState = disabled ? 'disabled' : state;
+
+  const filledValue = value ?? placeholder;
+
+  const inputValue = effectiveState === 'filled' ? filledValue : '';
+
+  const stateClass = STATE_CLASS[effectiveState];
+  const rootClass = [styles.base, styles[variant], stateClass].filter(Boolean).join(' ');
 
   return (
-    <div className={cn(styles.field, STATE_CLASS_MAP[state], className)}>
-      {showLeftIcon ? <FieldIcon /> : null}
-      <input {...rest} disabled={isDisabled} aria-disabled={isDisabled} className={styles.input} />
-      {showRightIcon ? <FieldIcon /> : null}
+    <div
+      className={rootClass}
+      data-variant={variant}
+      data-state={effectiveState}
+      aria-invalid={effectiveState === 'error'}
+    >
+      {showLeftIcon && leftIcon && <span className={styles.iconLeft}>{leftIcon}</span>}
+
+      <input
+        className={styles.input}
+        placeholder={placeholder}
+        value={inputValue}
+        disabled={effectiveState === 'disabled'}
+        readOnly
+        aria-label={placeholder}
+      />
+
+      {showRightIcon && rightIcon && <span className={styles.iconRight}>{rightIcon}</span>}
     </div>
   );
-}
+};

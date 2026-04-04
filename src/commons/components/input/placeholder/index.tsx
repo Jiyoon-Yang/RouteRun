@@ -1,7 +1,5 @@
 import type { ChangeEventHandler } from 'react';
 
-import figmaFocusTrailingUrl from '@/assets/input-placeholder/figma-focus-trailing.svg';
-
 import styles from './styles.module.css';
 
 export { FieldLucideIcon, FIELD_LUCIDE_ICON_SIZE, FIELD_LUCIDE_STROKE_WIDTH } from '../../../icons';
@@ -19,9 +17,6 @@ export type PlaceholderState =
   | 'disabled';
 export type PlaceholderVariant = 'primary' | 'secondary';
 
-/** Figma node 384:1070 — 포커스 시에만 노출(번들된 `@/assets` SVG URL) */
-export const PLACEHOLDER_FOCUS_TRAILING_ICON_SRC = figmaFocusTrailingUrl;
-
 export interface PlaceholderProps {
   placeholder: string;
   value?: string;
@@ -31,10 +26,6 @@ export interface PlaceholderProps {
   showRightIcon?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
-  /** `false`면 포커스 트레일(클리어) 아이콘 슬롯을 렌더하지 않습니다. */
-  showFocusTrailingIcon?: boolean;
-  /** 포커스 트레일 아이콘 교체. 미지정 시 Figma 384:1070 SVG */
-  focusTrailingIcon?: React.ReactNode;
   disabled?: boolean;
   readOnly?: boolean;
   onChange?: ChangeEventHandler<HTMLInputElement>;
@@ -58,8 +49,6 @@ export const Placeholder = ({
   variant,
   showLeftIcon = true,
   showRightIcon = true,
-  showFocusTrailingIcon = true,
-  focusTrailingIcon,
   leftIcon,
   rightIcon,
   disabled,
@@ -108,21 +97,6 @@ export const Placeholder = ({
         onChange={onChange}
         aria-label={placeholder}
       />
-
-      {showFocusTrailingIcon && (
-        <span className={styles.focusTrailing}>
-          {focusTrailingIcon ?? (
-            // eslint-disable-next-line @next/next/no-img-element -- Figma 384:1070 export
-            <img
-              src={PLACEHOLDER_FOCUS_TRAILING_ICON_SRC}
-              alt=""
-              width={20}
-              height={20}
-              draggable={false}
-            />
-          )}
-        </span>
-      )}
 
       {showRightIcon && rightIcon && <span className={styles.iconRight}>{rightIcon}</span>}
     </div>

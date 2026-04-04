@@ -16,7 +16,6 @@
 입력-디자인소스)
 - 활용 MCP: Figma Desktop MCP
 - 참고할 공통컴포넌트 노드 url:https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2603&m=dev
-- 포커스 트레일 아이콘(Figma 384:1070):https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=384-1070&m=dev → `@/assets/input-placeholder/figma-focus-trailing.svg` (import 시 번들 URL)
 
 산출물-파일경로)
 - TSX: `src/commons/components/input/placeholder/index.tsx`
@@ -26,8 +25,8 @@
 ==============================================
 
 핵심요구사항)
-- API: `placeholder`, `value?`, `state`, `variant`, `showLeftIcon?`, `showRightIcon?`, `showFocusTrailingIcon?`, `focusTrailingIcon?`, `leftIcon?`, `rightIcon?`, `disabled?`, `readOnly?`, `onChange?`.
-- `showLeftIcon` / `showRightIcon` / `showFocusTrailingIcon` 기본값은 true.
+- API: `placeholder`, `value?`, `state`, `variant`, `showLeftIcon?`, `showRightIcon?`, `leftIcon?`, `rightIcon?`, `disabled?`, `readOnly?`, `onChange?`.
+- `showLeftIcon` / `showRightIcon` 기본값은 true.
 - `state`: `default | hover | focus | focus_none | filled | error | success | disabled` — **focus_none**은 빈 값+포커스(placeholder 숨김), **focus**는 시안상 placeholder 유지, **success**는 그린 보더.
 - `variant`: `primary | secondary`.
 - `disabled === true`이면 항상 `disabled` 상태로 처리한다.
@@ -38,7 +37,7 @@
 - input은 `readOnly`(프리뷰·스토리북용).
 - 색·타이포는 `src/app/globals.css` 토큰(`var(--color-*)`, `--typography-body-1-ko-desktop-*`)으로 맞춘다.
 - 필드 높이·패딩·라운드는 단일 스케일이다(size variant 없음).
-- `styles.module.css`: variant 섹션 **default → filled → :hover → :focus-within(focus 보더) → success → error → disabled** 순. `:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess)` 등. 포커스 트레일 `.focusTrailing`은 `:focus-within` 또는 `.stateFocus`로 표시, `stateFilled`·error·success·disabled·readOnly에서는 숨김.
+- `styles.module.css`: variant 섹션 **default → filled → :hover → :focus-within(focus 보더) → success → error → disabled** 순. `:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess)` 등.
 - 아이콘은 팀에서 사용하는 아이콘 라이브러리를 우선 사용한다. 필드 슬롯에는 `FieldLucideIcon`(`src/commons/icons/`)으로 크기·선 두께를 통일할 것.
 - `disabled`일 때 input `disabled` + 포인터 차단 등 비활성 표현이 분명하다.
 

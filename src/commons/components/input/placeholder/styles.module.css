@@ -1,7 +1,6 @@
 /* Placeholder 필드 — Figma 139:2603 PartTextPlaceholder
    - hover(시각): 값 없을 때만 기본 hover. 값 있으면 filled와 동일 + 래퍼/입력에 pointer(포커스 중엔 text)
-   - 클릭해 수정 중이면 :focus-within → focus 보더(다크)
-   - 트레일: 포커스 시 값 유무와 무관하게 표시(error/success/disabled 제외) */
+   - 클릭해 수정 중이면 :focus-within → focus 보더(다크) */
 
 /* 공통 레이아웃 */
 .base {
@@ -47,27 +46,6 @@
   padding: 3px;
   width: 20px;
   height: 20px;
-}
-
-/* Figma 384:1070 — focus 시에만 표시(아래 display 규칙) */
-.focusTrailing {
-  display: none;
-  box-sizing: border-box;
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.focusTrailing img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
 }
 
 .iconLeft > svg,
@@ -319,19 +297,6 @@
   color: var(--color-light_black-200);
 }
 
-/* focus 트레일: 포커스 시 수정·빈 값 모두 (성공·에러·비활성 제외) */
-.base.primary:focus-within:not(.stateDisabled):not(.stateError):not(.stateSuccess) .focusTrailing,
-.base.primary.stateFocus:not(.stateSuccess):not(.stateError):not(.stateDisabled) .focusTrailing,
-.base.primary.stateFocusNone:not(.stateDisabled):not(.stateError):not(.stateSuccess) .focusTrailing {
-  display: inline-flex;
-}
-
-.base.secondary:focus-within:not(.stateDisabled):not(.stateError):not(.stateSuccess) .focusTrailing,
-.base.secondary.stateFocus:not(.stateSuccess):not(.stateError):not(.stateDisabled) .focusTrailing,
-.base.secondary.stateFocusNone:not(.stateDisabled):not(.stateError):not(.stateSuccess) .focusTrailing {
-  display: inline-flex;
-}
-
 /* ----- Secondary ----- */
 .base.secondary {
   background: var(--color-white_grey-200);
@@ -559,6 +524,3 @@
   color: var(--color-light_black-200);
 }
 
-.base[data-readonly='true'] .focusTrailing {
-  display: none !important;
-}

@@ -43,7 +43,6 @@ export const Button = ({
     ${styles[size]}
     ${styles[color]}
     ${className ?? ''}
-    ${disabled ? styles.disabled : ''}
   `;
 
   return (

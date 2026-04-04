@@ -44,6 +44,15 @@ export const TYPOGRAPHY_TOKENS = {
     letterSpacing: '0px',
   },
 
+  // Body-lg Regular (Figma — 입력 필드 등; globals: --Body-lg-*, --typography-body-lg-ko-desktop-*)
+  'body-lg-ko-desktop': {
+    fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
+    fontSize: '16px',
+    lineHeight: '24px',
+    fontWeight: 400,
+    letterSpacing: '-0.2px',
+  },
+
   // Body
   'body-1-ko-desktop': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
@@ -111,6 +120,13 @@ export const TYPOGRAPHY_TOKENS = {
     lineHeight: '22px',
     fontWeight: 400,
     letterSpacing: '0px',
+  },
+  'body-lg-ko-mobile': {
+    fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',
+    fontSize: '16px',
+    lineHeight: '24px',
+    fontWeight: 400,
+    letterSpacing: '-0.2px',
   },
   'body-1-ko-mobile': {
     fontFamily: '"Pretendard", Arial, Helvetica, sans-serif',

@@ -139,6 +139,18 @@
   --typography-heading-3-ko-desktop-regular-font-weight: 400;
   --typography-heading-3-ko-desktop-regular-letter-spacing: 0px;
 
+  /* Body-lg (Figma — Body-lg Regular, 입력 필드 등) */
+  --Body-lg-font-size: 16px;
+  --Body-lg-line-height: 24px;
+  --Body-lg-letter-spacing: -0.2px;
+
+  --typography-body-lg-ko-desktop-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-body-lg-ko-desktop-font-size: var(--Body-lg-font-size);
+  --typography-body-lg-ko-desktop-line-height: var(--Body-lg-line-height);
+  --typography-body-lg-ko-desktop-font-weight: 400;
+  --typography-body-lg-ko-desktop-letter-spacing: var(--Body-lg-letter-spacing);
+  --typography-body-lg-ko-desktop-font-style: normal;
+
   --typography-body-1-ko-desktop-font-family: "Pretendard", Arial, Helvetica, sans-serif;
   --typography-body-1-ko-desktop-font-size: 16px;
   --typography-body-1-ko-desktop-line-height: 24px;
@@ -193,6 +205,13 @@
   --typography-heading-3-ko-mobile-regular-line-height: 22px;
   --typography-heading-3-ko-mobile-regular-font-weight: 400;
   --typography-heading-3-ko-mobile-regular-letter-spacing: 0px;
+
+  --typography-body-lg-ko-mobile-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-body-lg-ko-mobile-font-size: var(--Body-lg-font-size);
+  --typography-body-lg-ko-mobile-line-height: var(--Body-lg-line-height);
+  --typography-body-lg-ko-mobile-font-weight: 400;
+  --typography-body-lg-ko-mobile-letter-spacing: var(--Body-lg-letter-spacing);
+  --typography-body-lg-ko-mobile-font-style: normal;
 
   --typography-body-1-ko-mobile-font-family: "Pretendard", Arial, Helvetica, sans-serif;
   --typography-body-1-ko-mobile-font-size: 16px;

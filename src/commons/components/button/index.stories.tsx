@@ -16,6 +16,88 @@ const colorOptions: ButtonProps['color'][] = ['blue', 'red', 'dark'];
 const sampleLeftIcon = <span aria-hidden>◀</span>;
 const sampleRightIcon = <span aria-hidden>▶</span>;
 
+const getSimulatedStateStyle = (
+  variant: ButtonProps['variant'],
+  color: ButtonProps['color'],
+  state: 'hover' | 'active',
+): React.CSSProperties => {
+  const isActive = state === 'active';
+
+  if (variant === 'fill') {
+    const fillStateMap: Record<ButtonProps['color'], { hover: string; active: string }> = {
+      blue: {
+        hover: 'var(--color-blue-600)',
+        active: 'var(--color-blue-700)',
+      },
+      red: {
+        hover: 'var(--color-red-600)',
+        active: 'var(--color-red-700)',
+      },
+      dark: {
+        hover: 'var(--color-dark_grey-900)',
+        active: 'var(--color-black-900)',
+      },
+    };
+
+    return {
+      background: isActive ? fillStateMap[color].active : fillStateMap[color].hover,
+    };
+  }
+
+  const outlineStateMap: Record<
+    ButtonProps['color'],
+    {
+      hover: { background: string; borderColor: string; color: string };
+      active: { background: string; borderColor: string; color: string };
+    }
+  > = {
+    blue: {
+      hover: {
+        background: 'var(--color-blue-50)',
+        borderColor: 'var(--color-blue-300)',
+        color: 'var(--color-blue-500)',
+      },
+      active: {
+        background: 'var(--color-blue-100)',
+        borderColor: 'var(--color-blue-600)',
+        color: 'var(--color-blue-600)',
+      },
+    },
+    red: {
+      hover: {
+        background: 'var(--color-red-50)',
+        borderColor: 'var(--color-red-300)',
+        color: 'var(--color-red-500)',
+      },
+      active: {
+        background: 'var(--color-red-100)',
+        borderColor: 'var(--color-red-600)',
+        color: 'var(--color-red-600)',
+      },
+    },
+    dark: {
+      hover: {
+        background: 'var(--color-dark_grey-50)',
+        borderColor: 'var(--color-black-300)',
+        color: 'var(--color-black-400)',
+      },
+      active: {
+        background: 'var(--color-dark_grey-100)',
+        borderColor: 'var(--color-black-500)',
+        color: 'var(--color-black-900)',
+      },
+    },
+  };
+
+  const target = isActive ? outlineStateMap[color].active : outlineStateMap[color].hover;
+
+  return {
+    background: target.background,
+    borderColor: target.borderColor,
+    color: target.color,
+  };
+};
+
 const withIconToggle = (args: ButtonStoryArgs) => {
   const { showLeftIcon, showRightIcon, ...buttonArgs } = args;
   return (
@@ -192,6 +274,7 @@ export const States: Story = {
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <Button
           {...args}
+          style={{ ...args.style, pointerEvents: 'none' }}
           leftIcon={args.showLeftIcon ? sampleLeftIcon : undefined}
           rightIcon={args.showRightIcon ? sampleRightIcon : undefined}
         >
@@ -199,6 +282,11 @@ export const States: Story = {
         </Button>
         <Button
           {...args}
+          style={{
+            ...args.style,
+            ...getSimulatedStateStyle(args.variant, args.color, 'hover'),
+            pointerEvents: 'none',
+          }}
           leftIcon={args.showLeftIcon ? sampleLeftIcon : undefined}
           rightIcon={args.showRightIcon ? sampleRightIcon : undefined}
         >
@@ -206,6 +294,11 @@ export const States: Story = {
         </Button>
         <Button
           {...args}
+          style={{
+            ...args.style,
+            ...getSimulatedStateStyle(args.variant, args.color, 'active'),
+            pointerEvents: 'none',
+          }}
           leftIcon={args.showLeftIcon ? sampleLeftIcon : undefined}
           rightIcon={args.showRightIcon ? sampleRightIcon : undefined}
         >

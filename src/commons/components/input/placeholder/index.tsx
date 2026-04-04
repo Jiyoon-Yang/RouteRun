@@ -1,72 +1,130 @@
-import { InputHTMLAttributes } from 'react';
+import type { ChangeEventHandler } from 'react';
+
+import figmaFocusTrailingUrl from '@/assets/input-placeholder/figma-focus-trailing.svg';
 
 import styles from './styles.module.css';
 
-export type InputPlaceholderState =
+export { FieldLucideIcon, FIELD_LUCIDE_ICON_SIZE, FIELD_LUCIDE_STROKE_WIDTH } from '../../../icons';
+export type { FieldLucideIconProps } from '../../../icons';
+
+/** Figma PartTextPlaceholder — `focus_none`은 빈 값+포커스(placeholder 숨김, 캐럿만), `focus`는 포커스+placeholder 노출 시안 */
+export type PlaceholderState =
   | 'default'
   | 'hover'
+  | 'focus'
+  | 'focus_none'
   | 'filled'
-  | 'active'
   | 'error'
+  | 'success'
   | 'disabled';
+export type PlaceholderVariant = 'primary' | 'secondary';
 
-export interface InputPlaceholderProps extends Omit<
-  InputHTMLAttributes<HTMLInputElement>,
-  'size' | 'disabled'
-> {
-  state?: InputPlaceholderState;
-  disabled?: boolean;
+/** Figma node 384:1070 — 포커스 시에만 노출(번들된 `@/assets` SVG URL) */
+export const PLACEHOLDER_FOCUS_TRAILING_ICON_SRC = figmaFocusTrailingUrl;
+
+export interface PlaceholderProps {
+  placeholder: string;
+  value?: string;
+  state: PlaceholderState;
+  variant: PlaceholderVariant;
   showLeftIcon?: boolean;
   showRightIcon?: boolean;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  /** `false`면 포커스 트레일(클리어) 아이콘 슬롯을 렌더하지 않습니다. */
+  showFocusTrailingIcon?: boolean;
+  /** 포커스 트레일 아이콘 교체. 미지정 시 Figma 384:1070 SVG */
+  focusTrailingIcon?: React.ReactNode;
+  disabled?: boolean;
+  readOnly?: boolean;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
 }
 
-function FieldIcon() {
-  return (
-    <span className={styles.iconSlot} aria-hidden="true">
-      <span className={styles.icon}>
-        <svg viewBox="0 0 20 20" focusable="false">
-          <path
-            d="M8 4H4v4M12 4h4v4M8 16H4v-4M12 16h4v-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
-    </span>
-  );
-}
-
-const STATE_CLASS_MAP: Record<InputPlaceholderState, string> = {
-  default: styles.stateDefault,
+const STATE_CLASS: Record<PlaceholderState, string | undefined> = {
+  default: undefined,
   hover: styles.stateHover,
+  focus: styles.stateFocus,
+  focus_none: styles.stateFocusNone,
   filled: styles.stateFilled,
-  active: styles.stateActive,
   error: styles.stateError,
+  success: styles.stateSuccess,
   disabled: styles.stateDisabled,
 };
 
-function cn(...classNames: Array<string | false | null | undefined>) {
-  return classNames.filter(Boolean).join(' ');
-}
-
-export default function InputPlaceholder({
-  state = 'default',
-  disabled = false,
+export const Placeholder = ({
+  placeholder,
+  value = '',
+  state,
+  variant,
   showLeftIcon = true,
   showRightIcon = true,
-  className,
-  ...rest
-}: InputPlaceholderProps) {
-  const isDisabled = state === 'disabled' || disabled;
+  showFocusTrailingIcon = true,
+  focusTrailingIcon,
+  leftIcon,
+  rightIcon,
+  disabled,
+  readOnly = false,
+  onChange,
+}: PlaceholderProps) => {
+  const effectiveState: PlaceholderState = disabled ? 'disabled' : state;
+
+  const filledValue = value !== '' ? value : placeholder;
+  const hasContent = value !== '';
+
+  const inputValue =
+    effectiveState === 'filled' || effectiveState === 'success'
+      ? filledValue
+      : hasContent
+        ? value
+        : '';
+
+  const hasVisibleInputValue = inputValue !== '';
+
+  const filledFromDefaultInput = effectiveState === 'default' && hasContent;
+
+  const stateClass = STATE_CLASS[effectiveState];
+  const derivedFilledClass = filledFromDefaultInput ? styles.stateFilled : undefined;
+  const rootClass = [styles.base, styles[variant], stateClass, derivedFilledClass]
+    .filter(Boolean)
+    .join(' ');
 
   return (
-    <div className={cn(styles.field, STATE_CLASS_MAP[state], className)}>
-      {showLeftIcon ? <FieldIcon /> : null}
-      <input {...rest} disabled={isDisabled} aria-disabled={isDisabled} className={styles.input} />
-      {showRightIcon ? <FieldIcon /> : null}
+    <div
+      className={rootClass}
+      data-variant={variant}
+      data-state={effectiveState}
+      data-readonly={readOnly ? 'true' : 'false'}
+      data-has-input-value={hasVisibleInputValue ? 'true' : 'false'}
+      aria-invalid={effectiveState === 'error'}
+    >
+      {showLeftIcon && leftIcon && <span className={styles.iconLeft}>{leftIcon}</span>}
+
+      <input
+        className={styles.input}
+        placeholder={placeholder}
+        value={inputValue}
+        disabled={effectiveState === 'disabled'}
+        readOnly={readOnly}
+        onChange={onChange}
+        aria-label={placeholder}
+      />
+
+      {showFocusTrailingIcon && (
+        <span className={styles.focusTrailing}>
+          {focusTrailingIcon ?? (
+            // eslint-disable-next-line @next/next/no-img-element -- Figma 384:1070 export
+            <img
+              src={PLACEHOLDER_FOCUS_TRAILING_ICON_SRC}
+              alt=""
+              width={20}
+              height={20}
+              draggable={false}
+            />
+          )}
+        </span>
+      )}
+
+      {showRightIcon && rightIcon && <span className={styles.iconRight}>{rightIcon}</span>}
     </div>
   );
-}
+};

@@ -1,6 +1,7 @@
-/* Placeholder 필드 — Figma 139:2603
-   - 버튼과 같이: 한 덩어리(.base.primary) 안에서 default → hover → focus → … 순으로 읽기
-   - :hover / :focus-within = 실제 마우스·포커스, .stateHover / .stateFocus = 스토리북에서 동일 스타일 고정용(같은 규칙에 쉼표로 묶음) */
+/* Placeholder 필드 — Figma 139:2603 PartTextPlaceholder
+   - hover(시각): 값 없을 때만 기본 hover. 값 있으면 filled와 동일 + 래퍼/입력에 pointer(포커스 중엔 text)
+   - 클릭해 수정 중이면 :focus-within → focus 보더(다크)
+   - 트레일: 포커스 시 값 유무와 무관하게 표시(error/success/disabled 제외) */
 
 /* 공통 레이아웃 */
 .base {
@@ -28,11 +29,13 @@
 
   padding: 0;
 
-  font-family: var(--typography-body-1-ko-desktop-font-family);
-  font-size: var(--typography-body-1-ko-desktop-font-size);
-  line-height: var(--typography-body-1-ko-desktop-line-height);
-  font-weight: 400;
-  letter-spacing: -0.2px;
+  font-family: var(--typography-body-lg-ko-desktop-font-family);
+  font-size: var(--typography-body-lg-ko-desktop-font-size);
+  line-height: var(--typography-body-lg-ko-desktop-line-height);
+  font-weight: var(--typography-body-lg-ko-desktop-font-weight);
+  font-style: var(--typography-body-lg-ko-desktop-font-style);
+  letter-spacing: var(--typography-body-lg-ko-desktop-letter-spacing);
+  cursor: text;
 }
 
 .iconLeft,
@@ -44,6 +47,27 @@
   padding: 3px;
   width: 20px;
   height: 20px;
+}
+
+/* Figma 384:1070 — focus 시에만 표시(아래 display 규칙) */
+.focusTrailing {
+  display: none;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.focusTrailing img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .iconLeft > svg,
@@ -62,18 +86,16 @@
   flex-shrink: 0;
 }
 
-/* Primary */
+/* ----- Primary ----- */
 .base.primary {
-  background: var(--color-grey-50);
+  background: transparent;
   border-color: var(--color-grey-200);
 }
 
-.base.primary .input {
-  color: var(--color-grey-600);
-}
-
+/* text/tertiary — default·hover */
+.base.primary .input,
 .base.primary .input::placeholder {
-  color: var(--color-grey-600);
+  color: var(--color-light_black-200);
   opacity: 1;
 }
 
@@ -83,7 +105,7 @@
 }
 
 .base.primary.stateFilled {
-  background: var(--color-white-500);
+  background: transparent;
   border-color: var(--color-grey-200);
 }
 
@@ -97,54 +119,182 @@
   color: var(--color-dark_grey-500);
 }
 
-.base.primary:hover:not(.stateError):not(.stateDisabled),
-.base.primary.stateHover {
+/* hover — 값 없음(:placeholder-shown)일 때만. stateFocus는 시안 고정(마우스 hover 미적용). stateHover 시안도 동일 조건 */
+.base.primary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:placeholder-shown),
+.base.primary.stateHover:has(.input:placeholder-shown) {
   background: var(--color-white-500);
-  border-color: var(--color-grey-600);
+  border-color: var(--color-light_black-200);
 }
 
-.base.primary:hover:not(.stateError):not(.stateDisabled) .input,
-.base.primary:hover:not(.stateError):not(.stateDisabled) .input::placeholder,
-.base.primary.stateHover .input,
-.base.primary.stateHover .input::placeholder {
-  color: var(--color-grey-600);
+.base.primary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:placeholder-shown)
+  .input,
+.base.primary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:placeholder-shown)
+  .input::placeholder,
+.base.primary.stateHover:has(.input:placeholder-shown) .input,
+.base.primary.stateHover:has(.input:placeholder-shown) .input::placeholder {
+  color: var(--color-light_black-200);
 }
 
-.base.primary:hover:not(.stateError):not(.stateDisabled) .iconLeft,
-.base.primary:hover:not(.stateError):not(.stateDisabled) .iconRight,
-.base.primary.stateHover .iconLeft,
-.base.primary.stateHover .iconRight {
+.base.primary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:placeholder-shown)
+  .iconLeft,
+.base.primary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:placeholder-shown)
+  .iconRight,
+.base.primary.stateHover:has(.input:placeholder-shown) .iconLeft,
+.base.primary.stateHover:has(.input:placeholder-shown) .iconRight {
   color: var(--color-dark_grey-500);
 }
 
-.base.primary:focus-within:not(.stateError):not(.stateDisabled),
-.base.primary.stateFocus {
-  background: var(--color-white-500);
-  border-color: var(--color-green-500);
+/* 값 있음 + hover: filled와 동일, 포인터(포커스 안 잡혔을 때만) */
+.base.primary.stateFilled:hover:not(.stateDisabled):not(.stateError),
+.base.primary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:not(:placeholder-shown)),
+.base.primary.stateHover:has(.input:not(:placeholder-shown)) {
+  background: transparent;
+  border-color: var(--color-grey-200);
+  cursor: pointer;
 }
 
-.base.primary:focus-within:not(.stateError):not(.stateDisabled) .input,
-.base.primary:focus-within:not(.stateError):not(.stateDisabled) .input::placeholder,
+.base.primary.stateFilled:hover:not(.stateDisabled):not(.stateError):not(:focus-within) .input,
+.base.primary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):has(
+    .input:not(:placeholder-shown)
+  ):not(:focus-within)
+  .input,
+.base.primary.stateHover:has(.input:not(:placeholder-shown)):not(:focus-within) .input {
+  cursor: pointer;
+}
+
+.base.primary.stateFilled:hover:not(.stateDisabled):not(.stateError) .input,
+.base.primary.stateFilled:hover:not(.stateDisabled):not(.stateError) .input::placeholder,
+.base.primary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:not(:placeholder-shown))
+  .input,
+.base.primary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:not(:placeholder-shown))
+  .input::placeholder,
+.base.primary.stateHover:has(.input:not(:placeholder-shown)) .input,
+.base.primary.stateHover:has(.input:not(:placeholder-shown)) .input::placeholder {
+  color: var(--color-light_black-900);
+}
+
+.base.primary.stateFilled:hover:not(.stateDisabled):not(.stateError) .iconLeft,
+.base.primary.stateFilled:hover:not(.stateDisabled):not(.stateError) .iconRight,
+.base.primary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:not(:placeholder-shown))
+  .iconLeft,
+.base.primary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:not(:placeholder-shown))
+  .iconRight,
+.base.primary.stateHover:has(.input:not(:placeholder-shown)) .iconLeft,
+.base.primary.stateHover:has(.input:not(:placeholder-shown)) .iconRight {
+  color: var(--color-dark_grey-500);
+}
+
+/* focus · focus_none — inverse-bold 테두리(secondary는 둘 다 배경 유지). 수정 중=I-beam */
+.base.primary:focus-within:not(.stateError):not(.stateDisabled):not(.stateSuccess),
+.base.primary.stateFocus,
+.base.primary.stateFocusNone {
+  background: transparent;
+  border-color: var(--color-light_black-700);
+  cursor: text;
+}
+
+.base.primary:focus-within:not(.stateError):not(.stateDisabled):not(.stateSuccess) .input,
 .base.primary.stateFocus .input,
+.base.primary.stateFocusNone .input {
+  color: var(--color-light_black-900);
+  cursor: text;
+}
+
+.base.primary:focus-within:not(.stateError):not(.stateDisabled):not(.stateSuccess) .input::placeholder,
 .base.primary.stateFocus .input::placeholder {
   color: var(--color-light_black-900);
 }
 
-.base.primary:focus-within:not(.stateError):not(.stateDisabled) .iconLeft,
-.base.primary:focus-within:not(.stateError):not(.stateDisabled) .iconRight,
+.base.primary.stateFocusNone .input::placeholder {
+  opacity: 0;
+  color: transparent;
+}
+
+.base.primary:not(.stateFocus) .input:placeholder-shown:focus {
+  caret-color: var(--color-light_black-900);
+}
+
+.base.primary:not(.stateFocus) .input:placeholder-shown:focus::placeholder {
+  opacity: 0;
+  color: transparent;
+}
+
+.base.primary:focus-within:not(.stateError):not(.stateDisabled):not(.stateSuccess) .iconLeft,
+.base.primary:focus-within:not(.stateError):not(.stateDisabled):not(.stateSuccess) .iconRight,
 .base.primary.stateFocus .iconLeft,
-.base.primary.stateFocus .iconRight {
+.base.primary.stateFocus .iconRight,
+.base.primary.stateFocusNone .iconLeft,
+.base.primary.stateFocusNone .iconRight {
+  color: var(--color-light_black-900);
+}
+
+/* success — green 테두리(예전 primary focus 색) */
+.base.primary.stateSuccess {
+  background: transparent;
+  border-color: var(--color-green-500);
+}
+
+.base.primary.stateSuccess .input,
+.base.primary.stateSuccess .input::placeholder {
+  color: var(--color-light_black-900);
+}
+
+.base.primary.stateSuccess .iconLeft,
+.base.primary.stateSuccess .iconRight {
   color: var(--color-light_black-900);
 }
 
 .base.primary.stateError {
-  background: var(--color-grey-50);
+  background: transparent;
   border-color: var(--color-red-600);
 }
 
+/* filled·error — text/primary #101828 근사 */
 .base.primary.stateError .input,
 .base.primary.stateError .input::placeholder {
-  color: var(--color-grey-600);
+  color: var(--color-light_black-900);
 }
 
 .base.primary.stateError .iconLeft,
@@ -161,26 +311,36 @@
 
 .base.primary.stateDisabled .input,
 .base.primary.stateDisabled .input::placeholder {
-  color: var(--color-grey-600);
+  color: var(--color-light_black-200);
 }
 
 .base.primary.stateDisabled .iconLeft,
 .base.primary.stateDisabled .iconRight {
-  color: var(--color-grey-600);
+  color: var(--color-light_black-200);
 }
 
-/* Secondary */
+/* focus 트레일: 포커스 시 수정·빈 값 모두 (성공·에러·비활성 제외) */
+.base.primary:focus-within:not(.stateDisabled):not(.stateError):not(.stateSuccess) .focusTrailing,
+.base.primary.stateFocus:not(.stateSuccess):not(.stateError):not(.stateDisabled) .focusTrailing,
+.base.primary.stateFocusNone:not(.stateDisabled):not(.stateError):not(.stateSuccess) .focusTrailing {
+  display: inline-flex;
+}
+
+.base.secondary:focus-within:not(.stateDisabled):not(.stateError):not(.stateSuccess) .focusTrailing,
+.base.secondary.stateFocus:not(.stateSuccess):not(.stateError):not(.stateDisabled) .focusTrailing,
+.base.secondary.stateFocusNone:not(.stateDisabled):not(.stateError):not(.stateSuccess) .focusTrailing {
+  display: inline-flex;
+}
+
+/* ----- Secondary ----- */
 .base.secondary {
-  background: var(--color-grey-50);
-  border-color: var(--color-grey-200);
+  background: var(--color-white_grey-200);
+  border-color: transparent;
 }
 
-.base.secondary .input {
-  color: var(--color-grey-600);
-}
-
+.base.secondary .input,
 .base.secondary .input::placeholder {
-  color: var(--color-grey-600);
+  color: var(--color-light_black-200);
   opacity: 1;
 }
 
@@ -190,8 +350,8 @@
 }
 
 .base.secondary.stateFilled {
-  background: var(--color-white-500);
-  border-color: var(--color-grey-200);
+  background: var(--color-white_grey-200);
+  border-color: transparent;
 }
 
 .base.secondary.stateFilled .input,
@@ -204,54 +364,177 @@
   color: var(--color-dark_grey-500);
 }
 
-.base.secondary:hover:not(.stateError):not(.stateDisabled),
-.base.secondary.stateHover {
+.base.secondary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:placeholder-shown),
+.base.secondary.stateHover:has(.input:placeholder-shown) {
   background: var(--color-grey-100);
-  border-color: var(--color-grey-600);
+  border-color: transparent;
 }
 
-.base.secondary:hover:not(.stateError):not(.stateDisabled) .input,
-.base.secondary:hover:not(.stateError):not(.stateDisabled) .input::placeholder,
-.base.secondary.stateHover .input,
-.base.secondary.stateHover .input::placeholder {
-  color: var(--color-grey-600);
+.base.secondary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:placeholder-shown)
+  .input,
+.base.secondary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:placeholder-shown)
+  .input::placeholder,
+.base.secondary.stateHover:has(.input:placeholder-shown) .input,
+.base.secondary.stateHover:has(.input:placeholder-shown) .input::placeholder {
+  color: var(--color-light_black-200);
 }
 
-.base.secondary:hover:not(.stateError):not(.stateDisabled) .iconLeft,
-.base.secondary:hover:not(.stateError):not(.stateDisabled) .iconRight,
-.base.secondary.stateHover .iconLeft,
-.base.secondary.stateHover .iconRight {
+.base.secondary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:placeholder-shown)
+  .iconLeft,
+.base.secondary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:placeholder-shown)
+  .iconRight,
+.base.secondary.stateHover:has(.input:placeholder-shown) .iconLeft,
+.base.secondary.stateHover:has(.input:placeholder-shown) .iconRight {
   color: var(--color-dark_grey-500);
 }
 
-.base.secondary:focus-within:not(.stateError):not(.stateDisabled),
-.base.secondary.stateFocus {
-  background: var(--color-grey-50);
-  border-color: var(--color-light_black-700);
+.base.secondary.stateFilled:hover:not(.stateDisabled):not(.stateError),
+.base.secondary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:not(:placeholder-shown)),
+.base.secondary.stateHover:has(.input:not(:placeholder-shown)) {
+  background: var(--color-white_grey-200);
+  border-color: transparent;
+  cursor: pointer;
 }
 
-.base.secondary:focus-within:not(.stateError):not(.stateDisabled) .input,
-.base.secondary:focus-within:not(.stateError):not(.stateDisabled) .input::placeholder,
+.base.secondary.stateFilled:hover:not(.stateDisabled):not(.stateError):not(:focus-within) .input,
+.base.secondary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):has(
+    .input:not(:placeholder-shown)
+  ):not(:focus-within)
+  .input,
+.base.secondary.stateHover:has(.input:not(:placeholder-shown)):not(:focus-within) .input {
+  cursor: pointer;
+}
+
+.base.secondary.stateFilled:hover:not(.stateDisabled):not(.stateError) .input,
+.base.secondary.stateFilled:hover:not(.stateDisabled):not(.stateError) .input::placeholder,
+.base.secondary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:not(:placeholder-shown))
+  .input,
+.base.secondary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:not(:placeholder-shown))
+  .input::placeholder,
+.base.secondary.stateHover:has(.input:not(:placeholder-shown)) .input,
+.base.secondary.stateHover:has(.input:not(:placeholder-shown)) .input::placeholder {
+  color: var(--color-light_black-900);
+}
+
+.base.secondary.stateFilled:hover:not(.stateDisabled):not(.stateError) .iconLeft,
+.base.secondary.stateFilled:hover:not(.stateDisabled):not(.stateError) .iconRight,
+.base.secondary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:not(:placeholder-shown))
+  .iconLeft,
+.base.secondary:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess):not(.stateFocusNone):not(
+    .stateFocus
+  ):not(
+    .stateFilled
+  ):has(.input:not(:placeholder-shown))
+  .iconRight,
+.base.secondary.stateHover:has(.input:not(:placeholder-shown)) .iconLeft,
+.base.secondary.stateHover:has(.input:not(:placeholder-shown)) .iconRight {
+  color: var(--color-dark_grey-500);
+}
+
+.base.secondary:focus-within:not(.stateError):not(.stateDisabled):not(.stateSuccess),
+.base.secondary.stateFocus,
+.base.secondary.stateFocusNone {
+  background: var(--color-white_grey-200);
+  border-color: var(--color-light_black-700);
+  cursor: text;
+}
+
+.base.secondary:focus-within:not(.stateError):not(.stateDisabled):not(.stateSuccess) .input,
 .base.secondary.stateFocus .input,
+.base.secondary.stateFocusNone .input {
+  color: var(--color-light_black-900);
+  cursor: text;
+}
+
+.base.secondary:focus-within:not(.stateError):not(.stateDisabled):not(.stateSuccess) .input::placeholder,
 .base.secondary.stateFocus .input::placeholder {
   color: var(--color-light_black-900);
 }
 
-.base.secondary:focus-within:not(.stateError):not(.stateDisabled) .iconLeft,
-.base.secondary:focus-within:not(.stateError):not(.stateDisabled) .iconRight,
+.base.secondary.stateFocusNone .input::placeholder {
+  opacity: 0;
+  color: transparent;
+}
+
+.base.secondary:not(.stateFocus) .input:placeholder-shown:focus {
+  caret-color: var(--color-light_black-900);
+}
+
+.base.secondary:not(.stateFocus) .input:placeholder-shown:focus::placeholder {
+  opacity: 0;
+  color: transparent;
+}
+
+.base.secondary:focus-within:not(.stateError):not(.stateDisabled):not(.stateSuccess) .iconLeft,
+.base.secondary:focus-within:not(.stateError):not(.stateDisabled):not(.stateSuccess) .iconRight,
 .base.secondary.stateFocus .iconLeft,
-.base.secondary.stateFocus .iconRight {
+.base.secondary.stateFocus .iconRight,
+.base.secondary.stateFocusNone .iconLeft,
+.base.secondary.stateFocusNone .iconRight {
+  color: var(--color-light_black-900);
+}
+
+.base.secondary.stateSuccess {
+  background: var(--color-white_grey-200);
+  border-color: var(--color-green-500);
+}
+
+.base.secondary.stateSuccess .input,
+.base.secondary.stateSuccess .input::placeholder {
+  color: var(--color-light_black-900);
+}
+
+.base.secondary.stateSuccess .iconLeft,
+.base.secondary.stateSuccess .iconRight {
   color: var(--color-light_black-900);
 }
 
 .base.secondary.stateError {
-  background: var(--color-grey-50);
+  background: var(--color-white_grey-200);
   border-color: var(--color-red-600);
 }
 
 .base.secondary.stateError .input,
 .base.secondary.stateError .input::placeholder {
-  color: var(--color-grey-600);
+  color: var(--color-light_black-900);
 }
 
 .base.secondary.stateError .iconLeft,
@@ -261,17 +544,21 @@
 
 .base.secondary.stateDisabled {
   background: var(--color-grey-100);
-  border-color: var(--color-grey-200);
+  border-color: transparent;
   cursor: not-allowed;
   pointer-events: none;
 }
 
 .base.secondary.stateDisabled .input,
 .base.secondary.stateDisabled .input::placeholder {
-  color: var(--color-grey-600);
+  color: var(--color-light_black-200);
 }
 
 .base.secondary.stateDisabled .iconLeft,
 .base.secondary.stateDisabled .iconRight {
-  color: var(--color-grey-600);
+  color: var(--color-light_black-200);
+}
+
+.base[data-readonly='true'] .focusTrailing {
+  display: none !important;
 }

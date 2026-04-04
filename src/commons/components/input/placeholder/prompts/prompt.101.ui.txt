@@ -16,6 +16,7 @@
 입력-디자인소스)
 - 활용 MCP: Figma Desktop MCP
 - 참고할 공통컴포넌트 노드 url:https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2603&m=dev
+- 포커스 트레일 아이콘(Figma 384:1070):https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=384-1070&m=dev → `@/assets/input-placeholder/figma-focus-trailing.svg` (import 시 번들 URL)
 
 산출물-파일경로)
 - TSX: `src/commons/components/input/placeholder/index.tsx`
@@ -25,19 +26,19 @@
 ==============================================
 
 핵심요구사항)
-- API: `placeholder`, `value?`, `state`, `variant`, `showLeftIcon?`, `showRightIcon?`, `leftIcon?`, `rightIcon?`, `disabled?`.
-- `showLeftIcon` / `showRightIcon` 기본값은 true.
-- `state`: `default | hover | focus | filled | error | disabled`.
+- API: `placeholder`, `value?`, `state`, `variant`, `showLeftIcon?`, `showRightIcon?`, `showFocusTrailingIcon?`, `focusTrailingIcon?`, `leftIcon?`, `rightIcon?`, `disabled?`, `readOnly?`, `onChange?`.
+- `showLeftIcon` / `showRightIcon` / `showFocusTrailingIcon` 기본값은 true.
+- `state`: `default | hover | focus | focus_none | filled | error | success | disabled` — **focus_none**은 빈 값+포커스(placeholder 숨김), **focus**는 시안상 placeholder 유지, **success**는 그린 보더.
 - `variant`: `primary | secondary`.
 - `disabled === true`이면 항상 `disabled` 상태로 처리한다.
-- `state === 'filled'`일 때만 input value에 `value ?? placeholder`를 넣는다.
-- 그 외 상태에서는 input value는 빈 문자열(placeholder 문구만 보임).
-- 루트 `className`은 `styles.base` + `styles.primary`|`styles.secondary` + (선택) `styles.stateHover` 등 **상태 모듈 클래스**를 한곳에서 조합한다. `effectiveState`에 따라 `STATE_CLASS` 맵으로 `stateHover`·`stateFocus`·`stateFilled`·`stateError`·`stateDisabled`를 붙인다(`default`는 추가 클래스 없음).
+- `state === 'filled'` 또는 `success`일 때 input value에 `value`가 비어 있으면 `placeholder` 문자열을 값처럼 넣는다.
+- 그 외 상태에서는 값이 있을 때만 표시·그 외 빈 문자열+placeholder.
+- 루트 `className`은 `styles.base` + `styles.primary`|`styles.secondary` + (선택) 상태 모듈을 조합한다. `STATE_CLASS`에 `stateHover`·`stateFocus`·`stateFilled`·`stateError`·`stateSuccess`·`stateDisabled`(`default`는 추가 없음).
 - 루트에 `data-variant`, `data-state`는(선택) 디버그·스토리용. `state === 'error'`일 때는 `aria-invalid`를 루트에 부여한다.
 - input은 `readOnly`(프리뷰·스토리북용).
 - 색·타이포는 `src/app/globals.css` 토큰(`var(--color-*)`, `--typography-body-1-ko-desktop-*`)으로 맞춘다.
 - 필드 높이·패딩·라운드는 단일 스케일이다(size variant 없음).
-- `styles.module.css`는 commons **button**과 같이 variant 섹션마다 **default → (filled) → :hover → :focus-within → error → disabled** 순으로 읽히게 쓴다. 실제 상호작용은 `:hover:not(.stateError):not(.stateDisabled)`, `:focus-within:not(...)` 로 두고, 스토리북 고정용으로 `.stateHover`·`.stateFocus` 등을 **같은 선언 블록에 쉼표로 묶는다**. 색은 `var(--color-…)` 직접 기입.
+- `styles.module.css`: variant 섹션 **default → filled → :hover → :focus-within(focus 보더) → success → error → disabled** 순. `:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess)` 등. 포커스 트레일 `.focusTrailing`은 `:focus-within` 또는 `.stateFocus`로 표시, `stateFilled`·error·success·disabled·readOnly에서는 숨김.
 - 아이콘은 팀에서 사용하는 아이콘 라이브러리를 우선 사용한다. 필드 슬롯에는 `FieldLucideIcon`(`src/commons/icons/`)으로 크기·선 두께를 통일할 것.
 - `disabled`일 때 input `disabled` + 포인터 차단 등 비활성 표현이 분명하다.
 

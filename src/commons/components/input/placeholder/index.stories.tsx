@@ -1,15 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { Fragment, useEffect, useState } from 'react';
+
+import figmaIconLeftUrl from '@/assets/input-placeholder/figma-icon-left.svg';
 
 import { Placeholder } from './index';
 
 type PlaceholderProps = React.ComponentProps<typeof Placeholder>;
 
-/** Figma node 139-2603 — 좌·우 `icon_placeholder` 동일 에셋(imgVector1, 스캔/코너 프레임) */
-const FIGMA_ICON_SCAN_SRC = '/storybook-assets/input-placeholder/figma-icon-left.svg';
+/** Figma node 139-2603 — 좌·우 `icon_placeholder` 동일 에셋 */
+const FIGMA_ICON_SCAN_SRC = figmaIconLeftUrl;
 
 function FigmaStoryIcon({ src }: { src: string }) {
   return (
-    // 스토리북: Figma export SVG를 그대로 쓰기 위해 정적 <img> 사용
     // eslint-disable-next-line @next/next/no-img-element -- Storybook 전용 Figma 에셋
     <img
       src={src}
@@ -26,8 +28,10 @@ const stateOptions: PlaceholderProps['state'][] = [
   'default',
   'hover',
   'focus',
+  'focus_none',
   'filled',
   'error',
+  'success',
   'disabled',
 ];
 const variantOptions: PlaceholderProps['variant'][] = ['primary', 'secondary'];
@@ -46,6 +50,29 @@ const withSampleIcons = (args: PlaceholderProps, overrides?: Partial<Placeholder
   );
 };
 
+/** Controls `value`와 캔버스 입력 동기화 — `state="default"`일 때 타이핑·filled 스타일 확인 */
+function InteractivePlaceholderWithIcons(props: PlaceholderProps) {
+  const { showLeftIcon = true, showRightIcon = true, value, ...rest } = props;
+  const [inner, setInner] = useState(value ?? '');
+
+  useEffect(() => {
+    setInner(value ?? '');
+  }, [value]);
+
+  return (
+    <Placeholder
+      {...rest}
+      showLeftIcon={showLeftIcon}
+      showRightIcon={showRightIcon}
+      leftIcon={showLeftIcon ? <FigmaStoryIcon src={FIGMA_ICON_SCAN_SRC} /> : undefined}
+      rightIcon={showRightIcon ? <FigmaStoryIcon src={FIGMA_ICON_SCAN_SRC} /> : undefined}
+      value={inner}
+      readOnly={false}
+      onChange={(e) => setInner(e.target.value)}
+    />
+  );
+}
+
 const meta = {
   title: 'Commons/Input/Placeholder',
   component: Placeholder,
@@ -58,6 +85,7 @@ const meta = {
     disabled: false,
     showLeftIcon: true,
     showRightIcon: true,
+    showFocusTrailingIcon: true,
   },
   argTypes: {
     placeholder: {
@@ -69,6 +97,8 @@ const meta = {
     state: {
       control: 'select',
       options: stateOptions,
+      description:
+        '**Playground**에서는 보통 `state="default"`만 쓰고, 글자를 입력하면 **filled와 같은 스타일**이 `value` 기준으로 자동 반영됩니다. `hover`·`focus`·`filled` 등은 피그마 **시안 고정용** 모듈 클래스입니다. **focus**=placeholder 보임 + 다크 보더 + 트레일 아이콘, **focus_none**=빈 값일 때 placeholder 숨김 시안, **success**=그린 보더.',
     },
     variant: {
       control: 'inline-radio',
@@ -76,6 +106,10 @@ const meta = {
     },
     disabled: {
       control: 'boolean',
+    },
+    readOnly: {
+      control: false,
+      table: { disable: true },
     },
     showLeftIcon: {
       control: 'boolean',
@@ -85,25 +119,38 @@ const meta = {
       control: 'boolean',
       description: 'ON이면 오른쪽에 동일 스캔 아이콘을 전달합니다(디자인과 동일).',
     },
+    showFocusTrailingIcon: {
+      control: 'boolean',
+      description:
+        '`true`이면 포커스(또는 **focus** / **focus_none** 시안)일 때 트레일 슬롯에 Figma 384:1070 클리어 아이콘이 보입니다. **`readOnly={true}`**(기본 캔버스)에서는 동작이 없어 CSS로 슬롯을 숨깁니다. **States** 스토리는 트레일 확인용으로 `readOnly={false}`입니다.',
+    },
+    focusTrailingIcon: { table: { disable: true } },
     leftIcon: { table: { disable: true } },
     rightIcon: { table: { disable: true } },
+    onChange: { table: { disable: true } },
   },
   parameters: {
     layout: 'centered',
     docs: {
       description: {
         component:
-          '아이콘은 Figma(node 139-2603) `icon_placeholder`와 동일한 SVG를 사용합니다. 포커스 행 디자인에는 텍스트와 트레일 사이 **클리어(X) 버튼**이 추가로 있으나, 현재 Placeholder API는 좌·우 슬롯 2개만 제공합니다. CSS는 버튼과 같이 `:hover`·`:focus-within`으로 상호작용하고, 스토리북에서만 동일 스타일을 고정할 때 `.stateHover` 등 모듈 클래스를 씁니다.',
+          'Figma [Placeholder 139:2603](https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2603&m=dev). **focus**는 다크 보더 + [384:1070](https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=384-1070&m=dev) 클리어 아이콘, **success**는 그린 보더(이전 primary-focus 스타일, secondary는 연한 배경+그린 보더). Primary 기본·filled·focus·error·success는 배경 없음, hover·disabled만 배경. Secondary는 기본·호버·filled·disabled는 테두리 없음·focus·error·success에서 테두리.',
       },
     },
   },
-  render: (args) => <div style={{ width: 360 }}>{withSampleIcons(args)}</div>,
+  render: (args) => <div style={{ width: 360 }}>{withSampleIcons(args, { readOnly: true })}</div>,
 } satisfies Meta<PlaceholderProps>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Playground: Story = {};
+export const Playground: Story = {
+  render: (args) => (
+    <div style={{ width: 360 }}>
+      <InteractivePlaceholderWithIcons {...args} />
+    </div>
+  ),
+};
 
 export const FullWidth: Story = {
   parameters: {
@@ -113,7 +160,11 @@ export const FullWidth: Story = {
       },
     },
   },
-  render: (args) => <div style={{ width: '100%', maxWidth: 560 }}>{withSampleIcons(args)}</div>,
+  render: (args) => (
+    <div style={{ width: '100%', maxWidth: 560 }}>
+      <InteractivePlaceholderWithIcons {...args} />
+    </div>
+  ),
 };
 
 export const Variants: Story = {
@@ -124,7 +175,8 @@ export const Variants: Story = {
   parameters: {
     docs: {
       description: {
-        story: '동일 `state`에서 `primary` / `secondary` 테두리·배경 차이를 비교합니다.',
+        story:
+          '동일 `state`에서 `primary`(대부분 테두리만·hover·disabled만 배경) / `secondary`(테두리 없음·배경 위주) 차이를 비교합니다.',
       },
     },
   },
@@ -132,7 +184,7 @@ export const Variants: Story = {
     <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
       {variantOptions.map((variant) => (
         <div key={variant} style={{ width: 320 }}>
-          {withSampleIcons(args, { variant })}
+          {withSampleIcons(args, { variant, readOnly: true })}
         </div>
       ))}
     </div>
@@ -144,28 +196,42 @@ export const States: Story = {
     docs: {
       description: {
         story:
-          '각 `state` 값에 맞는 모듈 클래스가 한 화면에서 비교됩니다. `filled` 행은 표시용으로 `value`를 넣습니다.',
+          '**8행 × 2열**(`state` × `primary` | `secondary`). `filled` 행만 표시용 `value`를 넣습니다. **focus / focus_none** 행의 오른쪽 트레일(클리어 아이콘)은 `readOnly={false}`일 때만 보입니다. **focus** 행에 마우스를 올려도 hover 배경이 겹치지 않습니다(`CSS`에서 `.stateFocus`는 `:hover` 시안과 분리). 인터랙션은 `Playground`에서 확인하세요.',
       },
     },
   },
   render: (args) => (
-    <div style={{ display: 'grid', gap: 12 }}>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '100px minmax(0, 1fr) minmax(0, 1fr)',
+        gap: '12px 16px',
+        alignItems: 'center',
+        maxWidth: 800,
+      }}
+    >
+      <span />
+      <span style={{ fontSize: 12, color: 'var(--color-grey-700, #7e7e7e)', fontWeight: 600 }}>
+        primary
+      </span>
+      <span style={{ fontSize: 12, color: 'var(--color-grey-700, #7e7e7e)', fontWeight: 600 }}>
+        secondary
+      </span>
       {stateOptions.map((state) => (
-        <div
-          key={state}
-          style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}
-        >
-          <span style={{ width: 88, fontSize: 12, color: 'var(--color-grey-700, #7e7e7e)' }}>
-            {state}
-          </span>
-          <div style={{ flex: '1 1 260px', maxWidth: 360 }}>
-            {withSampleIcons(args, {
-              state,
-              variant: 'primary',
-              value: state === 'filled' ? '입력된 값 예시' : args.value,
-            })}
-          </div>
-        </div>
+        <Fragment key={state}>
+          <span style={{ fontSize: 12, color: 'var(--color-grey-700, #7e7e7e)' }}>{state}</span>
+          {variantOptions.map((variant) => (
+            <div key={`${state}-${variant}`} style={{ minWidth: 0 }}>
+              {withSampleIcons(args, {
+                state,
+                variant,
+                value: state === 'filled' ? '입력된 값 예시' : args.value,
+                readOnly: false,
+                onChange: () => {},
+              })}
+            </div>
+          ))}
+        </Fragment>
       ))}
     </div>
   ),
@@ -180,7 +246,8 @@ export const Filled: Story = {
   parameters: {
     docs: {
       description: {
-        story: '`state === "filled"`일 때 input에 `value ?? placeholder`가 보이는지 확인합니다.',
+        story:
+          '**시안 전용** `state="filled"`일 때만, `value`가 비어 있으면 인풋에는 **빈 칸이 아니라 `placeholder` 문구가 채워진 것처럼** 보이게 됩니다(`filled`·`success` 분기). **Playground**에서는 `state="default"`로 두고 입력하는 것이 일반적이며, 이 경우 실제 **`value`**가 그대로 표시되고 filled 스타일은 입력 여부로만 결정됩니다.',
       },
     },
   },
@@ -201,13 +268,13 @@ export const Disabled: Story = {
         <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--color-grey-700, #7e7e7e)' }}>
           disabled prop
         </p>
-        {withSampleIcons(args, { state: 'default', disabled: true })}
+        {withSampleIcons(args, { state: 'default', disabled: true, readOnly: true })}
       </div>
       <div style={{ width: 320 }}>
         <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--color-grey-700, #7e7e7e)' }}>
           state=&quot;disabled&quot;
         </p>
-        {withSampleIcons(args, { state: 'disabled', disabled: false })}
+        {withSampleIcons(args, { state: 'disabled', disabled: false, readOnly: true })}
       </div>
     </div>
   ),

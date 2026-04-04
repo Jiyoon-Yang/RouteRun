@@ -13,7 +13,7 @@
 - 참고 TSX: `src/commons/components/input/placeholder/index.tsx`
 - 참고 CSS: `src/commons/components/input/placeholder/styles.module.css`
 - 구현 STORIES: `src/commons/components/input/placeholder/index.stories.tsx`
-- 스토리 아이콘 에셋(Figma node 139-2603, 좌·우 동일 `icon_placeholder`): `public/storybook-assets/input-placeholder/figma-icon-left.svg`
+- 스토리 아이콘 에셋(Figma node 139-2603, 좌·우 동일 `icon_placeholder`): `src/assets/input-placeholder/figma-icon-left.svg` (`import`로 번들 URL 사용)
 
 ==============================================
 
@@ -31,7 +31,7 @@
   - `disabled` (boolean)
   - `showLeftIcon` (boolean)
   - `showRightIcon` (boolean)
-- `showLeftIcon`, `showRightIcon`은 값에 따라 실제 `leftIcon`, `rightIcon` Props에 위 Figma export SVG(`<img src="/storybook-assets/...">`)가 전달되도록 `render`를 구현할 것
+- `showLeftIcon`, `showRightIcon`은 값에 따라 실제 `leftIcon`, `rightIcon` Props에 위 Figma export SVG(`import`한 URL을 `<img src={...}>`)가 전달되도록 `render`를 구현할 것
 - `leftIcon`, `rightIcon`은 controls 테이블에서 숨길 것(`table.disable`)
 
 3) 필수 스토리 구성

@@ -1,59 +1,100 @@
+import type { ChangeEventHandler } from 'react';
+
+import figmaFocusTrailingUrl from '@/assets/input-placeholder/figma-focus-trailing.svg';
+
 import styles from './styles.module.css';
 
 export { FieldLucideIcon, FIELD_LUCIDE_ICON_SIZE, FIELD_LUCIDE_STROKE_WIDTH } from '../../../icons';
 export type { FieldLucideIconProps } from '../../../icons';
 
-export type PlaceholderState = 'default' | 'hover' | 'focus' | 'filled' | 'error' | 'disabled';
+/** Figma PartTextPlaceholder — `focus_none`은 빈 값+포커스(placeholder 숨김, 캐럿만), `focus`는 포커스+placeholder 노출 시안 */
+export type PlaceholderState =
+  | 'default'
+  | 'hover'
+  | 'focus'
+  | 'focus_none'
+  | 'filled'
+  | 'error'
+  | 'success'
+  | 'disabled';
 export type PlaceholderVariant = 'primary' | 'secondary';
 
+/** Figma node 384:1070 — 포커스 시에만 노출(번들된 `@/assets` SVG URL) */
+export const PLACEHOLDER_FOCUS_TRAILING_ICON_SRC = figmaFocusTrailingUrl;
+
 export interface PlaceholderProps {
-  // placeholder (`state === 'filled'`이면 value로 표시, placeholder 문구는 숨김)
   placeholder: string;
-  // `state === 'filled'`일 때 input value (없으면 placeholder 문자열 사용)
   value?: string;
-  state: PlaceholderState; // 시각 상태
-  variant: PlaceholderVariant; // primary | secondary 스타일 축
-  showLeftIcon?: boolean; // 좌측 아이콘 노출 (기본 true)
-  showRightIcon?: boolean; // 우측 아이콘 노출 (기본 true)
+  state: PlaceholderState;
+  variant: PlaceholderVariant;
+  showLeftIcon?: boolean;
+  showRightIcon?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
-  disabled?: boolean; // true면 disabled 스타일·동작
+  /** `false`면 포커스 트레일(클리어) 아이콘 슬롯을 렌더하지 않습니다. */
+  showFocusTrailingIcon?: boolean;
+  /** 포커스 트레일 아이콘 교체. 미지정 시 Figma 384:1070 SVG */
+  focusTrailingIcon?: React.ReactNode;
+  disabled?: boolean;
+  readOnly?: boolean;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
 }
 
 const STATE_CLASS: Record<PlaceholderState, string | undefined> = {
   default: undefined,
   hover: styles.stateHover,
   focus: styles.stateFocus,
+  focus_none: styles.stateFocusNone,
   filled: styles.stateFilled,
   error: styles.stateError,
+  success: styles.stateSuccess,
   disabled: styles.stateDisabled,
 };
 
 export const Placeholder = ({
   placeholder,
-  value,
+  value = '',
   state,
   variant,
   showLeftIcon = true,
   showRightIcon = true,
+  showFocusTrailingIcon = true,
+  focusTrailingIcon,
   leftIcon,
   rightIcon,
   disabled,
+  readOnly = false,
+  onChange,
 }: PlaceholderProps) => {
   const effectiveState: PlaceholderState = disabled ? 'disabled' : state;
 
-  const filledValue = value ?? placeholder;
+  const filledValue = value !== '' ? value : placeholder;
+  const hasContent = value !== '';
 
-  const inputValue = effectiveState === 'filled' ? filledValue : '';
+  const inputValue =
+    effectiveState === 'filled' || effectiveState === 'success'
+      ? filledValue
+      : hasContent
+        ? value
+        : '';
+
+  const hasVisibleInputValue = inputValue !== '';
+
+  const filledFromDefaultInput = effectiveState === 'default' && hasContent;
 
   const stateClass = STATE_CLASS[effectiveState];
-  const rootClass = [styles.base, styles[variant], stateClass].filter(Boolean).join(' ');
+  const derivedFilledClass = filledFromDefaultInput ? styles.stateFilled : undefined;
+  const rootClass = [styles.base, styles[variant], stateClass, derivedFilledClass]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <div
       className={rootClass}
       data-variant={variant}
       data-state={effectiveState}
+      data-readonly={readOnly ? 'true' : 'false'}
+      data-has-input-value={hasVisibleInputValue ? 'true' : 'false'}
       aria-invalid={effectiveState === 'error'}
     >
       {showLeftIcon && leftIcon && <span className={styles.iconLeft}>{leftIcon}</span>}
@@ -63,9 +104,25 @@ export const Placeholder = ({
         placeholder={placeholder}
         value={inputValue}
         disabled={effectiveState === 'disabled'}
-        readOnly
+        readOnly={readOnly}
+        onChange={onChange}
         aria-label={placeholder}
       />
+
+      {showFocusTrailingIcon && (
+        <span className={styles.focusTrailing}>
+          {focusTrailingIcon ?? (
+            // eslint-disable-next-line @next/next/no-img-element -- Figma 384:1070 export
+            <img
+              src={PLACEHOLDER_FOCUS_TRAILING_ICON_SRC}
+              alt=""
+              width={20}
+              height={20}
+              draggable={false}
+            />
+          )}
+        </span>
+      )}
 
       {showRightIcon && rightIcon && <span className={styles.iconRight}>{rightIcon}</span>}
     </div>

@@ -1,0 +1,75 @@
+/**
+ * NavigationItem styles — Figma node 148:3911
+ * 체크리스트: CSS 변수(색·타이포) 우선 / 소수점 반올림 / 하드코딩 색상은 프롬프트 예외(#737373)만
+ */
+
+/* --- GNB item container (125×56, top border) --- */
+.item {
+  box-sizing: border-box;
+  display: flex;
+  width: 125px;
+  height: 56px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  border: none;
+  /* Figma 상단 구분선 #737373 — globals에 동일 값 토큰 없음 */
+  background: var(--color-white-500);
+  cursor: pointer;
+  text-decoration: none;
+  /* Figma 기본 라벨·아이콘 색 #737373 — 동일 토큰 없음 */
+  color: #737373;
+  font: inherit;
+}
+
+.item:hover:not([data-selected='true']):not([aria-current='page']) {
+  color: var(--color-black-500);
+}
+
+.item:active {
+  color: var(--color-black-600);
+}
+
+.item[data-selected='true'],
+.item[aria-current='page'] {
+  color: var(--color-black-600);
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--color-blue-500);
+  outline-offset: 2px;
+}
+
+/* --- inner stack: icon + label, gap 4px --- */
+.inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.iconWrap {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.label {
+  font-family: var(--typography-caption-1-ko-desktop-font-family);
+  font-size: var(--typography-caption-1-ko-desktop-font-size);
+  font-weight: var(--typography-caption-1-ko-desktop-font-weight);
+  /* Figma line-height 14.4px → 14px 반올림 (caption 토큰은 18px) */
+  line-height: 14px;
+  letter-spacing: var(--typography-caption-1-ko-desktop-letter-spacing);
+  text-align: center;
+  white-space: nowrap;
+}

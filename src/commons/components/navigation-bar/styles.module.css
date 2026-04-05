@@ -1,0 +1,30 @@
+/**
+ * NavigationBar styles — Figma node 148:3498 (375×56 루트, 배경 #fafafa → 토큰)
+ * 버전: 1.0.0 · 생성: 2026-04-05
+ * 체크리스트: 배경 var(--color-white-500) / 정수 px만 사용 / hex·rgb 미사용
+ * 참고: 피그마 상단 보더 #e5e5e5는 자식 NavigationItem 스펙과 다를 수 있음(해당 파일만 수정 가능한 작업 범위 시)
+ */
+
+/* --- layout: bar shell (가로 375 기준, 항목 125×3) --- */
+.root {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 375px;
+  margin-inline: auto;
+  background: var(--color-white-500);
+}
+
+.list {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.itemWrap {
+  display: flex;
+  flex-shrink: 0;
+}

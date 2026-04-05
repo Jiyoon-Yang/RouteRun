@@ -1,0 +1,10 @@
+/* src/components/Icon/Icon.module.css */
+
+.iconBase {
+  /* 텍스트와 함께 사용할 때 수직 중앙 정렬을 맞추기 위한 기본 세팅 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  flex-shrink: 0; /* flex 컨테이너 안에서 아이콘이 찌그러지는 것 방지 */
+}

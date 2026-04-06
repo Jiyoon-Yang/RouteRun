@@ -1,104 +1,74 @@
-import type { ChangeEventHandler } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import { forwardRef } from 'react';
+import type { InputHTMLAttributes } from 'react';
+
+import { FieldLucideIcon } from '@/commons/icons';
 
 import styles from './styles.module.css';
 
-export { FieldLucideIcon, FIELD_LUCIDE_ICON_SIZE, FIELD_LUCIDE_STROKE_WIDTH } from '../../../icons';
-export type { FieldLucideIconProps } from '../../../icons';
+type NativeInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'size'>;
 
-/** Figma PartTextPlaceholder — `focus_none`은 빈 값+포커스(placeholder 숨김, 캐럿만), `focus`는 포커스+placeholder 노출 시안 */
-export type PlaceholderState =
-  | 'default'
-  | 'hover'
-  | 'focus'
-  | 'focus_none'
-  | 'filled'
-  | 'error'
-  | 'success'
-  | 'disabled';
-export type PlaceholderVariant = 'primary' | 'secondary';
-
-export interface PlaceholderProps {
-  placeholder: string;
-  value?: string;
-  state: PlaceholderState;
-  variant: PlaceholderVariant;
+export interface PlaceholderProps extends NativeInputProps {
   showLeftIcon?: boolean;
   showRightIcon?: boolean;
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
-  disabled?: boolean;
-  readOnly?: boolean;
-  onChange?: ChangeEventHandler<HTMLInputElement>;
+  leftIcon?: LucideIcon;
+  rightIcon?: LucideIcon;
+  success?: boolean;
+  /** 오류 스타일 — DOM에는 `aria-invalid`로 반영 */
+  error?: boolean;
 }
 
-const STATE_CLASS: Record<PlaceholderState, string | undefined> = {
-  default: undefined,
-  hover: styles.stateHover,
-  focus: styles.stateFocus,
-  focus_none: styles.stateFocusNone,
-  filled: styles.stateFilled,
-  error: styles.stateError,
-  success: styles.stateSuccess,
-  disabled: styles.stateDisabled,
-};
-
-export const Placeholder = ({
-  placeholder,
-  value = '',
-  state,
-  variant,
-  showLeftIcon = true,
-  showRightIcon = true,
-  leftIcon,
-  rightIcon,
-  disabled,
-  readOnly = false,
-  onChange,
-}: PlaceholderProps) => {
-  const effectiveState: PlaceholderState = disabled ? 'disabled' : state;
-
-  const filledValue = value !== '' ? value : placeholder;
-  const hasContent = value !== '';
-
-  const inputValue =
-    effectiveState === 'filled' || effectiveState === 'success'
-      ? filledValue
-      : hasContent
-        ? value
-        : '';
-
-  const hasVisibleInputValue = inputValue !== '';
-
-  const filledFromDefaultInput = effectiveState === 'default' && hasContent;
-
-  const stateClass = STATE_CLASS[effectiveState];
-  const derivedFilledClass = filledFromDefaultInput ? styles.stateFilled : undefined;
-  const rootClass = [styles.base, styles[variant], stateClass, derivedFilledClass]
+export const Placeholder = forwardRef<HTMLInputElement, PlaceholderProps>(function Placeholder(
+  {
+    className,
+    showLeftIcon = true,
+    showRightIcon = true,
+    leftIcon,
+    rightIcon,
+    success = false,
+    error = false,
+    disabled,
+    'aria-invalid': ariaInvalid,
+    ...inputProps
+  },
+  ref,
+) {
+  const isInvalid = error || ariaInvalid === true || ariaInvalid === 'true';
+  const ariaInvalidResolved = error ? true : ariaInvalid;
+  const rootClassName = [styles.base, success ? styles.success : '', className ?? '']
     .filter(Boolean)
     .join(' ');
 
   return (
     <div
-      className={rootClass}
-      data-variant={variant}
-      data-state={effectiveState}
-      data-readonly={readOnly ? 'true' : 'false'}
-      data-has-input-value={hasVisibleInputValue ? 'true' : 'false'}
-      aria-invalid={effectiveState === 'error'}
+      className={rootClassName}
+      data-status={success ? 'success' : undefined}
+      data-disabled={disabled ? 'true' : 'false'}
+      data-invalid={isInvalid ? 'true' : 'false'}
     >
-      {showLeftIcon && leftIcon && <span className={styles.iconLeft}>{leftIcon}</span>}
+      <div className={styles.field}>
+        {showLeftIcon && leftIcon ? (
+          <span className={styles.iconSlot} aria-hidden>
+            <FieldLucideIcon icon={leftIcon} />
+          </span>
+        ) : null}
 
-      <input
-        className={styles.input}
-        placeholder={placeholder}
-        value={inputValue}
-        disabled={effectiveState === 'disabled'}
-        readOnly={readOnly}
-        onChange={onChange}
-        aria-label={placeholder}
-      />
+        <input
+          {...inputProps}
+          ref={ref}
+          className={styles.input}
+          disabled={disabled}
+          aria-invalid={ariaInvalidResolved}
+        />
 
-      {showRightIcon && rightIcon && <span className={styles.iconRight}>{rightIcon}</span>}
+        {showRightIcon && rightIcon ? (
+          <span className={styles.iconSlot} aria-hidden>
+            <FieldLucideIcon icon={rightIcon} />
+          </span>
+        ) : null}
+      </div>
     </div>
   );
-};
+});
+
+export default Placeholder;

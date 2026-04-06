@@ -1,51 +1,112 @@
-목표)
-- Input의 입력 영역(placeholder 표시 포함)을 독립 컴포넌트로 구현한다.
-- 피그마 공통컴포넌트와 첨부 이미지 기준으로 상태 variant를 반영한다.
-- 구현 결과(완료/미완료)를 체크리스트로 반환한다.
+아래의 조건을 모두 적용하여, 아래의 요구사항을 모두 구현할 것.
+구현 결과를 체크리스트로 반환할 것.
 
 ==============================================
 
-조건-커서룰)
-- 아래 커서룰을 적용하여 작업하고, 작업 종료 시 rules 적용 결과를 체크리스트로 반환할 것.
-  - @01-common.mdc
-  - @02-wireframe.mdc
-  - @03-ui.mdc
+조건-구현목표) Input의 입력 영역을 독립 컴포넌트로 구현할 것.
+            - placeholder 표시 기능을 포함할 것
+            - 피그마 공통컴포넌트 및 첨부 이미지 기준으로 구현할 것
+            - 상태별 variant를 반영할 것
 
 ==============================================
 
-입력-디자인소스)
-- 활용 MCP: Figma Desktop MCP
-- 참고할 공통컴포넌트 노드 url:https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2603&m=dev
-
-산출물-파일경로)
-- TSX: `src/commons/components/input/placeholder/index.tsx`
-- CSS: `src/commons/components/input/placeholder/styles.module.css`
-- (공통 아이콘) `src/commons/icons/lucide_field_icon.tsx` — 팀 아이콘 라이브러리(`package.json`) 기준 필드용 래퍼
+조건-커서룰) 아래의 커서룰을 적용하여 작업하고, 이후 작업이 끝나면 해당 rules 적용 결과를 체크리스트로 반환할 것.
+            - @01-common.mdc
+            - @02-wireframe.mdc
+            - @03-ui.mdc
 
 ==============================================
 
-핵심요구사항)
-- API: `placeholder`, `value?`, `state`, `variant`, `showLeftIcon?`, `showRightIcon?`, `leftIcon?`, `rightIcon?`, `disabled?`, `readOnly?`, `onChange?`.
-- `showLeftIcon` / `showRightIcon` 기본값은 true.
-- `state`: `default | hover | focus | focus_none | filled | error | success | disabled` — **focus_none**은 빈 값+포커스(placeholder 숨김), **focus**는 시안상 placeholder 유지, **success**는 그린 보더.
-- `variant`: `primary | secondary`.
-- `disabled === true`이면 항상 `disabled` 상태로 처리한다.
-- `state === 'filled'` 또는 `success`일 때 input value에 `value`가 비어 있으면 `placeholder` 문자열을 값처럼 넣는다.
-- 그 외 상태에서는 값이 있을 때만 표시·그 외 빈 문자열+placeholder.
-- 루트 `className`은 `styles.base` + `styles.primary`|`styles.secondary` + (선택) 상태 모듈을 조합한다. `STATE_CLASS`에 `stateHover`·`stateFocus`·`stateFilled`·`stateError`·`stateSuccess`·`stateDisabled`(`default`는 추가 없음).
-- 루트에 `data-variant`, `data-state`는(선택) 디버그·스토리용. `state === 'error'`일 때는 `aria-invalid`를 루트에 부여한다.
-- input은 `readOnly`(프리뷰·스토리북용).
-- 색·타이포는 `src/app/globals.css` 토큰(`var(--color-*)`, `--typography-body-1-ko-desktop-*`)으로 맞춘다.
-- 필드 높이·패딩·라운드는 단일 스케일이다(size variant 없음).
-- `styles.module.css`: variant 섹션 **default → filled → :hover → :focus-within(focus 보더) → success → error → disabled** 순. `:hover:not(.stateError):not(.stateDisabled):not(.stateSuccess)` 등.
-- 아이콘은 팀에서 사용하는 아이콘 라이브러리를 우선 사용한다. 필드 슬롯에는 `FieldLucideIcon`(`src/commons/icons/`)으로 크기·선 두께를 통일할 것.
-- `disabled`일 때 input `disabled` + 포인터 차단 등 비활성 표현이 분명하다.
+조건-피그마) 활용할MCP: Figma Desktop MCP
+조건-피그마) 구현될 컴포넌트 피그마 링크: 
+          https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2603&m=dev
 
-체크리스트(출력 포맷)
-- [ ] `index.tsx`: Placeholder 구현, `FieldLucideIcon` 등 commons icons re-export, 루트 `className`은 `styles.base` + `styles[variant]` + `STATE_CLASS[effectiveState]`
-- [ ] `src/commons/icons/lucide_field_icon.tsx`: `FieldLucideIcon`(크기·선 두께)
-- [ ] `styles.module.css`: `var(--color-*)` 직접 기입, `.base.primary.state*` 복합 선택자, 섹션 주석
-- [ ] `state` 전 구간 + `disabled` prop 연동
-- [ ] `filled`일 때만 `value ?? placeholder` 표시
-- [ ] `showLeftIcon` / `showRightIcon` + `leftIcon` / `rightIcon`으로 노출 제어
-- [ ] 루트에 `data-variant`, `data-state`, 에러 시 `aria-invalid`
+조건-파일경로) 구현될 TSX 파일경로: src/commons/components/input/placeholder/index.tsx
+조건-파일경로) 구현될 CSS 파일경로: src/commons/components/input/placeholder/styles.module.css
+조건-파일경로) 구현될 공통 아이콘 파일경로: src/commons/icons/lucide_field_icon.tsx
+            - package.json에 포함된 팀 아이콘 라이브러리 기준 필드용 래퍼로 유지할 것
+
+==============================================
+
+조건-사전분석) package.json과 폴더 및 라우터 및 HTML 및 CSS 레이아웃을
+            - step-by-step으로 먼저 분석할 것
+            - 의존성과 빌드 스크립트를 확인할 것
+            - src/app 및 src/commons 트리를 확인할 것
+            - 전역 스타일 진입점과 토큰 정의 위치를 확인할 것
+
+==============================================
+
+조건-공통목록) 사용할 색상은 src/app/globals.css에 정의된 CSS 변수 토큰을 활용할 것.
+            - 동일 의미의 토큰이 없으면 값을 하드코딩하고 주석으로 사유를 남길 것
+
+조건-공통목록) 사용할 타이포그래피는 src/app/globals.css에 정의된 변수 토큰을 활용할 것.
+            - 동일 의미의 토큰이 없으면 값을 하드코딩하고 주석으로 사유를 남길 것
+
+조건-공통목록) 아이콘은 반드시 FieldLucideIcon 컴포넌트를 import하여 사용할 것.
+            - import { FieldLucideIcon } from '@/components/icons'
+            - 피그마의 아이콘을 SVG나 이미지로 직접 삽입하지 말 것.
+
+조건-공통목록) 아이콘은 LucideIcon을 import하여 사용할 것.
+            - 피그마 아이콘을 SVG 파일이나 img로 직접 삽입하지 말 것
+            - import { FieldLucideIcon } from '@/commons/icons'
+            - LucideIcon 타입의 컴포넌트를 icon prop으로 넘겨 렌더링할 것
+
+조건-공통목록) 레이아웃은 부모-자식 관계의 flexbox만 사용하고, position: absolute는 금지.
+
+조건-공통목록) 모든 길이 단위는 rem으로 작성하고 px는 사용하지 않는다.
+            - 예: FieldLucideIcon에 icon으로 lucide-react 아이콘 컴포넌트 전달
+            - 필요 시 크기는 size, 선 두께는 strokeWidth prop으로 조정할 것
+
+조건-공통목록) 레이아웃은 부모와 자식 관계의 flexbox만 사용할 것.
+            - position: absolute는 사용하지 말 것
+
+조건-공통목록) 모든 길이 단위는 rem으로 작성할 것.
+            - px 단위는 사용하지 말 것
+
+==============================================
+
+핵심요구사항) 컴포넌트는 실제 입력 가능한 Input으로 구현할 것.
+            - 프리뷰/스토리북 전용 강제 상태 구조는 사용하지 말 것
+            - JS props로 상태를 고정하지 말 것
+
+핵심요구사항) props는 HTML 표준 호환을 우선할 것.
+            - React.InputHTMLAttributes<HTMLInputElement>를 확장할 것
+            - placeholder, value/defaultValue, onChange, disabled, readOnly, required, name, id, autoComplete를 그대로 지원할 것
+            - 커스텀 props는 최소화하고 아이콘 슬롯·시맨틱 상태(success, error)만 허용할 것 (error는 DOM의 aria-invalid로 반영)
+
+핵심요구사항) 상태는 가상클래스(Pseudo-class)와 표준 속성으로 구현할 것.
+            - default: 기본 상태
+            - hover: :hover
+            - focus: :focus 또는 :focus-within
+            - disabled: :disabled, [aria-disabled='true']
+            - error/invalid: [aria-invalid='true'] (필요 시 :invalid 보조 사용)
+            - success: .success 클래스 또는 [data-status='success'] 속성으로 처리할 것
+            - filled: :not(:placeholder-shown) 패턴으로 처리할 것
+
+핵심요구사항) placeholder/값 동작은 HTML 기본 규칙을 유지할 것.
+            - placeholder를 value처럼 강제로 렌더링하지 말 것
+            - 값이 없으면 placeholder, 값이 있으면 입력값을 표시할 것
+            - focus 상태에서 placeholder 표시 규칙을 임의로 변경하지 말 것
+
+핵심요구사항) 상태 우선순위를 CSS에서 명확히 보장할 것.
+            - 우선순위: disabled > error/invalid > success > focus > hover > filled > default
+            - 우선순위가 높은 상태가 낮은 상태를 덮어쓰도록 선택자를 구성할 것
+
+핵심요구사항) hover 적용 제한을 CSS 선택자로 명시할 것.
+            - 예시: input:hover:not(:disabled):not([aria-invalid='true']):not(.success):not([data-status='success']) { }
+            - disabled, error/invalid, success 상태에서는 hover 스타일이 적용되지 않게 할 것
+
+핵심요구사항) 접근성(Accessibility)과 표준 속성을 함께 만족할 것.
+            - 에러 표현 시 error(boolean) 또는 표준 aria-invalid를 설정 가능하게 할 것
+            - disabled 상태는 input의 disabled 속성으로 제어하고 필요 시 aria-disabled를 병행할 것
+            - placeholder는 보조 정보로만 사용하고 라벨 대체 수단으로 사용하지 말 것
+
+핵심요구사항) 스타일 범위는 Figma primary 단일 필드로 제한할 것.
+            - variant/size/state prop은 두지 말 것
+            - 기본 클래스(styles.base) + 가상클래스/속성 선택자 중심으로 구성할 것
+            - 디버그 전용 data-state는 기본 구현에서 제외할 것
+
+핵심요구사항) 아이콘 슬롯은 팀 공통 규칙을 따를 것.
+            - FieldLucideIcon 기반으로 렌더링할 것
+            - showLeftIcon/showRightIcon으로 노출을 제어할 것
+            - 팀 commons export 규칙에 맞게 index.tsx를 정렬할 것

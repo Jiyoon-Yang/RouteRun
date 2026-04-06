@@ -1,3 +1,8 @@
+'use client';
+
+import { useAnonymousLogin } from '@/components/login/hooks/index.anonymous.login.hook';
+import { useGoogleLogin } from '@/components/login/hooks/index.google.login.hook';
+
 function GoogleMark({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden>
@@ -22,23 +27,30 @@ function GoogleMark({ className }: { className?: string }) {
 }
 
 export default function LoginPage() {
+  const anonymousLogin = useAnonymousLogin();
+  const googleLogin = useGoogleLogin();
+
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[375px] flex-col bg-background px-5 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] pt-[max(1rem,env(safe-area-inset-top,0px))]">
       <div className="flex flex-1 flex-col justify-center">
         <div className="flex w-full flex-col gap-3">
           <button
             type="button"
-            className="flex h-[52px] w-full items-center justify-center rounded-2xl border border-neutral-300 bg-[var(--color-white-500)] px-4 text-base font-semibold leading-6 text-[#000000] shadow-sm transition hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:bg-neutral-100 dark:border-neutral-600 dark:bg-[var(--color-white-500)] dark:text-[#000000] dark:hover:bg-neutral-50 dark:active:bg-neutral-100"
+            onClick={anonymousLogin.trigger}
+            disabled={anonymousLogin.isLoading}
+            className="flex h-[52px] w-full items-center justify-center rounded-2xl border border-neutral-300 bg-[var(--color-white-500)] px-4 text-base font-semibold leading-6 text-[#000000] shadow-sm transition hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:bg-neutral-100 disabled:opacity-50 dark:border-neutral-600 dark:bg-[var(--color-white-500)] dark:text-[#000000] dark:hover:bg-neutral-50 dark:active:bg-neutral-100"
           >
-            게스트 로그인
+            {anonymousLogin.isLoading ? '로그인 중...' : '게스트 로그인'}
           </button>
 
           <button
             type="button"
-            className="flex h-[52px] w-full items-center justify-center gap-3 rounded-2xl border border-neutral-200 bg-[var(--color-white-500)] px-4 text-base font-semibold leading-6 text-[var(--color-black-900)] shadow-sm transition hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:bg-neutral-100 dark:border-neutral-600 dark:bg-white dark:text-[var(--color-black-900)] dark:hover:bg-neutral-50"
+            onClick={googleLogin.trigger}
+            disabled={googleLogin.isPending}
+            className="flex h-[52px] w-full items-center justify-center gap-3 rounded-2xl border border-neutral-200 bg-[var(--color-white-500)] px-4 text-base font-semibold leading-6 text-[var(--color-black-900)] shadow-sm transition hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:bg-neutral-100 disabled:opacity-50 dark:border-neutral-600 dark:bg-white dark:text-[var(--color-black-900)] dark:hover:bg-neutral-50"
           >
             <GoogleMark className="h-[22px] w-[22px] shrink-0" />
-            구글로 로그인
+            {googleLogin.isPending ? '로그인 중...' : '구글로 로그인'}
           </button>
         </div>
       </div>

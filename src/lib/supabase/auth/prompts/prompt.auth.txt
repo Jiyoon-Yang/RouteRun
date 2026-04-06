@@ -8,7 +8,7 @@
 
 ==============================================
 
-조건-파일경로) 구현될 TS 파일경로: @dobby-review/utils/src/supabase/auth/index.ts
+조건-파일경로) 구현될 TS 파일경로: src/lib/supabase/auth/index.ts
 
 ==============================================
 
@@ -31,6 +31,6 @@
             - UNAUTHENTICATED
 
 추가-요구사항) Supabase 클라이언트 사용 규칙
-            - import 기준: _prompt-library/auth/prompt.101.initialize.txt 구현 파일
+            - import 기준: src/lib/supabase/initialize/index.ts 파일
             - 사용 기준: 토큰 검증이 필요한 함수는 토큰 기반 클라이언트 생성 유틸 우선 사용
             - 금지 사항: 각 파일에서 createClient 직접 생성

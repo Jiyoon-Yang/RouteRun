@@ -131,55 +131,30 @@ export const States: Story = {
         [
           {
             label: '1 Default',
-            node: (
-              <Placeholder {...iconArgs} value="" placeholder="Placeholder" />
-            ),
+            node: <Placeholder {...iconArgs} value="" placeholder="Placeholder" />,
           },
           {
             label: '2 Hover',
-            node: (
-              <Placeholder {...iconArgs} value="" placeholder="Placeholder" />
-            ),
+            node: <Placeholder {...iconArgs} value="" placeholder="Placeholder" />,
             hint: '→ Hover 스토리 또는 Pseudo States (:hover)',
           },
           {
             label: '3 FocusEmpty',
-            node: (
-              <Placeholder {...iconArgs} value="" placeholder="Placeholder" />
-            ),
+            node: <Placeholder {...iconArgs} value="" placeholder="Placeholder" />,
             hint: '→ FocusEmpty 스토리 또는 Pseudo States (:focus)',
           },
           {
             label: '4 FocusFilled',
-            node: (
-              <Placeholder
-                {...iconArgs}
-                value="Placeholder"
-                placeholder="Placeholder"
-              />
-            ),
+            node: <Placeholder {...iconArgs} value="Placeholder" placeholder="Placeholder" />,
             hint: '→ FocusFilled 스토리 또는 Pseudo States (:focus)',
           },
           {
             label: '5 Filled',
-            node: (
-              <Placeholder
-                {...iconArgs}
-                value="user@example.com"
-                placeholder="이메일 주소"
-              />
-            ),
+            node: <Placeholder {...iconArgs} value="user@example.com" placeholder="이메일 주소" />,
           },
           {
             label: '6 Error',
-            node: (
-              <Placeholder
-                {...iconArgs}
-                error
-                value="잘못된 입력"
-                placeholder="Placeholder"
-              />
-            ),
+            node: <Placeholder {...iconArgs} error value="잘못된 입력" placeholder="Placeholder" />,
           },
           {
             label: '7 Success',
@@ -194,14 +169,7 @@ export const States: Story = {
           },
           {
             label: '8 Disabled',
-            node: (
-              <Placeholder
-                {...iconArgs}
-                disabled
-                value=""
-                placeholder="Placeholder"
-              />
-            ),
+            node: <Placeholder {...iconArgs} disabled value="" placeholder="Placeholder" />,
           },
         ] as const
       ).map((row) => (
@@ -272,8 +240,7 @@ export const Hover: Story = {
     pseudo: { hover: true },
     docs: {
       description: {
-        story:
-          'Figma: 보더만 진해짐. **Pseudo states → hover** 로도 확인 가능.',
+        story: 'Figma: 보더만 진해짐. **Pseudo states → hover** 로도 확인 가능.',
       },
     },
   },

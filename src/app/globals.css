@@ -181,6 +181,13 @@
   --typography-caption-1-ko-desktop-font-weight: 500;
   --typography-caption-1-ko-desktop-letter-spacing: 0px;
 
+  /* Caption-2 (Figma — body/sm/regular: 12/16 Regular, 부가 문구 등) */
+  --typography-caption-2-ko-desktop-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-caption-2-ko-desktop-font-size: 12px;
+  --typography-caption-2-ko-desktop-line-height: 16px;
+  --typography-caption-2-ko-desktop-font-weight: 400;
+  --typography-caption-2-ko-desktop-letter-spacing: var(--Body-lg-letter-spacing);
+
   /* Mobile (basic default = desktop) */
   --typography-heading-1-ko-mobile-font-family: "Pretendard", Arial, Helvetica, sans-serif;
   --typography-heading-1-ko-mobile-font-size: 24px;
@@ -242,6 +249,12 @@
   --typography-caption-1-ko-mobile-line-height: 18px;
   --typography-caption-1-ko-mobile-font-weight: 500;
   --typography-caption-1-ko-mobile-letter-spacing: 0px;
+
+  --typography-caption-2-ko-mobile-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-caption-2-ko-mobile-font-size: 12px;
+  --typography-caption-2-ko-mobile-line-height: 16px;
+  --typography-caption-2-ko-mobile-font-weight: 400;
+  --typography-caption-2-ko-mobile-letter-spacing: var(--Body-lg-letter-spacing);
 
   /* App semantic aliases */
   --background: var(--color-white-100);

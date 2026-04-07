@@ -94,4 +94,3 @@
 :global(*:has(input:disabled)) .base .infoIcon {
   color: var(--color-grey-500);
 }
-

@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Info } from 'lucide-react';
+import { AlertCircle, Check, Info } from 'lucide-react';
 import type { HTMLAttributes } from 'react';
 
 import { FieldLucideIcon } from '@/commons/icons';
@@ -17,7 +17,7 @@ export interface AddtionalTextProps extends NativeParagraphProps {
 
 const ICON_BY_STATE = {
   default: Info,
-  success: CheckCircle2,
+  success: Check,
   error: AlertCircle,
 } as const;
 

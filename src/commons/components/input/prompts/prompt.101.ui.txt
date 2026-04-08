@@ -1,68 +1,69 @@
-목표)
-- 피그마 Input 디자인을 기준으로 공통 컴포넌트 UI를 TSX/CSS로 재구현한다.
-- 기존 Input의 내용/구조(`label` + `placeholder` + `addtional_text`)는 유지한다.
-- 프로젝트 토큰 규칙을 따르는 재사용 가능한 API를 유지하고, 구현 결과를 체크리스트로 반환한다.
+아래 조건을 모두 적용하여 요구사항을 구현할 것. 구현 결과를 체크리스트로 반환할 것.
 
 ==============================================
 
-조건-커서룰)
-- 아래 커서룰을 적용하여 작업하고, 작업 종료 시 rules 적용 결과를 체크리스트로 반환할 것.
-  - @01-common.mdc
-  - @02-wireframe.mdc
-  - @03-ui.mdc
+조건-구현목표) `label` + `placeholder`(입력 필드) + `addtional_text`를 조합한 복합 Input을 구현할 것.
+            - 피그마 공통컴포넌트 기준 레이아웃·간격을 반영할 것
+            - 입력 필드 영역의 시각 상태는 하위 `placeholder` 컴포넌트와 동일한 CSS 규칙(가상클래스·표준 속성)을 따를 것
 
 ==============================================
 
-입력-디자인)
-- 활용 MCP: Figma Desktop MCP
-- 참고할 공통컴포넌트 노드 URL
-  - input states set: https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2557&t=e1xHQkpJlQYYkJLf-11
-
-산출물-파일경로)
-- TSX: `src/commons/components/input/index.tsx`
-- CSS: `src/commons/components/input/styles.module.css`
-- 하위 컴포넌트
-  - `src/commons/components/input/label/index.tsx`
-  - `src/commons/components/input/placeholder/index.tsx`
-  - `src/commons/components/input/addtional_text/index.tsx`
+조건-커서룰) 아래 커서룰을 적용하고, 작업 종료 시 rules 적용 결과를 체크리스트로 반환할 것.
+            - @01-common.mdc
+            - @02-wireframe.mdc
+            - @03-ui.mdc
 
 ==============================================
 
-핵심요구사항)
-1) 컴포넌트 API
-- 아래 props를 유지/지원할 것
-  - `label?: string`
-  - `required?: boolean`
-  - `state?: 'default' | 'hover' | 'filled' | 'active' | 'error' | 'disabled'`
-  - `addtionalText?: string`
-  - `addtionalTextState?: 'default' | 'success' | 'error' | 'disabled'`
-  - `disabled?: boolean`
-  - `showLeftIcon?: boolean` (기본 true)
-  - `showRightIcon?: boolean` (기본 true)
+조건-피그마) 활용 MCP: Figma Desktop MCP
+조건-피그마) 참고 노드 URL:
+          https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2557&t=6iHziqK5z6HelNfJ-11
 
-2) 조합형 구조 유지
-- Input은 래퍼 컴포넌트로 구현하고 하위 3종을 조합할 것
-  - `label`
-  - `placeholder`
-  - `addtional_text`
+==============================================
 
-3) 스타일 구현
-- 피그마 기준 간격/높이/라운드/타이포를 반영할 것
-- 입력 필드 좌/우 아이콘은 `showLeftIcon` / `showRightIcon` 불린으로 노출 여부를 제어할 것
-- 상태별 보더/텍스트 색상 차이를 분리할 것
+조건-파일경로) TSX: `src/commons/components/input/index.tsx`
+조건-파일경로) CSS: `src/commons/components/input/styles.module.css`
+조건-파일경로) 하위 컴포넌트(조합만, 본 프롬프트에서 재구현하지 않음)
+            - `src/commons/components/input/label/index.tsx`
+            - `src/commons/components/input/placeholder/index.tsx`
+            - `src/commons/components/input/addtional_text/index.tsx`
 
-4) 상태 및 문구 규칙
-- `default | hover | filled | active | error | disabled` 상태가 모두 동작해야 함
-- `addtional_text`는 상태별 색상을 반영해야 함
-- `error` 상태에서는 에러 톤(보더/보조문구)이 명확해야 함
+==============================================
 
-5) 접근성 및 토큰 사용
-- `label`과 input을 `htmlFor`/`id`로 연결할 것
-- 색상/타이포는 전역 토큰(`globals.css`) 기반으로 적용할 것
+조건-공통목록) 색상·타이포는 `src/app/globals.css` 토큰을 사용할 것. (동일 의미 토큰이 없으면 하드코딩 + 주석 사유)
+조건-공통목록) 아이콘은 팀 규칙에 따라 `FieldLucideIcon` 등 공통 경로를 사용하고, 피그마 SVG/img 직삽입은 금지할 것.
+조건-공통목록) 레이아웃은 flexbox 위주로 구성할 것. (필요 시 하위 컴포넌트와 동일한 제약 유지)
+조건-공통목록) 길이 단위는 rem 우선. (프로젝트 규칙과 충돌 시 프로젝트 규칙 우선)
+
+==============================================
+
+핵심요구사항) 복합 컴포넌트는 하위 3종을 import하여 조합할 것.
+            - `label` ↔ 입력 요소는 `htmlFor` / `id`로 연결할 것
+            - `placeholder`(필드)에 입력 관련 props·접근성 속성을 전달할 것
+            - `addtional_text`에는 보조 문구·해당 영역에 필요한 최소 props만 전달할 것
+
+핵심요구사항) 입력 필드의 상태는 가상클래스(Pseudo-class)와 표준 속성으로 구현할 것. (JS로 `state`·variant 등을 고정하지 말 것)
+            - default: 기본 상태
+            - hover: :hover
+            - focus: :focus 또는 :focus-within
+            - disabled: :disabled, [aria-disabled='true']
+            - error/invalid: [aria-invalid='true'] (필요 시 :invalid 보조)
+            - success: .success 클래스 또는 [data-status='success']
+            - filled: :not(:placeholder-shown)
+
+핵심요구사항) 상태 우선순위·hover 제한은 하위 `placeholder`의 CSS 규칙과 일치시킬 것.
+            - 우선순위: disabled > error/invalid > success > focus > hover > filled > default
+            - disabled · error/invalid · success 구간에서는 hover 스타일이 겹치지 않도록 선택자로 제한할 것
+
+핵심요구사항) API는 HTML 표준을 우선할 것.
+            - 루트는 `React.InputHTMLAttributes<HTMLInputElement>` 확장을 고려하고, `disabled`·`aria-invalid`·`data-status` 등은 실제 DOM에 반영할 것
+            - 좌우 아이콘 노출은 `showLeftIcon` / `showRightIcon`(기본값 팀 규칙에 따름)으로 제어할 것
+
+==============================================
 
 체크리스트(출력 포맷)
-- [ ] `src/commons/components/input/index.tsx`에 조합형 Input 컴포넌트가 구현됨
-- [ ] `src/commons/components/input/styles.module.css`에 레이아웃 스타일이 구현됨
-- [ ] `label`, `placeholder`, `addtional_text` 하위 컴포넌트 3종을 import하여 조합함
-- [ ] state(`default | hover | filled | active | error | disabled`)가 모두 동작함
-- [ ] `showLeftIcon` / `showRightIcon`으로 좌우 아이콘 노출이 제어됨
+- [ ] `index.tsx`에서 3종 하위 컴포넌트를 조합함
+- [ ] `styles.module.css`에 래퍼 레이아웃이 정의됨
+- [ ] label–input `id`/`htmlFor` 연결됨
+- [ ] 필드 상태가 가상클래스·표준 속성 기준으로 동작함 (위 핵심요구사항 목록)
+- [ ] `showLeftIcon` / `showRightIcon`으로 아이콘 노출이 제어됨

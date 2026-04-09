@@ -18,7 +18,7 @@
   min-height: 3rem;
   padding: 0.75rem 1rem;
   gap: 0.5rem;
-  border: 0.0625rem solid var(--color-grey-300);
+  border: 0.0625rem solid var(--color-grey-200);
   border-radius: 0.75rem;
   background-color: transparent;
   transition: border-color 120ms ease, background-color 120ms ease;
@@ -41,7 +41,7 @@
 }
 
 .input::placeholder {
-  color: var(--color-grey-600);
+  color: #a4a7ae; /* Figma color/text/tertiary 토큰과 매칭되는 전역 토큰 부재 */
 }
 
 .iconSlot {
@@ -49,7 +49,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--color-grey-600);
+  color: #535862; /* Figma color/icon/secondary 토큰과 매칭되는 전역 토큰 부재 */
 }
 
 /* 값 있음: 본문색 */

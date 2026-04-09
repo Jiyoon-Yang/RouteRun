@@ -38,9 +38,11 @@
 ==============================================
 
 핵심요구사항) 복합 컴포넌트는 하위 3종을 import하여 조합할 것.
+            - `label`은 필수로 항상 노출할 것
             - `label` ↔ 입력 요소는 `htmlFor` / `id`로 연결할 것
             - `placeholder`(필드)에 입력 관련 props·접근성 속성을 전달할 것
             - `addtional_text`에는 보조 문구·해당 영역에 필요한 최소 props만 전달할 것
+            - `addtionalTextState`가 미지정이면 필드 상태와 자동 동기화할 것 (`error`→`error`, `success`→`success`, 그 외 `default`)
 
 핵심요구사항) 입력 필드의 상태는 가상클래스(Pseudo-class)와 표준 속성으로 구현할 것. (JS로 `state`·variant 등을 고정하지 말 것)
             - default: 기본 상태
@@ -54,6 +56,7 @@
 핵심요구사항) 상태 우선순위·hover 제한은 하위 `placeholder`의 CSS 규칙과 일치시킬 것.
             - 우선순위: disabled > error/invalid > success > focus > hover > filled > default
             - disabled · error/invalid · success 구간에서는 hover 스타일이 겹치지 않도록 선택자로 제한할 것
+            - disabled 상태에서도 `label` 색상은 기본값을 유지할 것
 
 핵심요구사항) API는 HTML 표준을 우선할 것.
             - 루트는 `React.InputHTMLAttributes<HTMLInputElement>` 확장을 고려하고, `disabled`·`aria-invalid`·`data-status` 등은 실제 DOM에 반영할 것

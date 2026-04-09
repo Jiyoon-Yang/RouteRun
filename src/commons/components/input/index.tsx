@@ -7,16 +7,14 @@ import { Placeholder, type PlaceholderProps } from './placeholder';
 import styles from './styles.module.css';
 
 export type InputProps = PlaceholderProps & {
-  /** 라벨 텍스트(없으면 Label 미렌더) */
-  label?: ReactNode;
-  /** 미지정 시 `required`(HTML)가 true이면 `required` 라벨 타입 */
+  /** 라벨 텍스트(항상 노출) */
+  label: ReactNode;
+  /** 라벨 표시 타입(`none`/`optional`/`required`/`info`). 미지정 시 `required` 값으로 자동 결정 */
   labelType?: LabelType;
   /** 필드 하단 보조 문구 */
   additionalText?: string;
   additionalTextState?: AddtionalTextState;
   showAdditionalIcon?: boolean;
-  /** 최상위 래퍼 클래스 */
-  wrapperClassName?: string;
 };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
@@ -24,10 +22,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     label,
     labelType,
     additionalText,
-    additionalTextState = 'default',
+    additionalTextState,
     showAdditionalIcon = true,
     disabled = false,
-    wrapperClassName,
+    success = false,
+    error = false,
+    'aria-invalid': ariaInvalid,
     className,
     id: idProp,
     showLeftIcon = true,
@@ -42,18 +42,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   const uid = useId().replace(/:/g, '');
   const id = idProp ?? `input-${uid}`;
   const resolvedLabelType: LabelType = labelType ?? (required ? 'required' : 'none');
-
-  const showLabel = label != null && label !== '';
-
-  const rootClassName = [styles.root, wrapperClassName].filter(Boolean).join(' ');
+  const isInvalid = error || ariaInvalid === true || ariaInvalid === 'true';
+  const resolvedAdditionalTextState: AddtionalTextState =
+    additionalTextState ?? (isInvalid ? 'error' : success ? 'success' : 'default');
 
   return (
-    <div className={rootClassName}>
-      {showLabel ? (
-        <Label htmlFor={id} type={resolvedLabelType} disabled={!!disabled}>
-          {label}
-        </Label>
-      ) : null}
+    <div className={styles.root}>
+      <Label htmlFor={id} type={resolvedLabelType}>
+        {label}
+      </Label>
 
       <Placeholder
         ref={ref}
@@ -64,13 +61,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         showRightIcon={showRightIcon}
         leftIcon={leftIcon}
         rightIcon={rightIcon}
+        success={success}
+        error={error}
+        aria-invalid={ariaInvalid}
         required={required}
         {...rest}
       />
 
       <AddtionalText
         message={additionalText ?? ''}
-        state={additionalTextState}
+        state={resolvedAdditionalTextState}
         showIcon={showAdditionalIcon}
       />
     </div>

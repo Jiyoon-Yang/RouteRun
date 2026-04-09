@@ -15,21 +15,26 @@ const iconArgs = {
 } as const;
 
 type InputStoryProps = ComponentProps<typeof Input>;
+type InputControlState = 'default' | 'success' | 'error' | 'disabled';
+type InputStoryArgs = InputStoryProps & { state: InputControlState };
+
+const mapStateToFlags = (state: InputControlState) => ({
+  disabled: state === 'disabled',
+  success: state === 'success',
+  error: state === 'error',
+});
 
 const meta = {
   title: 'Commons/Input',
   component: Input,
   tags: ['autodocs'],
   args: {
-    label: '라벨',
-    labelType: undefined,
+    label: 'Label',
+    labelType: 'none',
     placeholder: 'Placeholder',
     additionalText: '보조 설명 문구입니다.',
-    additionalTextState: 'default',
     showAdditionalIcon: true,
-    disabled: false,
-    success: false,
-    error: false,
+    state: 'default',
     showLeftIcon: true,
     showRightIcon: true,
     required: false,
@@ -38,33 +43,32 @@ const meta = {
   argTypes: {
     label: { control: 'text' },
     labelType: {
-      control: 'select',
-      options: [undefined, 'none', 'optional', 'required', 'info'],
+      control: 'radio',
+      options: ['none', 'optional', 'required', 'info'],
+      description: '라벨 표시 타입 선택. (`required=true`일 때만 `required`로 자동 표시) ',
     },
     placeholder: { control: 'text' },
     value: { control: 'text' },
     additionalText: { control: 'text' },
     additionalTextState: {
-      control: 'select',
-      options: ['default', 'success', 'error'],
+      table: { disable: true },
+      control: false,
+    },
+    state: {
+      control: 'radio',
+      options: ['default', 'success', 'error', 'disabled'],
+      description: '기본/성공/오류/비활성 상태를 단일 컨트롤로 전환',
     },
     showAdditionalIcon: { control: 'boolean' },
-    disabled: { control: 'boolean' },
-    success: { control: 'boolean' },
-    error: {
-      control: 'boolean',
-      description: '오류 보더 — DOM에는 `aria-invalid`로 반영',
-    },
-    required: {
-      control: 'boolean',
-      description: 'HTML `required` + 라벨 필수 표시(타입 미지정 시)',
-    },
+    disabled: { table: { disable: true }, control: false },
+    success: { table: { disable: true }, control: false },
+    error: { table: { disable: true }, control: false },
+    required: { table: { disable: true }, control: false },
     'aria-invalid': { table: { disable: true }, control: false },
     showLeftIcon: { control: 'boolean' },
     showRightIcon: { control: 'boolean' },
     leftIcon: { table: { disable: true } },
     rightIcon: { table: { disable: true } },
-    wrapperClassName: { control: 'text' },
   },
   parameters: {
     layout: 'centered',
@@ -75,12 +79,16 @@ const meta = {
       },
     },
   },
-  render: (args) => (
-    <div style={{ width: '22.5rem' }}>
-      <Input {...args} />
-    </div>
-  ),
-} satisfies Meta<InputStoryProps>;
+  render: (args: InputStoryArgs) => {
+    const { state, ...rest } = args;
+    const mapped = mapStateToFlags(state);
+    return (
+      <div style={{ width: '22.5rem' }}>
+        <Input {...rest} disabled={mapped.disabled} success={mapped.success} error={mapped.error} />
+      </div>
+    );
+  },
+} satisfies Meta<InputStoryArgs>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -92,12 +100,17 @@ export const Playground: Story = {
     additionalText: '한 줄 안내 문구입니다.',
   },
   render: function PlaygroundRender() {
-    const [args, updateArgs] = useArgs<InputStoryProps>();
+    const [args, updateArgs] = useArgs<InputStoryArgs>();
+    const { state, ...rest } = args;
+    const mapped = mapStateToFlags(state);
     return (
       <div style={{ width: '22.5rem' }}>
         <Input
-          {...args}
-          value={args.value ?? ''}
+          {...rest}
+          disabled={mapped.disabled}
+          success={mapped.success}
+          error={mapped.error}
+          value={rest.value ?? ''}
           onChange={(e) => {
             updateArgs({ value: e.target.value });
           }}
@@ -353,7 +366,7 @@ export const Filled: Story = {
 export const Error: Story = {
   args: {
     label: '라벨',
-    error: true,
+    state: 'error',
     value: '잘못된 입력',
     placeholder: 'Placeholder',
     additionalText: '형식을 확인해 주세요.',
@@ -365,7 +378,7 @@ export const Error: Story = {
 export const Success: Story = {
   args: {
     label: '라벨',
-    success: true,
+    state: 'success',
     value: '러닝 코스',
     placeholder: '검색어를 입력하세요',
     additionalText: '사용 가능한 값입니다.',
@@ -377,7 +390,7 @@ export const Success: Story = {
 export const Disabled: Story = {
   args: {
     label: '라벨',
-    disabled: true,
+    state: 'disabled',
     value: '',
     placeholder: 'Placeholder',
     additionalText: '비활성 필드입니다.',

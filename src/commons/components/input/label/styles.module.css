@@ -3,7 +3,7 @@
   align-items: center;
   gap: 0.25rem;
   width: fit-content;
-  color: var(--color-light_black-900);
+  color: var(--color-black-500);
   font-family: var(--typography-body-2-ko-desktop-regular-font-family);
   font-size: 0.875rem;
   line-height: 1.25rem;
@@ -22,7 +22,7 @@
 }
 
 .requiredMark {
-  color: var(--color-red-500);
+  color: var(--color-red-600);
   font-weight: var(--typography-body-2-ko-desktop-bold-font-weight);
   display: none;
 }
@@ -64,33 +64,20 @@
   color: var(--color-black-500);
 }
 
-/* parent field focus/disabled 상태를 label로 반영 */
-:global(*:has(input:focus-visible)) .base:not([data-disabled='true']) {
-  color: var(--color-black-500);
-}
-
-:global(*:has(input:focus-visible)) .base:not([data-disabled='true']) .infoIcon {
-  color: var(--color-black-500);
-}
-
 /* disabled가 최우선으로 모든 상태를 덮어쓴다 */
-.base[data-disabled='true'],
-:global(*:has(input:disabled)) .base {
+.base[data-disabled='true'] {
   color: var(--color-grey-500);
   cursor: not-allowed;
 }
 
-.base[data-disabled='true'] .meta,
-:global(*:has(input:disabled)) .base .meta {
+.base[data-disabled='true'] .meta {
   color: var(--color-grey-500);
 }
 
-.base[data-disabled='true'] .requiredMark,
-:global(*:has(input:disabled)) .base .requiredMark {
+.base[data-disabled='true'] .requiredMark {
   color: var(--color-grey-500);
 }
 
-.base[data-disabled='true'] .infoIcon,
-:global(*:has(input:disabled)) .base .infoIcon {
+.base[data-disabled='true'] .infoIcon {
   color: var(--color-grey-500);
 }

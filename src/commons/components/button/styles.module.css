@@ -10,15 +10,16 @@
 
 .iconBase > svg,
 .iconBase > img {
-  width: 80%;
-  height: 80%;
+  width: 100%;
+  height: 100%;
   display: block;
   object-fit: contain;
 }
 
+/* Figma 카드 액션 버튼 등: 아이콘 프레임 18×18 */
 .iconSmall {
-  width: 16px;
-  height: 16px;
+  width: 1.125rem;
+  height: 1.125rem;
 }
 
 .iconMedium {

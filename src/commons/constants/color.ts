@@ -107,6 +107,9 @@ export const COLOR_TOKENS = {
   'blue-700': '#244f96',
   'blue-800': '#1c3d74',
   'blue-900': '#152f59',
+
+  'card_outline-100': '#e2e8f0',
+  'card_outline-500': '#7186a1',
 } as const;
 
 export type ColorTokenName = keyof typeof COLOR_TOKENS;

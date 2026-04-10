@@ -1,0 +1,160 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  box-sizing: border-box;
+  width: 21.5rem;
+  border: 0.0625rem solid var(--color-card_outline-100);
+  border-radius: 1rem;
+  background: var(--color-white-500);
+}
+
+.rootDefault {
+  padding: 0.8125rem;
+}
+
+.rootWithActions {
+  padding: 1.0625rem;
+  width: 21.5rem;
+}
+
+.rootDefault:hover {
+  background: var(--color-white_grey-500);
+}
+
+.selected {
+  border-color: var(--color-card_outline-500);
+}
+
+.topSection {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.thumbnailWrap {
+  display: flex;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-white_grey-200);
+}
+
+.thumbnailImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.content {
+  display: flex;
+  flex: 1 0 0;
+  min-width: 0;
+  min-height: 5rem;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.contentInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.contentTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.title {
+  margin: 0;
+  min-width: 0;
+  color: var(--color-black-900);
+  font-family: var(--typography-body-1-ko-desktop-font-family);
+  font-size: 1rem;
+  line-height: 1.2rem; /* 동일 의미 토큰 부재로 하드코딩 */
+  font-weight: var(--typography-body-1-ko-desktop-font-weight);
+  letter-spacing: var(--typography-body-1-ko-desktop-letter-spacing);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.likeWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.likeIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.likeCount {
+  color: var(--color-black-300);
+  font-family: var(--typography-body-2-ko-desktop-bold-font-family);
+  font-size: 0.875rem;
+  line-height: 1.05rem; /* 동일 의미 토큰 부재로 하드코딩 */
+  font-weight: var(--typography-body-2-ko-desktop-bold-font-weight);
+  letter-spacing: var(--typography-body-2-ko-desktop-bold-letter-spacing);
+}
+
+.locationWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.locationIcon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.location {
+  color: var(--color-black-300);
+  font-family: var(--typography-body-2-ko-desktop-regular-font-family);
+  font-size: 0.875rem;
+  line-height: 1.05rem; /* 동일 의미 토큰 부재로 하드코딩 */
+  font-weight: var(--typography-body-2-ko-desktop-regular-font-weight);
+  letter-spacing: var(--typography-body-2-ko-desktop-regular-letter-spacing);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.distance {
+  margin: 0;
+  color: var(--color-black-900);
+  font-family: var(--typography-body-2-ko-desktop-semibold-font-family);
+  font-size: 0.875rem;
+  line-height: 1.05rem; /* 동일 의미 토큰 부재로 하드코딩 */
+  font-weight: var(--typography-body-2-ko-desktop-semibold-font-weight);
+  letter-spacing: var(--typography-body-2-ko-desktop-semibold-letter-spacing);
+}
+
+.actions {
+  display: flex;
+  width: 100%;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.actionButton {
+  width: 100%;
+  height: 2.25rem;
+  padding: 0.75rem 1.5rem;
+  font-family: var(--typography-body-2-ko-desktop-semibold-font-family);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: var(--typography-body-2-ko-desktop-semibold-font-weight);
+  letter-spacing: var(--typography-body-2-ko-desktop-semibold-letter-spacing);
+}

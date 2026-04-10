@@ -1,0 +1,41 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.5rem;
+  width: 21.4375rem;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background: var(--color-white-500);
+  box-shadow: 0 1.5625rem 3.125rem 0 rgba(0, 0, 0, 0.25); /* global token 부재로 하드코딩 */
+}
+
+.title {
+  margin: 0;
+  text-align: center;
+  color: #020618; /* 동일 의미 토큰 부재로 하드코딩 */
+  font-family: var(--typography-body-1-ko-desktop-font-family);
+  font-size: 1rem;
+  line-height: 1.187rem;
+  font-weight: 500; /* 동일 의미 토큰 부재로 하드코딩 */
+  letter-spacing: -0.0625rem; /* 동일 의미 토큰 부재로 하드코딩 */
+}
+
+.inputWrap {
+  width: 100%;
+}
+
+.inputField {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.actionButton {
+  width: 100%;
+}

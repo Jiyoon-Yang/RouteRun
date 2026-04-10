@@ -1,17 +1,25 @@
 {
   "extends": [
-    "next/core-web-vitals", // Next.js 권장 규칙
-    "eslint:recommended", // 일반적인 JS 에러 방지
-    "plugin:@typescript-eslint/recommended", // TS 타입 관련 체크
-    "plugin:prettier/recommended" // Prettier와 충돌 방지 및 Prettier 에러를 ESLint로 표시
+    "next/core-web-vitals",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
+    "plugin:storybook/recommended" // 👈 스토리북 공식 권장 규칙 추가
   ],
   "rules": {
-    "no-unused-vars": "off", // TS 규칙과 중복되므로 끔
-    "@typescript-eslint/no-unused-vars": ["error"], // 사용하지 않는 변수 금지
-    "@typescript-eslint/no-explicit-any": "warn", // any 사용 지양 (경고)
-    "react/self-closing-comp": "error", // 빈 태그는 <div /> 형태로 강제
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "react/self-closing-comp": "error",
+    "no-console": ["warn", { "allow": ["warn", "error", "info"] }],
     "import/order": [
-      // 임포트 순서 정렬
       "error",
       {
         "groups": [
@@ -19,11 +27,30 @@
           "external",
           "internal",
           ["parent", "sibling"],
-          "index"
+          "index",
+          "object",
+          "type"
         ],
+        "pathGroups": [{ "pattern": "@/**", "group": "internal", "position": "after" }],
         "newlines-between": "always",
         "alphabetize": { "order": "asc", "caseInsensitive": true }
       }
     ]
-  }
+  },
+  // 👇 스토리북 파일(*.stories.tsx 등)에만 적용되는 예외 처리 구역
+  "overrides": [
+    {
+      "files": ["*.stories.@(ts|tsx|js|jsx|mjs|cjs)"],
+      "rules": {
+        // 스토리북은 메타데이터 정의 시 익명 default export를 자주 쓰므로 에러 무시
+        "import/no-anonymous-default-export": "off",
+
+        // 스토리를 작성하며 테스트용으로 console.log를 자유롭게 쓸 수 있게 허용
+        "no-console": "off",
+
+        // 스토리 내부에서 Props로 넘길 때 빈 함수(empty function) 사용을 허용
+        "@typescript-eslint/no-empty-function": "off"
+      }
+    }
+  ]
 }

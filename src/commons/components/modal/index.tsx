@@ -61,7 +61,7 @@ export function Modal(props: ModalProps) {
         <div className={styles.inputWrap}>
           <Input
             label={props.inputLabel}
-            labelType={props.inputLabelType}
+            labelType={props.inputLabelType ?? (props.inputRequired ? 'required' : 'optional')}
             required={props.inputRequired}
             value={props.inputValue}
             onChange={(event) => props.onInputChange(event.target.value)}

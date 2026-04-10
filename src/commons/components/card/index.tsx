@@ -3,18 +3,12 @@ import { Icon } from '@/commons/components/icons';
 
 import styles from './styles.module.css';
 
-const DEFAULT_THUMBNAIL_SRC =
-  '/Users/MeJoo/Desktop/Running_Course/.cursor-assets/90515084e4c71e385e1f075bf7c074292980bd07.png';
-
 export type CardType = 'default' | 'my-course' | 'liked-course';
 
-export type CardProps = {
+type CardBaseProps = {
   className?: string;
   type: CardType;
   isLiked: boolean;
-  isSelected: boolean;
-  thumbnailSrc?: string;
-  thumbnailAlt?: string;
   title?: string;
   location?: string;
   distanceText?: string;
@@ -23,13 +17,23 @@ export type CardProps = {
   onSecondaryActionClick?: () => void;
 };
 
+type DefaultCardProps = CardBaseProps & {
+  type: 'default';
+  isSelected: boolean;
+};
+
+type ActionCardProps = CardBaseProps & {
+  type: 'my-course' | 'liked-course';
+  isSelected?: never;
+};
+
+export type CardProps = DefaultCardProps | ActionCardProps;
+
 export function Card({
   className,
   type,
   isLiked,
   isSelected,
-  thumbnailSrc = DEFAULT_THUMBNAIL_SRC,
-  thumbnailAlt = '러닝 코스 썸네일',
   title = '한강 러닝 코스',
   location = '여의도 한강공원',
   distanceText = '5km',
@@ -42,7 +46,7 @@ export function Card({
   const rootClass = [
     styles.root,
     showActions ? styles.rootWithActions : styles.rootDefault,
-    isSelected ? styles.selected : '',
+    type === 'default' && isSelected ? styles.selected : '',
     className,
   ]
     .filter(Boolean)
@@ -52,7 +56,7 @@ export function Card({
     <article className={rootClass}>
       <section className={styles.topSection}>
         <div className={styles.thumbnailWrap}>
-          <img src={thumbnailSrc} alt={thumbnailAlt} className={styles.thumbnailImage} />
+          <span className={styles.thumbnailPlaceholder}>썸네일</span>
         </div>
 
         <div className={styles.content}>
@@ -63,7 +67,7 @@ export function Card({
                 <Icon
                   name={isLiked ? 'heartFilled' : 'heart'}
                   size={1}
-                  color={isLiked ? 'var(--color-red-500)' : 'var(--color-dark_grey-300)'}
+                  color={isLiked ? 'var(--color-red-500)' : 'var(--color-card_outline-500)'}
                   className={styles.likeIcon}
                 />
                 <span className={styles.likeCount}>{likeCount}</span>
@@ -74,7 +78,7 @@ export function Card({
               <Icon
                 name="mapPin"
                 size={1}
-                color="var(--color-black-300)"
+                color="var(--color-card_outline-500)"
                 className={styles.locationIcon}
               />
               <span className={styles.location}>{location}</span>
@@ -95,7 +99,7 @@ export function Card({
             className={styles.actionButton}
             leftIcon={
               type === 'my-course' ? (
-                <Icon name="pencil" size={1.125} color="var(--color-black-300)" strokeWidth={1.8} />
+                <Icon name="pencil" size={18} color="var(--color-black-300)" strokeWidth={1.75} />
               ) : undefined
             }
             onClick={onPrimaryActionClick}
@@ -111,9 +115,9 @@ export function Card({
             className={styles.actionButton}
             leftIcon={
               type === 'my-course' ? (
-                <Icon name="trash2" size={1.125} color="var(--color-red-500)" strokeWidth={1.8} />
+                <Icon name="trash2" size={18} color="var(--color-red-500)" strokeWidth={1.75} />
               ) : (
-                <Icon name="heart" size={1.125} color="var(--color-red-500)" strokeWidth={1.8} />
+                <Icon name="heart" size={18} color="var(--color-red-500)" strokeWidth={1.75} />
               )
             }
             onClick={onSecondaryActionClick}

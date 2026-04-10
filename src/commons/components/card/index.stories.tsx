@@ -28,8 +28,6 @@ const meta = {
     location: { control: 'text' },
     distanceText: { control: 'text' },
     likeCount: { control: { type: 'number', min: 0, step: 1 } },
-    thumbnailSrc: { control: 'text' },
-    thumbnailAlt: { control: 'text' },
     className: { control: false },
     onPrimaryActionClick: { action: 'primary-action-click' },
     onSecondaryActionClick: { action: 'secondary-action-click' },
@@ -64,8 +62,13 @@ export const Default: Story = {
 
 export const DefaultSelected: Story = {
   args: {
-    ...Default.args,
+    type: 'default',
+    isLiked: true,
     isSelected: true,
+    title: '올림픽 공원 둘레길',
+    location: '서울 송파구',
+    distanceText: '2.8km',
+    likeCount: 10,
   },
 };
 
@@ -73,7 +76,6 @@ export const MyCourse: Story = {
   args: {
     type: 'my-course',
     isLiked: true,
-    isSelected: false,
     title: '한강 러닝 코스',
     location: '여의도 한강공원',
     distanceText: '5km',
@@ -85,7 +87,6 @@ export const LikedCourse: Story = {
   args: {
     type: 'liked-course',
     isLiked: true,
-    isSelected: false,
     title: '한강 러닝 코스',
     location: '여의도 한강공원',
     distanceText: '5km',
@@ -111,7 +112,6 @@ export const AllTypes: Story = {
       <Card
         type="my-course"
         isLiked
-        isSelected={false}
         title="한강 러닝 코스"
         location="여의도 한강공원"
         distanceText="5km"
@@ -120,7 +120,6 @@ export const AllTypes: Story = {
       <Card
         type="liked-course"
         isLiked
-        isSelected={false}
         title="한강 러닝 코스"
         location="여의도 한강공원"
         distanceText="5km"

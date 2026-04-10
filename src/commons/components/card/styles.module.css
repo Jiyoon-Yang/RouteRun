@@ -11,7 +11,8 @@
 }
 
 .rootDefault {
-  padding: 0.8125rem;
+  min-height: 6.625rem;
+  padding: 1rem;
 }
 
 .rootWithActions {
@@ -48,6 +49,20 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.thumbnailPlaceholder {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-black-300);
+  font-family: var(--typography-caption-1-ko-desktop-font-family);
+  font-size: 0.75rem;
+  line-height: 1.125rem;
+  font-weight: var(--typography-caption-1-ko-desktop-font-weight);
+  letter-spacing: var(--typography-caption-1-ko-desktop-letter-spacing);
 }
 
 .content {
@@ -89,6 +104,7 @@
 .likeWrap {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.25rem;
   flex-shrink: 0;
 }
@@ -99,10 +115,12 @@
 }
 
 .likeCount {
-  color: var(--color-black-300);
+  display: flex;
+  align-items: center;
+  color: var(--color-card_outline-500);
   font-family: var(--typography-body-2-ko-desktop-bold-font-family);
   font-size: 0.875rem;
-  line-height: 1.05rem; /* 동일 의미 토큰 부재로 하드코딩 */
+  line-height: 1.05rem; /* 피그마 수치(14/16.8) 기준 하드코딩 */
   font-weight: var(--typography-body-2-ko-desktop-bold-font-weight);
   letter-spacing: var(--typography-body-2-ko-desktop-bold-letter-spacing);
 }
@@ -120,7 +138,7 @@
 }
 
 .location {
-  color: var(--color-black-300);
+  color: var(--color-card_outline-500);
   font-family: var(--typography-body-2-ko-desktop-regular-font-family);
   font-size: 0.875rem;
   line-height: 1.05rem; /* 동일 의미 토큰 부재로 하드코딩 */

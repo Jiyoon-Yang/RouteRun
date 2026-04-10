@@ -67,7 +67,7 @@ export function Card({
                 <Icon
                   name={isLiked ? 'heartFilled' : 'heart'}
                   size={1}
-                  color={isLiked ? 'var(--color-red-500)' : 'var(--color-card_outline-500)'}
+                  color={isLiked ? 'var(--color-red-500)' : 'var(--color-red-500)'}
                   className={styles.likeIcon}
                 />
                 <span className={styles.likeCount}>{likeCount}</span>

@@ -1,5 +1,5 @@
 import { Button } from '@/commons/components/button';
-import { Input, type LabelType } from '@/commons/components/input';
+import { Input, type AddtionalTextState, type LabelType } from '@/commons/components/input';
 
 import styles from './styles.module.css';
 
@@ -25,10 +25,14 @@ type ConfirmModalProps = ModalBaseProps & {
 type FormModalProps = ModalBaseProps & {
   type: 'form';
   inputLabel: string;
+  /** 미지정 시 `inputRequired`에 따라 `required` / `none`(피그마 148:3557 — 라벨 + 필드 동시 노출) */
   inputLabelType?: LabelType;
   inputValue: string;
   inputPlaceholder?: string;
   inputRequired?: boolean;
+  inputAdditionalText?: string;
+  inputAdditionalTextState?: AddtionalTextState;
+  showInputAdditionalIcon?: boolean;
   onInputChange: (value: string) => void;
 };
 
@@ -61,11 +65,14 @@ export function Modal(props: ModalProps) {
         <div className={styles.inputWrap}>
           <Input
             label={props.inputLabel}
-            labelType={props.inputLabelType ?? (props.inputRequired ? 'required' : 'optional')}
+            labelType={props.inputLabelType ?? (props.inputRequired ? 'required' : 'none')}
             required={props.inputRequired}
             value={props.inputValue}
             onChange={(event) => props.onInputChange(event.target.value)}
             placeholder={props.inputPlaceholder}
+            additionalText={props.inputAdditionalText}
+            additionalTextState={props.inputAdditionalTextState}
+            showAdditionalIcon={props.showInputAdditionalIcon}
             className={styles.inputField}
             showLeftIcon={false}
             showRightIcon={false}

@@ -13,12 +13,14 @@
 .title {
   margin: 0;
   text-align: center;
-  color: #020618; /* 동일 의미 토큰 부재로 하드코딩 */
-  font-family: var(--typography-body-1-ko-desktop-font-family);
-  font-size: 1rem;
-  line-height: 1.187rem;
-  font-weight: 500; /* 동일 의미 토큰 부재로 하드코딩 */
-  letter-spacing: -0.0625rem; /* 동일 의미 토큰 부재로 하드코딩 */
+  /* Figma #020618 — 등록 색 중 RGB 거리상 가장 근접: --color-black-500 (#0a0a0a) */
+  color: var(--color-black-500);
+  font-family: var(--typography-modal-title-ko-desktop-font-family);
+  font-size: var(--typography-modal-title-ko-desktop-font-size);
+  font-style: var(--typography-modal-title-ko-desktop-font-style);
+  font-weight: var(--typography-modal-title-ko-desktop-font-weight);
+  line-height: var(--typography-modal-title-ko-desktop-line-height);
+  letter-spacing: var(--typography-modal-title-ko-desktop-letter-spacing);
 }
 
 .inputWrap {

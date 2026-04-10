@@ -48,10 +48,11 @@
   width: fit-content;
   text-align: center;
 
-  font-family: var(--typography-body-1-ko-desktop-font-family);
-  font-weight: var(--typography-body-1-ko-desktop-font-weight);
-  font-style: normal;
-  letter-spacing: var(--typography-body-1-ko-desktop-letter-spacing);
+  font-family: var(--typography-body-lg-ko-desktop-semibold-font-family);
+  font-weight: var(--typography-body-lg-ko-desktop-semibold-font-weight);
+  font-style: var(--typography-body-lg-ko-desktop-semibold-font-style);
+  letter-spacing: var(--typography-body-lg-ko-desktop-semibold-letter-spacing);
+  line-height: var(--typography-body-lg-ko-desktop-semibold-line-height);
   cursor: pointer;
 }
 

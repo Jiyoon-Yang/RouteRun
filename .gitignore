@@ -179,3 +179,6 @@ next-env.d.ts
 
 *storybook.log
 storybook-static
+
+.cursor-assets/
+.cursor-figma-assets/

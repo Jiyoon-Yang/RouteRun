@@ -1,6 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-
 import { Label } from './index';
+
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 
 type LabelProps = React.ComponentProps<typeof Label>;
 

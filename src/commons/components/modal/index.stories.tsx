@@ -1,6 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-
 import { Modal } from './index';
+
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 
 type ModalProps = React.ComponentProps<typeof Modal>;
 type FormModalProps = Extract<ModalProps, { type: 'form' }>;

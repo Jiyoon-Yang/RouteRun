@@ -1,6 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-
 import { TabButton } from './index';
+
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 
 const variantOptions = ['green', 'blue', 'orange', 'red'] as const;
 

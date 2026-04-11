@@ -1,6 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-
 import { Card } from './index';
+
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 
 type CardProps = React.ComponentProps<typeof Card>;
 

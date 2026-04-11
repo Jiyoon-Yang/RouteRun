@@ -3,11 +3,11 @@
  * 체크리스트: CSS Module + 토큰 색상(예외값 주석) / 인라인 스타일 없음 / 4상태(default·hover·active·selected)
  */
 
-import type { ComponentPropsWithoutRef } from 'react';
-
 import { Icon, type IconName } from '@/commons/components/icons';
 
 import styles from './styles.module.css';
+
+import type { ComponentPropsWithoutRef } from 'react';
 
 type SharedProps = {
   icon: IconName;

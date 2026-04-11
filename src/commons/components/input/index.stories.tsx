@@ -2,12 +2,13 @@
  * 복합 Input Storybook — `prompts/prompt.201.stories.txt` 준수
  * label + Placeholder(필드) + addtional_text 조합. 필드 시각 상태는 Placeholder CSS(가상클래스·표준 속성)와 동일.
  */
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { Scan } from 'lucide-react';
-import type { ComponentProps } from 'react';
 import { useArgs } from 'storybook/preview-api';
 
 import { Input } from './index';
+
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ComponentProps } from 'react';
 
 const iconArgs = {
   leftIcon: Scan,

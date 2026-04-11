@@ -1,9 +1,10 @@
 import { Info } from 'lucide-react';
-import type { LabelHTMLAttributes, ReactNode } from 'react';
 
 import { FieldLucideIcon } from '@/commons/icons';
 
 import styles from './styles.module.css';
+
+import type { LabelHTMLAttributes, ReactNode } from 'react';
 
 type NativeLabelProps = LabelHTMLAttributes<HTMLLabelElement>;
 

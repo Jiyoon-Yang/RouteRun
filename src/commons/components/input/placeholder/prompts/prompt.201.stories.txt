@@ -30,41 +30,4 @@
 
 ==============================================
 
-핵심요구사항) 스토리는 `prompt.101.ui.txt`와 동일한 철학을 따를 것.
-- `state` prop 기반 시각 고정은 사용하지 말 것.
-- Figma 8개 상태는 아래 스토리 이름과 대응할 것.
-  1. `Default` — 빈 값 + placeholder
-  2. `Hover` — `parameters.pseudo.hover` 또는 Pseudo States 툴바
-  3. `FocusEmpty` — 빈 값 + `pseudo.focus`
-  4. `FocusFilled` — 값 있음 + `pseudo.focus`
-  5. `Filled` — 값 있음, 포커스 없음 (비포커스 filled)
-  6. `Error` — `error` (DOM에는 `aria-invalid`, 스토리명은 Error)
-  7. `Success` — `success` prop
-  8. `Disabled` — `disabled`
-
-핵심요구사항) Storybook CSF 형식으로 작성할 것.
-- `title`, `component`, `tags`, `args`, `argTypes`, `parameters.layout`를 포함할 것.
-
-핵심요구사항) 아래 항목은 컨트롤 가능해야 함.
-- `placeholder` (text)
-- `value` (text)
-- `disabled` (boolean)
-- `success` (boolean)
-- `error` (boolean — 오류 보더, DOM에는 `aria-invalid`로 연결)
-- `showLeftIcon` (boolean)
-- `showRightIcon` (boolean)
-- `leftIcon`, `rightIcon`은 `Scan` 고정으로 두고 controls 테이블에서 숨길 것 (`table.disable`)
-
-핵심요구사항) `playground`용 인터랙티브 스토리(`Playground`)와 `FullWidth`는 선택적으로 유지 가능.
-
-핵심요구사항) 필수 스토리 세트
-- `Playground`
-- `Variants` (variant 비교 — 해당 시)
-- `States` (상태 비교 — 컴포넌트에 state·시각 축이 있을 때)
-- 필요 시 `FullWidth`, `Filled`, `Disabled` 등 실사용·경계 케이스 추가
-- 피그마에 없는 조합은 만들지 않는다. (UI 구현 시 정한 설계와 모순 없게.)
-
-핵심요구사항) 검증 가능성
-- 스토리만으로 주요 UI·동작을 팀원이 빠르게 점검할 수 있어야 한다.
-- 프로젝트에서 정의한 variant 의미(색·용도)를 스토리에서 구분 가능해야 한다.
-
+핵심요구사항) 참고할 TSX, CSS 경로를 바탕으로 해당 컴포넌트의 스토리를 지정된 경로에 구현할 것.

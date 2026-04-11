@@ -2,11 +2,12 @@
  * Placeholder Storybook — `prompts/prompt.201.stories.txt` 준수
  * 아이콘: Lucide `Scan` → `leftIcon` / `rightIcon` (FieldLucideIcon 기본 크기·선두께는 컴포넌트가 lucide_field_icon 상수 사용)
  */
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { Scan } from 'lucide-react';
 import { useArgs } from 'storybook/preview-api';
 
 import { Placeholder } from './index';
+
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 
 type PlaceholderProps = React.ComponentProps<typeof Placeholder>;
 

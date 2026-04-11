@@ -1,9 +1,10 @@
 import { AlertCircle, Check, Info } from 'lucide-react';
-import type { HTMLAttributes } from 'react';
 
 import { FieldLucideIcon } from '@/commons/icons';
 
 import styles from './styles.module.css';
+
+import type { HTMLAttributes } from 'react';
 
 export type AddtionalTextState = 'default' | 'success' | 'error';
 

@@ -1,7 +1,7 @@
+import { NavigationBar, type NavigationBarLink, type NavigationBarProps } from './index';
+
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { MouseEvent } from 'react';
-
-import { NavigationBar, type NavigationBarLink, type NavigationBarProps } from './index';
 
 const DEFAULT_ITEMS: NavigationBarLink[] = [
   { href: '/', label: '홈', icon: 'house' },

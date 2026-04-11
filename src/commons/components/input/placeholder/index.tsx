@@ -1,10 +1,11 @@
-import type { LucideIcon } from 'lucide-react';
 import { forwardRef } from 'react';
-import type { InputHTMLAttributes } from 'react';
 
 import { FieldLucideIcon } from '@/commons/icons';
 
 import styles from './styles.module.css';
+
+import type { LucideIcon } from 'lucide-react';
+import type { InputHTMLAttributes } from 'react';
 
 type NativeInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'size'>;
 

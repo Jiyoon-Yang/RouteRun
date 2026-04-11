@@ -114,6 +114,9 @@
   --color-blue-800: #1c3d74;
   --color-blue-900: #152f59;
 
+  --color-card_outline-100: #e2e8f0;
+  --color-card_outline-500: #62748e;
+
   /* Typography tokens (from Figma foundation / provided typography spec) */
   --typography-heading-1-ko-desktop-font-family: "Pretendard", Arial, Helvetica, sans-serif;
   --typography-heading-1-ko-desktop-font-size: 24px;
@@ -139,6 +142,14 @@
   --typography-heading-3-ko-desktop-regular-font-weight: 400;
   --typography-heading-3-ko-desktop-regular-letter-spacing: 0px;
 
+  /* Modal title (Figma 모달 제목 18/27 Semibold — 색은 #020618에 가장 근접한 --color-black-500 사용) */
+  --typography-modal-title-ko-desktop-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-modal-title-ko-desktop-font-size: 1.125rem;
+  --typography-modal-title-ko-desktop-line-height: 1.6875rem;
+  --typography-modal-title-ko-desktop-font-weight: 600;
+  --typography-modal-title-ko-desktop-letter-spacing: -0.0625rem;
+  --typography-modal-title-ko-desktop-font-style: normal;
+
   /* Body-lg (Figma — Body-lg Regular, 입력 필드 등) */
   --Body-lg-font-size: 16px;
   --Body-lg-line-height: 24px;
@@ -150,6 +161,13 @@
   --typography-body-lg-ko-desktop-font-weight: 400;
   --typography-body-lg-ko-desktop-letter-spacing: var(--Body-lg-letter-spacing);
   --typography-body-lg-ko-desktop-font-style: normal;
+
+  --typography-body-lg-ko-desktop-semibold-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-body-lg-ko-desktop-semibold-font-size: var(--Body-lg-font-size);
+  --typography-body-lg-ko-desktop-semibold-line-height: var(--Body-lg-line-height);
+  --typography-body-lg-ko-desktop-semibold-font-weight: 600;
+  --typography-body-lg-ko-desktop-semibold-letter-spacing: var(--Body-lg-letter-spacing);
+  --typography-body-lg-ko-desktop-semibold-font-style: normal;
 
   --typography-body-1-ko-desktop-font-family: "Pretendard", Arial, Helvetica, sans-serif;
   --typography-body-1-ko-desktop-font-size: 16px;
@@ -213,12 +231,26 @@
   --typography-heading-3-ko-mobile-regular-font-weight: 400;
   --typography-heading-3-ko-mobile-regular-letter-spacing: 0px;
 
+  --typography-modal-title-ko-mobile-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-modal-title-ko-mobile-font-size: 1.125rem;
+  --typography-modal-title-ko-mobile-line-height: 1.6875rem;
+  --typography-modal-title-ko-mobile-font-weight: 600;
+  --typography-modal-title-ko-mobile-letter-spacing: -0.0625rem;
+  --typography-modal-title-ko-mobile-font-style: normal;
+
   --typography-body-lg-ko-mobile-font-family: "Pretendard", Arial, Helvetica, sans-serif;
   --typography-body-lg-ko-mobile-font-size: var(--Body-lg-font-size);
   --typography-body-lg-ko-mobile-line-height: var(--Body-lg-line-height);
   --typography-body-lg-ko-mobile-font-weight: 400;
   --typography-body-lg-ko-mobile-letter-spacing: var(--Body-lg-letter-spacing);
   --typography-body-lg-ko-mobile-font-style: normal;
+
+  --typography-body-lg-ko-mobile-semibold-font-family: "Pretendard", Arial, Helvetica, sans-serif;
+  --typography-body-lg-ko-mobile-semibold-font-size: var(--Body-lg-font-size);
+  --typography-body-lg-ko-mobile-semibold-line-height: var(--Body-lg-line-height);
+  --typography-body-lg-ko-mobile-semibold-font-weight: 600;
+  --typography-body-lg-ko-mobile-semibold-letter-spacing: var(--Body-lg-letter-spacing);
+  --typography-body-lg-ko-mobile-semibold-font-style: normal;
 
   --typography-body-1-ko-mobile-font-family: "Pretendard", Arial, Helvetica, sans-serif;
   --typography-body-1-ko-mobile-font-size: 16px;

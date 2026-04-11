@@ -1,8 +1,6 @@
 /* Placeholder input — Figma node 139:2603 (8 states)
-   - Default/Focus/Filled/Error/Success: 배경 없음(transparent)
-   - Hover: 보더 진함 + 배경(white_grey-50)
-   - Disabled: 회색 필
-   - 입력 타이포: Pretendard regular 16px (body-lg 토큰) */
+   - 시각 상태: 입력 요소의 :disabled, [aria-disabled], aria-invalid, data-status, 가상클래스
+   - 래퍼는 :has(.input …)로 동기화 (JS로 state prop 고정하지 않음) */
 
 .base {
   display: flex;
@@ -58,75 +56,82 @@
 }
 
 /* 5 filled(비포커스) — 값만 있을 때도 배경 없음 */
-.base:not(:focus-within):not([data-disabled='true']):not([data-invalid='true']):not(.success):not([data-status='success'])
+.base:not(:focus-within):not(:has(.input:disabled)):not(:has(.input[aria-disabled='true'])):not(
+    :has(.input[aria-invalid='true'])
+  ):not(:has(.input[data-status='success']))
   .field:has(.input:not(:placeholder-shown)) {
   background-color: transparent;
 }
 
 /* 2 hover — 보더 + 배경 (Figma) */
-.base:hover:not(:focus-within):not([data-disabled='true']):not([data-invalid='true']):not(.success):not([data-status='success'])
+.base:hover:not(:focus-within):not(:has(.input:disabled)):not(:has(.input[aria-disabled='true'])):not(
+    :has(.input[aria-invalid='true'])
+  ):not(:has(.input[data-status='success']))
   .field {
   border-color: var(--color-grey-500);
   background-color: var(--color-white_grey-50);
 }
 
 /* 7 success — 배경 없음 */
-.base[data-status='success'] .field,
-.base.success .field {
+.base:has(.input[data-status='success']) .field {
   border-color: var(--color-green-500);
   background-color: transparent;
 }
 
 /* 6 error — 배경 없음 */
-.base[data-invalid='true'] .field,
 .base:has(.input[aria-invalid='true']) .field {
   border-color: var(--color-red-500);
   background-color: transparent;
 }
 
 /* 3·4 focus (일반) — 배경 없음 + 진한 보더 */
-.base:focus-within:not([data-disabled='true']):not([data-invalid='true']):not([data-status='success']):not(.success) .field {
+.base:focus-within:not(:has(.input:disabled)):not(:has(.input[aria-disabled='true'])):not(
+    :has(.input[aria-invalid='true'])
+  ):not(:has(.input[data-status='success']))
+  .field {
   border-color: var(--color-black-500);
   background-color: transparent;
 }
 
-.base:focus-within:not([data-disabled='true']):not([data-invalid='true']):not([data-status='success']):not(.success) .iconSlot {
+.base:focus-within:not(:has(.input:disabled)):not(:has(.input[aria-disabled='true'])):not(
+    :has(.input[aria-invalid='true'])
+  ):not(:has(.input[data-status='success']))
+  .iconSlot {
   color: var(--color-black-500);
 }
 
-.base[data-invalid='true']:focus-within .field,
 .base:has(.input[aria-invalid='true']):focus-within .field {
   border-color: var(--color-red-500);
   background-color: transparent;
 }
 
-.base[data-status='success']:focus-within .field,
-.base.success:focus-within .field {
+.base:has(.input[data-status='success']):focus-within .field {
   border-color: var(--color-green-500);
   background-color: transparent;
 }
 
-.base[data-invalid='true']:focus-within .iconSlot,
 .base:has(.input[aria-invalid='true']):focus-within .iconSlot {
   color: var(--color-grey-600);
 }
 
-.base[data-status='success']:focus-within .iconSlot,
-.base.success:focus-within .iconSlot {
+.base:has(.input[data-status='success']):focus-within .iconSlot {
   color: var(--color-grey-600);
 }
 
 /* 8 disabled — 회색 필만 유지 */
-.input:disabled {
+.input:disabled,
+.input[aria-disabled='true'] {
   cursor: not-allowed;
   color: var(--color-grey-600);
 }
 
-.base[data-disabled='true'] .field {
+.base:has(.input:disabled) .field,
+.base:has(.input[aria-disabled='true']) .field {
   border-color: var(--color-grey-200);
   background-color: var(--color-white_grey-100);
 }
 
-.base[data-disabled='true'] .iconSlot {
+.base:has(.input:disabled) .iconSlot,
+.base:has(.input[aria-disabled='true']) .iconSlot {
   color: var(--color-grey-500);
 }

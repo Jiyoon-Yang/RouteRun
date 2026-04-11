@@ -1,33 +1,72 @@
 /**
  * 복합 Input Storybook — `prompts/prompt.201.stories.txt` 준수
- * label + Placeholder(필드) + addtional_text 조합. 필드 시각 상태는 Placeholder CSS(가상클래스·표준 속성)와 동일.
+ * Compound: `Input.Root` + `Label` + `Field` + `AddtionalText`. 필드 시각 상태는 DOM·CSS(가상클래스) 기준.
  */
 import { Scan } from 'lucide-react';
 import { useArgs } from 'storybook/preview-api';
 
 import { Input } from './index';
 
+import type { AddtionalTextState } from './addtional_text';
+import type { LabelType } from './label';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 
 const iconArgs = {
   leftIcon: Scan,
   rightIcon: Scan,
 } as const;
 
-type InputStoryProps = ComponentProps<typeof Input>;
 type InputControlState = 'default' | 'success' | 'error' | 'disabled';
-type InputStoryArgs = InputStoryProps & { state: InputControlState };
 
-const mapStateToFlags = (state: InputControlState) => ({
+type InputStoryArgs = Omit<ComponentProps<typeof Input.Field>, 'children'> & {
+  label: ReactNode;
+  labelType?: LabelType;
+  additionalText?: string;
+  additionalTextState?: AddtionalTextState;
+  showAdditionalIcon?: boolean;
+  state: InputControlState;
+};
+
+const mapStateToFieldAttrs = (state: InputControlState) => ({
   disabled: state === 'disabled',
-  success: state === 'success',
-  error: state === 'error',
+  'aria-invalid': (state === 'error' ? true : undefined) as true | undefined,
+  ...(state === 'success' ? ({ 'data-status': 'success' as const } as const) : {}),
 });
+
+function renderComposedInput(args: InputStoryArgs) {
+  const {
+    state,
+    label,
+    labelType,
+    additionalText,
+    additionalTextState,
+    showAdditionalIcon = true,
+    required,
+    ...fieldRest
+  } = args;
+  const mapped = mapStateToFieldAttrs(state);
+  const resolvedLabelType: LabelType = labelType ?? (required ? 'required' : 'none');
+
+  const addtionalProps =
+    additionalTextState !== undefined ? { state: additionalTextState as AddtionalTextState } : {};
+
+  return (
+    <Input.Root>
+      <Input.Label type={resolvedLabelType}>{label}</Input.Label>
+      <Input.Field {...fieldRest} {...mapped} required={required} />
+      <Input.AddtionalText
+        message={additionalText ?? ''}
+        showIcon={showAdditionalIcon}
+        {...addtionalProps}
+      />
+    </Input.Root>
+  );
+}
 
 const meta = {
   title: 'Commons/Input',
-  component: Input,
+  component: Input.Root,
   tags: ['autodocs'],
   args: {
     label: 'Label',
@@ -40,13 +79,13 @@ const meta = {
     showRightIcon: true,
     required: false,
     ...iconArgs,
-  },
+  } satisfies InputStoryArgs,
   argTypes: {
     label: { control: 'text' },
     labelType: {
       control: 'radio',
       options: ['none', 'optional', 'required', 'info'],
-      description: '라벨 표시 타입 선택. (`required=true`일 때만 `required`로 자동 표시) ',
+      description: '라벨 표시 타입. (`required=true`일 때만 `required`로 자동 표시)',
     },
     placeholder: { control: 'text' },
     value: { control: 'text' },
@@ -58,14 +97,12 @@ const meta = {
     state: {
       control: 'radio',
       options: ['default', 'success', 'error', 'disabled'],
-      description: '기본/성공/오류/비활성 상태를 단일 컨트롤로 전환',
+      description: '필드 DOM 상태: default / data-status=success / aria-invalid / disabled',
     },
     showAdditionalIcon: { control: 'boolean' },
     disabled: { table: { disable: true }, control: false },
-    success: { table: { disable: true }, control: false },
-    error: { table: { disable: true }, control: false },
-    required: { table: { disable: true }, control: false },
     'aria-invalid': { table: { disable: true }, control: false },
+    required: { table: { disable: true }, control: false },
     showLeftIcon: { control: 'boolean' },
     showRightIcon: { control: 'boolean' },
     leftIcon: { table: { disable: true } },
@@ -76,19 +113,13 @@ const meta = {
     docs: {
       description: {
         component:
-          'Figma [139:2557](https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2557&m=dev) — `label` + 입력 필드(`Placeholder`) + `addtional_text` 복합 컴포넌트. 입력 필드의 **hover/focus/filled 등은 CSS 가상클래스**로 처리되며, 스토리에서는 `error`·`success`·`disabled` 등으로 DOM 상태를 맞춥니다.',
+          'Figma [139:2557](https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2557&m=dev) — **Compound** (`Root`·`Label`·`Field`·`AddtionalText`). 필드 **hover/focus/filled**는 CSS 가상클래스, 오류·성공·비활성은 **`aria-invalid`·`data-status`·`disabled`** 로 반영합니다.',
       },
     },
   },
-  render: (args: InputStoryArgs) => {
-    const { state, ...rest } = args;
-    const mapped = mapStateToFlags(state);
-    return (
-      <div style={{ width: '22.5rem' }}>
-        <Input {...rest} disabled={mapped.disabled} success={mapped.success} error={mapped.error} />
-      </div>
-    );
-  },
+  render: (args: InputStoryArgs) => (
+    <div style={{ width: '22.5rem' }}>{renderComposedInput(args)}</div>
+  ),
 } satisfies Meta<InputStoryArgs>;
 
 export default meta;
@@ -102,20 +133,15 @@ export const Playground: Story = {
   },
   render: function PlaygroundRender() {
     const [args, updateArgs] = useArgs<InputStoryArgs>();
-    const { state, ...rest } = args;
-    const mapped = mapStateToFlags(state);
     return (
       <div style={{ width: '22.5rem' }}>
-        <Input
-          {...rest}
-          disabled={mapped.disabled}
-          success={mapped.success}
-          error={mapped.error}
-          value={rest.value ?? ''}
-          onChange={(e) => {
+        {renderComposedInput({
+          ...args,
+          value: args.value ?? '',
+          onChange: (e) => {
             updateArgs({ value: e.target.value });
-          }}
-        />
+          },
+        })}
       </div>
     );
   },
@@ -127,7 +153,7 @@ export const States: Story = {
     docs: {
       description: {
         story:
-          '필드 8상태 요약(Placeholder와 동일). **Hover · Focus** 는 Pseudo States 애드온 또는 개별 스토리에서 확인하세요.',
+          '필드 8상태 요약. **Hover · Focus** 는 Pseudo States 애드온 또는 개별 스토리에서 확인하세요.',
       },
     },
   },
@@ -147,107 +173,94 @@ export const States: Story = {
         [
           {
             label: '1 Default',
-            node: (
-              <Input
-                {...iconArgs}
-                label="라벨"
-                value=""
-                placeholder="Placeholder"
-                additionalText="보조 문구"
-              />
-            ),
+            node: renderComposedInput({
+              ...iconArgs,
+              label: '라벨',
+              state: 'default',
+              value: '',
+              placeholder: 'Placeholder',
+              additionalText: '보조 문구',
+            }),
           },
           {
             label: '2 Hover',
-            node: (
-              <Input
-                {...iconArgs}
-                label="라벨"
-                value=""
-                placeholder="Placeholder"
-                additionalText="보조 문구"
-              />
-            ),
+            node: renderComposedInput({
+              ...iconArgs,
+              label: '라벨',
+              state: 'default',
+              value: '',
+              placeholder: 'Placeholder',
+              additionalText: '보조 문구',
+            }),
             hint: '→ Hover 스토리 또는 Pseudo States (:hover)',
           },
           {
             label: '3 FocusEmpty',
-            node: (
-              <Input
-                {...iconArgs}
-                label="라벨"
-                value=""
-                placeholder="Placeholder"
-                additionalText="보조 문구"
-              />
-            ),
+            node: renderComposedInput({
+              ...iconArgs,
+              label: '라벨',
+              state: 'default',
+              value: '',
+              placeholder: 'Placeholder',
+              additionalText: '보조 문구',
+            }),
             hint: '→ FocusEmpty 스토리 또는 Pseudo States (:focus)',
           },
           {
             label: '4 FocusFilled',
-            node: (
-              <Input
-                {...iconArgs}
-                label="라벨"
-                value="입력값"
-                placeholder="Placeholder"
-                additionalText="보조 문구"
-              />
-            ),
+            node: renderComposedInput({
+              ...iconArgs,
+              label: '라벨',
+              state: 'default',
+              value: '입력값',
+              placeholder: 'Placeholder',
+              additionalText: '보조 문구',
+            }),
             hint: '→ FocusFilled 스토리',
           },
           {
             label: '5 Filled',
-            node: (
-              <Input
-                {...iconArgs}
-                label="라벨"
-                value="user@example.com"
-                placeholder="이메일"
-                additionalText="보조 문구"
-              />
-            ),
+            node: renderComposedInput({
+              ...iconArgs,
+              label: '라벨',
+              state: 'default',
+              value: 'user@example.com',
+              placeholder: '이메일',
+              additionalText: '보조 문구',
+            }),
           },
           {
             label: '6 Error',
-            node: (
-              <Input
-                {...iconArgs}
-                label="라벨"
-                error
-                value="잘못된 입력"
-                placeholder="Placeholder"
-                additionalText="오류가 발생했습니다."
-                additionalTextState="error"
-              />
-            ),
+            node: renderComposedInput({
+              ...iconArgs,
+              label: '라벨',
+              state: 'error',
+              value: '잘못된 입력',
+              placeholder: 'Placeholder',
+              additionalText: '오류가 발생했습니다.',
+            }),
           },
           {
             label: '7 Success',
-            node: (
-              <Input
-                {...iconArgs}
-                label="라벨"
-                success
-                value="러닝 코스"
-                placeholder="검색어를 입력하세요"
-                additionalText="확인되었습니다."
-                additionalTextState="success"
-              />
-            ),
+            node: renderComposedInput({
+              ...iconArgs,
+              label: '라벨',
+              state: 'success',
+              value: '러닝 코스',
+              placeholder: '검색어를 입력하세요',
+              additionalText: '확인되었습니다.',
+            }),
           },
           {
             label: '8 Disabled',
-            node: (
-              <Input
-                {...iconArgs}
-                label="라벨"
-                disabled
-                value=""
-                placeholder="Placeholder"
-                additionalText="비활성 상태입니다."
-              />
-            ),
+            node: renderComposedInput({
+              ...iconArgs,
+              label: '라벨',
+              state: 'disabled',
+              value: '',
+              placeholder: 'Placeholder',
+              additionalText: '비활성 상태입니다.',
+            }),
           },
         ] as const
       ).map((row) => (
@@ -428,8 +441,6 @@ export const FullWidth: Story = {
     },
   },
   render: (args) => (
-    <div style={{ width: '100%', maxWidth: '35rem' }}>
-      <Input {...args} />
-    </div>
+    <div style={{ width: '100%', maxWidth: '35rem' }}>{renderComposedInput(args)}</div>
   ),
 };

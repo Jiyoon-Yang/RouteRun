@@ -14,9 +14,6 @@ export interface PlaceholderProps extends NativeInputProps {
   showRightIcon?: boolean;
   leftIcon?: LucideIcon;
   rightIcon?: LucideIcon;
-  success?: boolean;
-  /** 오류 스타일 — DOM에는 `aria-invalid`로 반영 */
-  error?: boolean;
 }
 
 export const Placeholder = forwardRef<HTMLInputElement, PlaceholderProps>(function Placeholder(
@@ -26,27 +23,16 @@ export const Placeholder = forwardRef<HTMLInputElement, PlaceholderProps>(functi
     showRightIcon = true,
     leftIcon,
     rightIcon,
-    success = false,
-    error = false,
     disabled,
     'aria-invalid': ariaInvalid,
     ...inputProps
   },
   ref,
 ) {
-  const isInvalid = error || ariaInvalid === true || ariaInvalid === 'true';
-  const ariaInvalidResolved = error ? true : ariaInvalid;
-  const rootClassName = [styles.base, success ? styles.success : '', className ?? '']
-    .filter(Boolean)
-    .join(' ');
+  const rootClassName = [styles.base, className ?? ''].filter(Boolean).join(' ');
 
   return (
-    <div
-      className={rootClassName}
-      data-status={success ? 'success' : undefined}
-      data-disabled={disabled ? 'true' : 'false'}
-      data-invalid={isInvalid ? 'true' : 'false'}
-    >
+    <div className={rootClassName}>
       <div className={styles.field}>
         {showLeftIcon && leftIcon ? (
           <span className={styles.iconSlot} aria-hidden>
@@ -59,7 +45,7 @@ export const Placeholder = forwardRef<HTMLInputElement, PlaceholderProps>(functi
           ref={ref}
           className={styles.input}
           disabled={disabled}
-          aria-invalid={ariaInvalidResolved}
+          aria-invalid={ariaInvalid}
         />
 
         {showRightIcon && rightIcon ? (

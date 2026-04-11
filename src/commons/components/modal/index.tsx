@@ -63,20 +63,25 @@ export function Modal(props: ModalProps) {
 
       {type === 'form' ? (
         <div className={styles.inputWrap}>
-          <Input
-            label={props.inputLabel}
-            labelType={props.inputLabelType ?? (props.inputRequired ? 'required' : 'none')}
-            required={props.inputRequired}
-            value={props.inputValue}
-            onChange={(event) => props.onInputChange(event.target.value)}
-            placeholder={props.inputPlaceholder}
-            additionalText={props.inputAdditionalText}
-            additionalTextState={props.inputAdditionalTextState}
-            showAdditionalIcon={props.showInputAdditionalIcon}
-            className={styles.inputField}
-            showLeftIcon={false}
-            showRightIcon={false}
-          />
+          <Input.Root>
+            <Input.Label type={props.inputLabelType ?? (props.inputRequired ? 'required' : 'none')}>
+              {props.inputLabel}
+            </Input.Label>
+            <Input.Field
+              className={styles.inputField}
+              required={props.inputRequired}
+              value={props.inputValue}
+              onChange={(event) => props.onInputChange(event.target.value)}
+              placeholder={props.inputPlaceholder}
+              showLeftIcon={false}
+              showRightIcon={false}
+            />
+            <Input.AddtionalText
+              message={props.inputAdditionalText ?? ''}
+              state={props.inputAdditionalTextState}
+              showIcon={props.showInputAdditionalIcon}
+            />
+          </Input.Root>
         </div>
       ) : null}
 

@@ -8,8 +8,11 @@ import { useArgs } from 'storybook/preview-api';
 import { Placeholder } from './index';
 
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ComponentProps } from 'react';
 
-type PlaceholderProps = React.ComponentProps<typeof Placeholder>;
+type PlaceholderProps = ComponentProps<typeof Placeholder>;
+/** Storybook·DOM용 `data-*` (InputHTMLAttributes 제네릭에 누락된 경우 대비) */
+type PlaceholderStoryArgs = PlaceholderProps & { 'data-status'?: 'success' };
 
 const iconArgs = {
   leftIcon: Scan,
@@ -23,8 +26,6 @@ const meta = {
   args: {
     placeholder: 'Placeholder',
     disabled: false,
-    success: false,
-    error: false,
     showLeftIcon: true,
     showRightIcon: true,
     ...iconArgs,
@@ -33,15 +34,7 @@ const meta = {
     placeholder: { control: 'text' },
     value: { control: 'text' },
     disabled: { control: 'boolean' },
-    success: { control: 'boolean' },
-    error: {
-      control: 'boolean',
-      description: '오류 보더 — DOM에는 `aria-invalid`로 반영',
-    },
-    'aria-invalid': {
-      table: { disable: true },
-      control: false,
-    },
+    'aria-invalid': { control: 'boolean' },
     showLeftIcon: { control: 'boolean' },
     showRightIcon: { control: 'boolean' },
     leftIcon: { table: { disable: true } },
@@ -52,7 +45,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Figma [139:2603](https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2603&m=dev) — **단일 primary 필드**, `state` prop 없음. 8가지 시각 상태는 **Default / Hover / FocusEmpty / FocusFilled / Filled / Error / Success / Disabled** 스토리와 **States**에서 비교합니다. `:hover`·포커스는 **Pseudo States** 애드온 또는 각 스토리의 `parameters.pseudo`로 확인합니다.',
+          'Figma [139:2603](https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=139-2603&m=dev) — **단일 primary 필드**. 오류·성공·비활성은 **`aria-invalid`·`data-status`·`disabled`** 등 DOM 속성으로 반영합니다.',
       },
     },
   },
@@ -61,10 +54,10 @@ const meta = {
       <Placeholder {...args} />
     </div>
   ),
-} satisfies Meta<PlaceholderProps>;
+} satisfies Meta<PlaceholderStoryArgs>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<PlaceholderStoryArgs>;
 
 /** 인터랙티브 — `value`는 `useArgs`로 동기화 */
 export const Playground: Story = {
@@ -73,7 +66,7 @@ export const Playground: Story = {
     value: '',
   },
   render: function PlaygroundRender() {
-    const [args, updateArgs] = useArgs<PlaceholderProps>();
+    const [args, updateArgs] = useArgs<PlaceholderStoryArgs>();
     return (
       <div style={{ width: '22.5rem' }}>
         <Placeholder
@@ -155,14 +148,21 @@ export const States: Story = {
           },
           {
             label: '6 Error',
-            node: <Placeholder {...iconArgs} error value="잘못된 입력" placeholder="Placeholder" />,
+            node: (
+              <Placeholder
+                {...iconArgs}
+                aria-invalid
+                value="잘못된 입력"
+                placeholder="Placeholder"
+              />
+            ),
           },
           {
             label: '7 Success',
             node: (
               <Placeholder
                 {...iconArgs}
-                success
+                data-status="success"
                 value="러닝 코스"
                 placeholder="검색어를 입력하세요"
               />
@@ -305,12 +305,12 @@ export const Error: Story = {
   parameters: {
     docs: {
       description: {
-        story: '`error` → `aria-invalid` + `data-invalid`',
+        story: '`aria-invalid` + `:has(.input[aria-invalid])` 보더',
       },
     },
   },
   args: {
-    error: true,
+    'aria-invalid': true,
     value: '잘못된 입력',
     placeholder: 'Placeholder',
     ...iconArgs,
@@ -319,7 +319,7 @@ export const Error: Story = {
 
 export const Success: Story = {
   args: {
-    success: true,
+    'data-status': 'success',
     value: '러닝 코스',
     placeholder: '검색어를 입력하세요',
     ...iconArgs,

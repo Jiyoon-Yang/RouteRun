@@ -2,7 +2,7 @@
 
 ==============================================
 
-조건-구현목표) `label` + `placeholder`(입력 필드) + `addtional_text`를 조합한 복합 Input을 구현할 것.
+조건-구현목표) `label` + `placeholder`(입력 필드) + `addtional_text`를 조합한 복합 컴포넌트 구조의 Input을 구현할 것.
             - 피그마 공통컴포넌트 기준 레이아웃·간격을 반영할 것
             - 입력 필드 영역의 시각 상태는 하위 `placeholder` 컴포넌트와 동일한 CSS 규칙(가상클래스·표준 속성)을 따를 것
 
@@ -36,13 +36,15 @@
 조건-공통목록) 길이 단위는 rem 우선. (프로젝트 규칙과 충돌 시 프로젝트 규칙 우선)
 
 ==============================================
+핵심요구사항) MCP를 연동하여 피그마의 디자인을 그대로 소스코드로 구현할 것.
+                - 스토리북은 생성하지 말 것.
+                - 기존의 공통컴포넌트와 스타일일관성을 통일하여 복합 컴포넌트(Compound Component)로 만들어낼 것.
 
-핵심요구사항) 복합 컴포넌트는 하위 3종을 import하여 조합할 것.
-            - `label`은 필수로 항상 노출할 것
-            - `label` ↔ 입력 요소는 `htmlFor` / `id`로 연결할 것
-            - `placeholder`(필드)에 입력 관련 props·접근성 속성을 전달할 것
-            - `addtional_text`에는 보조 문구·해당 영역에 필요한 최소 props만 전달할 것
-            - `addtionalTextState`가 미지정이면 필드 상태와 자동 동기화할 것 (`error`→`error`, `success`→`success`, 그 외 `default`)
+핵심요구사항) 아래 요구사항을 따를 것.
+            - Root 하위 3종(label / placeholder / addtional_text)을 import·조합.
+            - htmlFor / id는 Context 기본값으로 연결하고, 소비자가 id·htmlFor를 넘기면 그 값을 우선으로 함.
+            - AdditionalText의 state가 없으면 Field의 error·success·aria-invalid와 자동 동기화한다 (error→error, success→success, 그 외 default).
+            - 입력 필드의 시각 상태·가상클래스·표준 속성·아이콘(showLeftIcon/showRightIcon) 규칙은 기존 프롬프트와 동일하다.
 
 핵심요구사항) 입력 필드의 상태는 가상클래스(Pseudo-class)와 표준 속성으로 구현할 것. (JS로 `state`·variant 등을 고정하지 말 것)
             - default: 기본 상태

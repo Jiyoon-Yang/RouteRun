@@ -7,10 +7,10 @@ import { useArgs } from 'storybook/preview-api';
 
 import { Input } from './index';
 
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import type { ComponentProps, ReactNode } from 'react';
 import type { AddtionalTextState } from './addtional_text';
 import type { LabelType } from './label';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ComponentProps, ReactNode } from 'react';
 
 const iconArgs = {
   leftIcon: Scan,
@@ -49,9 +49,7 @@ function renderComposedInput(args: InputStoryArgs) {
   const resolvedLabelType: LabelType = labelType ?? (required ? 'required' : 'none');
 
   const addtionalProps =
-    additionalTextState !== undefined
-      ? { state: additionalTextState as AddtionalTextState }
-      : {};
+    additionalTextState !== undefined ? { state: additionalTextState as AddtionalTextState } : {};
 
   return (
     <Input.Root>
@@ -443,8 +441,6 @@ export const FullWidth: Story = {
     },
   },
   render: (args) => (
-    <div style={{ width: '100%', maxWidth: '35rem' }}>
-      {renderComposedInput(args)}
-    </div>
+    <div style={{ width: '100%', maxWidth: '35rem' }}>{renderComposedInput(args)}</div>
   ),
 };

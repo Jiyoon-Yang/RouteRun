@@ -8,8 +8,8 @@ const meta = {
   tags: ['autodocs'],
   args: {
     title: '러닝 코스',
-    showLeftIcon: false,
-    showRightIcon: false,
+    showLeftIcon: true,
+    showRightIcon: true,
   },
   argTypes: {
     title: {

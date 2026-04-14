@@ -32,8 +32,8 @@ export type HeaderProps = {
 export function Header({
   className,
   title = COPY.runningCourse,
-  showLeftIcon = false,
-  showRightIcon = false,
+  showLeftIcon = true,
+  showRightIcon = true,
   onLeftIconClick,
   onRightIconClick,
 }: HeaderProps) {

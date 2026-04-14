@@ -12,8 +12,8 @@
 조건-피그마) 활용할MCP: Figma Desktop
 조건-피그마) 구현될 컴포넌트 노드링크: https://www.figma.com/design/ALdH93pdOV32rbpqzxnEu3/%EB%9F%AC%EB%8B%9D%EC%BD%94%EC%8A%A4?node-id=148-3498&m=dev
 
-조건-파일경로) 구현될 TSX 파일경로: src/commons/components/navigation-bar/index.tsx
-조건-파일경로) 구현될 CSS 파일경로: src/commons/components/navigation-bar/styles.module.css
+조건-파일경로) 구현될 TSX 파일경로: src/commons/layout/navigation-bar/index.tsx
+조건-파일경로) 구현될 CSS 파일경로: src/commons/layout/navigation-bar/styles.module.css
 
 ==============================================
 

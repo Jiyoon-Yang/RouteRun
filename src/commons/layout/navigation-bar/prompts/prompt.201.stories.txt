@@ -8,9 +8,9 @@
 
 ==============================================
 
-조건-파일경로) 참고할 TSX     파일경로: src/commons/components/navigation-bar/index.tsx
-조건-파일경로) 참고할 CSS     파일경로: src/commons/components/navigation-bar/styles.module.css
-조건-파일경로) 구현될 STORIES 파일경로: src/commons/components/navigation-bar/index.stories.tsx
+조건-파일경로) 참고할 TSX     파일경로: src/commons/layout/navigation-bar/index.tsx
+조건-파일경로) 참고할 CSS     파일경로: src/commons/layout/navigation-bar/styles.module.css
+조건-파일경로) 구현될 STORIES 파일경로: src/commons/layout/navigation-bar/index.stories.tsx
 
 ==============================================
 

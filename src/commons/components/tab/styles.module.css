@@ -1,19 +1,22 @@
 .base {
   display: inline-flex;
-  min-height: 40px;
+  min-height: 36px;
   min-width: 0;
-  padding: 10px 16px;
+  padding: 0;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   align-self: stretch;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
 
   /* Body/B2 */
   font-family: var(--typography-body-2-ko-desktop-bold-font-family);
-  font-size: clamp(13px, 2.8vw, 15px);
+  font-size: 14px;
   font-style: normal;
   font-weight: var(--typography-body-2-ko-desktop-bold-font-weight);
-  line-height: clamp(18px, 3.4vw, 20px);
+  line-height: 17px;
   letter-spacing: var(--typography-body-2-ko-desktop-bold-letter-spacing);
 
   cursor: pointer;

@@ -1,6 +1,9 @@
-import type { Metadata } from 'next';
+import Script from 'next/script';
 
+import { Layout } from '@/commons/layout';
 import { AuthProvider } from '@/commons/providers/auth/auth.provider';
+
+import type { Metadata } from 'next';
 
 import './globals.css';
 
@@ -17,13 +20,16 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <script
+        <Script
+          id="tmap-sdk"
+          strategy="afterInteractive"
           src={`https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=${process.env.NEXT_PUBLIC_TMAP_API_KEY}`}
         />
       </head>
-      <body>
-        <AuthProvider>{children}</AuthProvider>
+      <body className="antialiased">
+        <AuthProvider>
+          <Layout>{children}</Layout>
+        </AuthProvider>
       </body>
     </html>
   );

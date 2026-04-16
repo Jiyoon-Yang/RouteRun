@@ -22,6 +22,7 @@ const COPY = {
 
 export type HeaderProps = {
   className?: string;
+  variant?: 'brand' | 'title';
   title?: string;
   showLeftIcon?: boolean;
   showRightIcon?: boolean;
@@ -31,6 +32,7 @@ export type HeaderProps = {
 
 export function Header({
   className,
+  variant = 'title',
   title = COPY.runningCourse,
   showLeftIcon = true,
   showRightIcon = true,
@@ -38,10 +40,29 @@ export function Header({
   onRightIconClick,
 }: HeaderProps) {
   const rootClass = [styles.root, className].filter(Boolean).join(' ').trim();
+  const innerClass =
+    variant === 'brand'
+      ? [styles.inner, styles.brandInner].join(' ')
+      : [styles.inner, styles.titleInner].join(' ');
+
+  if (variant === 'brand') {
+    return (
+      <header className={rootClass}>
+        <div className={innerClass}>
+          <div className={styles.brandMark} aria-hidden>
+            <span className={styles.brandMarkText}>RR</span>
+          </div>
+          <div className={styles.brandCopy}>
+            <h1 className={styles.brandTitle}>RouteRun</h1>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className={rootClass}>
-      <div className={styles.inner}>
+      <div className={innerClass}>
         {showLeftIcon ? (
           <button
             type="button"

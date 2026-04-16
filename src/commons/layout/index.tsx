@@ -14,6 +14,8 @@ import { NavigationBar } from './navigation-bar';
 import styles from './styles.module.css';
 import type { ReactNode } from 'react';
 
+import type { ReactNode } from 'react';
+
 type LayoutProps = {
   children: ReactNode;
 };
@@ -23,7 +25,7 @@ export function Layout({ children }: LayoutProps) {
     <div className={styles.wrapper}>
       <div className={styles.container}>
         <div className={styles.top}>
-          <Header />
+          <Header variant="brand" />
         </div>
         <main className={styles.middle}>{children}</main>
         <div className={styles.bottom}>

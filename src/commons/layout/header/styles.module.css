@@ -21,57 +21,11 @@
   box-sizing: border-box;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   min-height: 56px;
   width: 100%;
-  padding: 12px 16px;
+  max-width: 768px;
   margin-inline: auto;
-}
-
-.brandInner {
-  gap: 8px;
-}
-
-.titleInner {
-  justify-content: space-between;
-}
-
-.brandMark {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 12px;
-  background: var(--color-black-500);
-}
-
-.brandMarkText {
-  color: var(--color-white-500);
-  font-family: var(--typography-body-sm-ko-desktop-bold-font-family);
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 700;
-  line-height: 14px;
-  letter-spacing: 0;
-}
-
-.brandCopy {
-  display: flex;
-  flex: 1 1 auto;
-  min-width: 0;
-  align-items: center;
-}
-
-.brandTitle {
-  margin: 0;
-  color: var(--color-black-500);
-  font-family: var(--typography-heading-2-ko-desktop-semibold-font-family);
-  font-size: 20px;
-  font-style: normal;
-  font-weight: 600;
-  line-height: 26px;
-  letter-spacing: 0;
 }
 
 .title {

@@ -9,11 +9,11 @@
  * - [x] max-width 480px / 화면 중앙 정렬
  */
 
+import type { ReactNode } from 'react';
+
 import { Header } from './header';
 import { NavigationBar } from './navigation-bar';
 import styles from './styles.module.css';
-import type { ReactNode } from 'react';
-
 import type { ReactNode } from 'react';
 
 type LayoutProps = {
@@ -25,7 +25,7 @@ export function Layout({ children }: LayoutProps) {
     <div className={styles.wrapper}>
       <div className={styles.container}>
         <div className={styles.top}>
-          <Header variant="brand" />
+          <Header />
         </div>
         <main className={styles.middle}>{children}</main>
         <div className={styles.bottom}>

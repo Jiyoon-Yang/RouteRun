@@ -7,17 +7,11 @@ const meta = {
   component: Header,
   tags: ['autodocs'],
   args: {
-    variant: 'title',
     title: '러닝 코스',
     showLeftIcon: true,
     showRightIcon: true,
   },
   argTypes: {
-    variant: {
-      control: 'select',
-      options: ['brand', 'title'],
-      description: '헤더 표현 타입',
-    },
     title: {
       control: 'text',
       description: '헤더 상단 타이틀 텍스트',
@@ -56,22 +50,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Playground: Story = {};
-
-export const Brand: Story = {
-  args: {
-    variant: 'brand',
-    title: undefined,
-    showLeftIcon: false,
-    showRightIcon: false,
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: '홈 화면용 브랜드 헤더 상태입니다.',
-      },
-    },
-  },
-};
 
 export const LongTitle: Story = {
   args: {

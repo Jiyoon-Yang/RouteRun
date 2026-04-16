@@ -1,26 +1,36 @@
 /**
- * App layout shell — wireframe
- * 상단 헤더(60px)·본문·하단 GNB(56px) flex 구조, 고정 영역 패딩 반영
+ * Layout — 공통 앱 레이아웃
+ * 버전: 1.0.0 · 생성: 2026-04-16
+ * 체크리스트:
+ * - [x] CSS Module 클래스만 사용
+ * - [x] 인라인 스타일 미사용
+ * - [x] Header / NavigationBar import 조립
+ * - [x] children 영역 flex: 1 / 내부 스크롤
+ * - [x] max-width 480px / 화면 중앙 정렬
  */
 
+import type { ReactNode } from 'react';
+
+import { Header } from './header';
+import { NavigationBar } from './navigation-bar';
 import styles from './styles.module.css';
 
-export type LayoutProps = {
-  children: React.ReactNode;
+type LayoutProps = {
+  children: ReactNode;
 };
 
 export function Layout({ children }: LayoutProps) {
   return (
-    <div className={styles.root}>
-      <header className={styles.header} aria-label="상단 헤더">
-        <div className={styles.headerInner}>Header</div>
-      </header>
-      <main className={styles.main}>
-        <div className={styles.mainInner}>{children}</div>
-      </main>
-      <nav className={styles.gnb} aria-label="하단 탭 내비게이션">
-        <div className={styles.gnbInner}> GNB</div>
-      </nav>
+    <div className={styles.wrapper}>
+      <div className={styles.container}>
+        <div className={styles.top}>
+          <Header />
+        </div>
+        <main className={styles.middle}>{children}</main>
+        <div className={styles.bottom}>
+          <NavigationBar />
+        </div>
+      </div>
     </div>
   );
 }

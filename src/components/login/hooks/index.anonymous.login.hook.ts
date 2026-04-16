@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useState, useCallback } from 'react';
 
 interface UseAnonymousLoginOptions {
   returnTo?: string;
@@ -13,7 +13,9 @@ interface UseAnonymousLoginResult {
   error: string | null;
 }
 
-export function useAnonymousLogin({ returnTo }: UseAnonymousLoginOptions = {}): UseAnonymousLoginResult {
+export function useAnonymousLogin({
+  returnTo,
+}: UseAnonymousLoginOptions = {}): UseAnonymousLoginResult {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();

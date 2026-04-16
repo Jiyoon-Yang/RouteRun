@@ -16,7 +16,7 @@ export function Home() {
       <div className={styles.tab}>
         <div className={styles.tabScroll}>
           {TAB_ITEMS.map((tab) => (
-            <div key={tab.label} className={styles.tabItem}>
+            <div key={tab.label} className={styles.tabItem} style={{ flexGrow: tab.ratio }}>
               <TabButton variant={tab.variant} isActive={tab.isActive}>
                 {tab.label}
               </TabButton>

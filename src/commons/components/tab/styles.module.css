@@ -1,6 +1,6 @@
 .base {
   display: inline-flex;
-  min-height: 36px;
+  min-height: 40px;
   min-width: 0;
   padding: 10px 16px;
   flex-direction: column;
@@ -13,10 +13,10 @@
 
   /* Body/B2 */
   font-family: var(--typography-body-2-ko-desktop-bold-font-family);
-  font-size: clamp(12px, 2.6vw, 14px);
+  font-size: clamp(13px, 2.8vw, 15px);
   font-style: normal;
   font-weight: var(--typography-body-2-ko-desktop-bold-font-weight);
-  line-height: clamp(16px, 3.2vw, 20px);
+  line-height: clamp(18px, 3.4vw, 20px);
   letter-spacing: var(--typography-body-2-ko-desktop-bold-letter-spacing);
 
   cursor: pointer;

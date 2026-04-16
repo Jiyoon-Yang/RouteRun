@@ -32,16 +32,27 @@
 
 .tabItem > button {
   width: 100%;
-  padding-right: 0;
-  padding-left: 0;
 }
 
 .map {
   display: flex;
+  align-items: center;
+  justify-content: center;
   flex: 1;
   width: 100%;
   min-height: 0;
-  background: var(--color-white_grey-100);
+  background: var(--color-white_grey-400);
+}
+
+.mapPlaceholder {
+  color: var(--color-blue-900);
+  opacity: 0.6;
+  font-family: var(--typography-body-lg-ko-desktop-semibold-font-family);
+  font-size: var(--typography-body-lg-ko-desktop-semibold-font-size);
+  font-style: var(--typography-body-lg-ko-desktop-semibold-font-style);
+  font-weight: var(--typography-body-lg-ko-desktop-semibold-font-weight);
+  letter-spacing: var(--typography-body-lg-ko-desktop-semibold-letter-spacing);
+  line-height: var(--typography-body-lg-ko-desktop-semibold-line-height);
 }
 
 .courseList {

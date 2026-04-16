@@ -25,7 +25,9 @@ export function Home() {
         </div>
       </div>
 
-      <div className={styles.map} />
+      <div className={styles.map}>
+        <span className={styles.mapPlaceholder}>[MAP AREA]</span>
+      </div>
 
       <div className={styles.courseList}>
         <div className={styles.bottomSheetHandle} />

@@ -50,7 +50,12 @@ export const ROUTE_CONFIG: Record<string, RouteConfig> = {
   },
 };
 
-export const NAVIGATION_BAR_ROUTES = [ROUTES.HOME, ROUTES.COURSES.NEW, ROUTES.MYPAGE] as const;
+export const NAVIGATION_BAR_ROUTES = [
+  ROUTES.LOGIN,
+  ROUTES.HOME,
+  ROUTES.COURSES.NEW,
+  ROUTES.MYPAGE,
+] as const;
 
 export const HEADER_ROUTES = [ROUTES.HOME, ROUTES.COURSES.NEW, ROUTES.MYPAGE] as const;
 

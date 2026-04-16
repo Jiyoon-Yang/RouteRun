@@ -1,7 +1,10 @@
-import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
+import Script from 'next/script';
 
+import { Layout } from '@/commons/layout';
 import { AuthProvider } from '@/commons/providers/auth/auth.provider';
+
+import type { Metadata } from 'next';
 
 import './globals.css';
 
@@ -27,12 +30,17 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
-        <script
+        {/* no-sync-scripts 규칙 에러가 떠서 동기 script를 Script 컴포넌트로 변경함 */}
+        <Script
+          id="tmap-sdk"
+          strategy="afterInteractive"
           src={`https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=${process.env.NEXT_PUBLIC_TMAP_API_KEY}`}
         />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <Layout>{children}</Layout>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,16 +1,17 @@
-import { User } from "@supabase/supabase-js";
-import { createSupabaseClientWithToken } from "@/lib/supabase/initialize";
+import { User } from '@supabase/supabase-js';
+
+import { createSupabaseClientWithToken } from '@/lib/supabase/initialize';
 
 // ─── 공통 에러 타입 ────────────────────────────────────────────────────────────
 
-export type AuthErrorCode = "UNAUTHENTICATED";
+export type AuthErrorCode = 'UNAUTHENTICATED';
 
 export class AuthError extends Error {
   readonly code: AuthErrorCode;
 
   constructor(code: AuthErrorCode, message: string) {
     super(message);
-    this.name = "AuthError";
+    this.name = 'AuthError';
     this.code = code;
   }
 }
@@ -18,16 +19,16 @@ export class AuthError extends Error {
 // ─── 내부 유틸 ─────────────────────────────────────────────────────────────────
 
 function extractBearerToken(headers: Headers): string {
-  const authorization = headers.get("Authorization");
+  const authorization = headers.get('Authorization');
 
   if (!authorization) {
-    throw new AuthError("UNAUTHENTICATED", "Authorization 헤더가 누락되었습니다.");
+    throw new AuthError('UNAUTHENTICATED', 'Authorization 헤더가 누락되었습니다.');
   }
 
-  const [scheme, token] = authorization.split(" ");
+  const [scheme, token] = authorization.split(' ');
 
-  if (!token || scheme.toLowerCase() !== "bearer") {
-    throw new AuthError("UNAUTHENTICATED", "Authorization 헤더 형식이 올바르지 않습니다.");
+  if (!token || scheme.toLowerCase() !== 'bearer') {
+    throw new AuthError('UNAUTHENTICATED', 'Authorization 헤더 형식이 올바르지 않습니다.');
   }
 
   return token;
@@ -38,7 +39,7 @@ async function fetchUserByToken(token: string): Promise<User> {
   const { data, error } = await client.auth.getUser();
 
   if (error || !data.user) {
-    throw new AuthError("UNAUTHENTICATED", "유효하지 않은 토큰입니다.");
+    throw new AuthError('UNAUTHENTICATED', '유효하지 않은 토큰입니다.');
   }
 
   return data.user;

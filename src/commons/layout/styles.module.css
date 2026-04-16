@@ -31,7 +31,13 @@
   flex: 1;
   flex-direction: column;
   overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
   width: 100%;
+}
+
+.middle::-webkit-scrollbar {
+  display: none;
 }
 
 /* bottom: 하단 네비게이션 바 영역 56px 고정 */

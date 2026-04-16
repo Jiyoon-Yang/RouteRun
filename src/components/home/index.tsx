@@ -1,0 +1,41 @@
+import { Card } from '@/commons/components/card';
+import { TabButton } from '@/commons/components/tab';
+
+import styles from './styles.module.css';
+
+const TAB_ITEMS = [
+  { label: '~3km', variant: 'blue' as const, isActive: true },
+  { label: '3~5km', variant: 'green' as const, isActive: false },
+  { label: '5~10km', variant: 'red' as const, isActive: false },
+  { label: '10km~', variant: 'orange' as const, isActive: false },
+];
+
+export function Home() {
+  return (
+    <section className={styles.container}>
+      <div className={styles.tab}>
+        <div className={styles.tabScroll}>
+          {TAB_ITEMS.map((tab) => (
+            <div key={tab.label} className={styles.tabItem}>
+              <TabButton variant={tab.variant} isActive={tab.isActive}>
+                {tab.label}
+              </TabButton>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className={styles.map} />
+
+      <div className={styles.courseList}>
+        <div className={styles.bottomSheetHandle} />
+        <div className={styles.cardList}>
+          <Card className={styles.cardWidth} type="default" isLiked={false} isSelected={false} />
+          <Card className={styles.cardWidth} type="default" isLiked isSelected />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default Home;

@@ -1,18 +1,8 @@
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
 
 import { AuthProvider } from '@/commons/providers/auth/auth.provider';
 
 import './globals.css';
-
-const geistSans = Inter({
-  subsets: ['latin'],
-  variable: '--font-geist-sans',
-});
-const geistMono = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-geist-mono',
-});
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -27,11 +17,12 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <script
           src={`https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=${process.env.NEXT_PUBLIC_TMAP_API_KEY}`}
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

@@ -5,10 +5,11 @@
 
 /* --- GNB item container (125×56, top border) --- */
 .item {
+  padding-bottom: env(safe-area-inset-bottom);
   box-sizing: border-box;
   display: flex;
-  width: 125px;
-  height: 56px;
+  width: 100%;
+  min-height: 56px;
   align-items: center;
   justify-content: center;
   padding: 0;

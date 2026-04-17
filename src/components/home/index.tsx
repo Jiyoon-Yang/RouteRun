@@ -18,7 +18,7 @@ export function Home() {
       <div className={styles.tab}>
         <div className={styles.tabScroll}>
           {TAB_ITEMS.map((tab) => (
-            <div key={tab.label} className={styles.tabItem} style={{ flexGrow: tab.ratio }}>
+            <div key={tab.label} className={styles.tabItem}>
               <TabButton variant={tab.variant} isActive={tab.isActive}>
                 {tab.label}
               </TabButton>
@@ -33,6 +33,7 @@ export function Home() {
 
       <div className={styles.courseList}>
         <div className={styles.bottomSheetHandle} />
+        <h2 className={styles.courseListTitle}>러닝코스 목록</h2>
         <div className={styles.cardList}>
           <Card className={styles.cardWidth} type="default" isLiked={false} isSelected={false} />
           <Card className={styles.cardWidth} type="default" isLiked isSelected />

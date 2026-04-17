@@ -77,11 +77,28 @@
   background: var(--color-grey-200);
 }
 
+.courseListTitle {
+  margin: 0 0 12px;
+  color: var(--color-black-500);
+  font-family: var(--typography-title-sm-ko-mobile-semibold-font-family);
+  font-size: var(--typography-title-sm-ko-mobile-semibold-font-size);
+  font-style: var(--typography-title-sm-ko-mobile-semibold-font-style);
+  font-weight: var(--typography-title-sm-ko-mobile-semibold-font-weight);
+  letter-spacing: var(--typography-title-sm-ko-mobile-semibold-letter-spacing);
+  line-height: var(--typography-title-sm-ko-mobile-semibold-line-height);
+}
+
 .cardList {
   display: flex;
   flex-direction: column;
   gap: 12px;
   overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.cardList::-webkit-scrollbar {
+  display: none;
 }
 
 .cardWidth {

@@ -22,6 +22,7 @@ import { useState } from 'react';
 import { Button } from '@/commons/components/button';
 import { Card } from '@/commons/components/card';
 import { Icon } from '@/commons/components/icons';
+import { Header } from '@/commons/layout/header';
 
 import styles from './styles.module.css';
 
@@ -54,6 +55,14 @@ export default function Mypage() {
 
   return (
     <div className={styles.container}>
+      <Header
+        title={TEXTS.TITLE}
+        showLeftIcon={false}
+        showRightIcon={true}
+        rightIconName="logOut"
+        onRightIconClick={() => {}}
+      />
+
       {/* 프로필 섹션 */}
       <section className={styles.profileSection} aria-label="프로필">
         <div className={styles.profileInfo}>

@@ -22,6 +22,7 @@ import { Button } from '@/commons/components/button';
 import { Icon } from '@/commons/components/icons';
 import Input from '@/commons/components/input';
 import { Label } from '@/commons/components/input/label';
+import { Header } from '@/commons/layout/header';
 
 import styles from './styles.module.css';
 
@@ -75,6 +76,8 @@ export default function CourseSubmit({ mode, courseId: _courseId }: CourseSubmit
 
   return (
     <div className={styles.container}>
+      <Header title={pageTitle} showRightIcon={false} />
+
       {/* 지도 플레이스홀더 */}
       <div className={styles.mapArea} aria-label="지도 영역">
         <span className={styles.mapLabel}>{TEXTS.MAP_PLACEHOLDER}</span>

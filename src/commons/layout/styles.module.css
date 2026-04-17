@@ -8,12 +8,12 @@
   background-color: #f0f0f0;
 }
 
-/* container: 모바일 전용 max-width 480px, 세로 flex */
+/* container: 모바일 전용 max-width 375px, 세로 flex */
 .container {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 375px;
+  max-width: 769px;
   height: 100%;
   background-color: #ffffff;
 }
@@ -48,3 +48,9 @@
   width: 100%;
   height: 56px;
 }
+/* 
+@media (min-width: 769px) {
+  .container {
+    max-width: 375px;
+  }
+} */

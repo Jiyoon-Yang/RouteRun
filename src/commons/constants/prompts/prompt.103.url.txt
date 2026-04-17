@@ -47,3 +47,10 @@
                   - 노출가능목록
                      - header O
                      - navigationbar O
+
+               6) 코스 수정
+                  - 경로명: /courses/[id]/edit
+                  - 접근가능상태: [회원전용]
+                  - 노출가능목록
+                     - header O
+                     - navigationbar O

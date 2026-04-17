@@ -14,7 +14,12 @@
 
 import { usePathname } from 'next/navigation';
 
-import { HEADER_ROUTES, NAVIGATION_BAR_ROUTES } from '@/commons/constants/url';
+import {
+  HEADER_DYNAMIC_PATTERNS,
+  HEADER_ROUTES,
+  NAVIGATION_BAR_DYNAMIC_PATTERNS,
+  NAVIGATION_BAR_ROUTES,
+} from '@/commons/constants/url';
 
 import { Header } from './header';
 import { NavigationBar } from './navigation-bar';
@@ -28,8 +33,12 @@ type LayoutProps = {
 
 export function Layout({ children }: LayoutProps) {
   const pathname = usePathname();
-  const showHeader = (HEADER_ROUTES as readonly string[]).includes(pathname);
-  const showNavigationBar = (NAVIGATION_BAR_ROUTES as readonly string[]).includes(pathname);
+  const showHeader =
+    (HEADER_ROUTES as readonly string[]).includes(pathname) ||
+    HEADER_DYNAMIC_PATTERNS.some((pattern) => pattern.test(pathname));
+  const showNavigationBar =
+    (NAVIGATION_BAR_ROUTES as readonly string[]).includes(pathname) ||
+    NAVIGATION_BAR_DYNAMIC_PATTERNS.some((pattern) => pattern.test(pathname));
 
   return (
     <div className={styles.wrapper}>

@@ -89,3 +89,27 @@ export const Icon = ({
 };
 
 export default Icon;
+
+export { LogoIcon } from './logo';
+
+import type { LucideIcon } from 'lucide-react';
+
+interface FieldLucideIconProps {
+  icon: LucideIcon;
+  size?: number | string;
+  color?: string;
+  strokeWidth?: number;
+  className?: string;
+}
+
+export function FieldLucideIcon({
+  icon: LucideComponent,
+  size = 16,
+  color = 'currentColor',
+  strokeWidth = 2,
+  className,
+}: FieldLucideIconProps) {
+  return (
+    <LucideComponent size={size} color={color} strokeWidth={strokeWidth} className={className} />
+  );
+}

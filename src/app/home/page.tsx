@@ -1,4 +1,4 @@
-import HomeWireframe from '@/components/home';
+import HomeWireframe from '@/components/home/';
 
 export default function HomePage() {
   return <HomeWireframe />;

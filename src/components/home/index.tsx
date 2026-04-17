@@ -1,5 +1,6 @@
 import { Card } from '@/commons/components/card';
 import { TabButton } from '@/commons/components/tab';
+import { Header } from '@/commons/layout/header';
 
 import styles from './styles.module.css';
 
@@ -13,6 +14,7 @@ const TAB_ITEMS = [
 export function Home() {
   return (
     <section className={styles.container}>
+      <Header showLogo showLeftIcon={false} showRightIcon={false} title="RouteRun" />
       <div className={styles.tab}>
         <div className={styles.tabScroll}>
           {TAB_ITEMS.map((tab) => (

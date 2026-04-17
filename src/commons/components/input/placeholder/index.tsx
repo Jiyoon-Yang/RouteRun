@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 
-import { FieldLucideIcon } from '@/commons/icons';
+import { FieldLucideIcon } from '@/commons/components/icons';
 
 import styles from './styles.module.css';
 

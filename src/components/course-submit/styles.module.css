@@ -1,0 +1,242 @@
+/*
+ * CourseSubmit styles.module.css
+ * 버전: 1.0.0 · 생성: 2026-04-16
+ * 체크리스트:
+ * - [x] tailwind.config 미수정
+ * - [x] 하드코딩 색상값: 매칭 토큰 없는 경우 주석 명시
+ * - [x] 인라인 스타일 0건
+ * - [x] CSS 변수(var(--*)) 기반 디자인 토큰 사용
+ * - [x] position: absolute 는 이미지 뱃지에만 한정 사용
+ * - [x] 소수점 값 반올림 완료
+ */
+
+/* ====================== layout ====================== */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-white-500);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.container::-webkit-scrollbar {
+  display: none;
+}
+
+/* ====================== header ====================== */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  width: 100%;
+  height: 60px;
+  padding: 12px 16px 13px;
+  background-color: var(--color-white-500);
+  border-bottom: 1px solid var(--color-card_outline-100);
+}
+
+.headerIconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  min-width: 44px;
+  min-height: 44px;
+  margin: -12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-black-500);
+}
+
+.headerIconPlaceholder {
+  display: block;
+  flex-shrink: 0;
+  width: 20px;
+  min-width: 44px;
+  visibility: hidden;
+}
+
+.headerTitle {
+  flex: 1;
+  font-family: var(--typography-heading-3-ko-desktop-semibold-font-family);
+  font-size: var(--typography-heading-3-ko-desktop-semibold-font-size);
+  font-weight: var(--typography-heading-3-ko-desktop-semibold-font-weight);
+  line-height: var(--typography-heading-3-ko-desktop-semibold-line-height);
+  letter-spacing: var(--typography-heading-3-ko-desktop-semibold-letter-spacing);
+  color: var(--color-black-500);
+  text-align: center;
+}
+
+/* ====================== map area ====================== */
+
+.mapArea {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 100%;
+  height: 272px;
+  background-color: #f1f5f9; /* Figma: 매칭되는 디자인 토큰 없음 */
+  border-bottom: 1px solid var(--color-card_outline-100);
+}
+
+.mapLabel {
+  font-family: var(--typography-body-lg-ko-desktop-font-family);
+  font-size: var(--typography-body-lg-ko-desktop-font-size);
+  font-weight: var(--typography-body-lg-ko-desktop-font-weight);
+  line-height: var(--typography-body-lg-ko-desktop-line-height);
+  color: var(--color-card_outline-500);
+}
+
+/* ====================== form section ====================== */
+
+.formSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 16px 24px;
+  background-color: #f8fafc; /* Figma: 매칭되는 디자인 토큰 없음 */
+  flex: 1;
+}
+
+/* ====================== field group ====================== */
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+/* ====================== textarea ====================== */
+
+.textarea {
+  width: 100%;
+  height: 104px;
+  padding: 12px 16px;
+  border: 1px solid var(--color-grey-200);
+  border-radius: 12px;
+  background: transparent;
+  resize: none;
+  font-family: var(--typography-body-lg-ko-desktop-font-family);
+  font-size: var(--typography-body-lg-ko-desktop-font-size);
+  font-weight: var(--typography-body-lg-ko-desktop-font-weight);
+  line-height: var(--typography-body-lg-ko-desktop-line-height);
+  letter-spacing: var(--typography-body-lg-ko-desktop-letter-spacing);
+  color: var(--color-black-500);
+  outline: none;
+  transition: border-color 120ms ease;
+}
+
+.textarea::placeholder {
+  color: #a4a7ae; /* Figma color/text/tertiary — 매칭되는 디자인 토큰 없음 */
+}
+
+.textarea:focus {
+  border-color: var(--color-black-500);
+}
+
+/* ====================== image upload ====================== */
+
+.imageList {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 8px;
+  padding-top: 8px;
+  overflow-x: auto;
+}
+
+.addImageButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  background-color: var(--color-white-500);
+  border: 2px dashed #cad5e2; /* Figma: 매칭되는 디자인 토큰 없음 */
+  border-radius: 12px;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.addImageCircle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #cad5e2; /* Figma: 매칭되는 디자인 토큰 없음 */
+}
+
+.addImageCount {
+  font-family: var(--typography-caption-1-ko-desktop-font-family);
+  font-size: var(--typography-caption-1-ko-desktop-font-size);
+  font-weight: var(--typography-caption-1-ko-desktop-font-weight);
+  line-height: var(--typography-caption-1-ko-desktop-line-height);
+  color: #cad5e2; /* Figma: 매칭되는 디자인 토큰 없음 */
+}
+
+.fileInput {
+  display: none;
+}
+
+/* 이미지 아이템 — 뱃지 오버레이를 위해 relative 사용 */
+.imageItem {
+  position: relative;
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+}
+
+.imageThumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid var(--color-card_outline-100);
+  display: block;
+}
+
+.deleteImageButton {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--color-card_outline-500);
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  min-width: 20px;
+  min-height: 20px;
+}
+
+/* ====================== submit area ====================== */
+
+.submitArea {
+  display: flex;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.submitButton {
+  width: 100%;
+}

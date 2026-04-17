@@ -22,10 +22,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 56px;
+  min-height: 60px;
   width: 100%;
   max-width: 768px;
   margin-inline: auto;
+  padding: 12px 16px;
+  gap: 8px;
 }
 
 .title {
@@ -68,5 +70,9 @@
   display: inline-flex;
   width: 40px;
   height: 40px;
+  flex-shrink: 0;
+}
+
+.logo {
   flex-shrink: 0;
 }

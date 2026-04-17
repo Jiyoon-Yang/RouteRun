@@ -1,6 +1,4 @@
-import { AlertCircle, Check, Info } from 'lucide-react';
-
-import { FieldLucideIcon } from '@/commons/icons';
+import { Icon, type IconName } from '@/commons/components/icons';
 
 import styles from './styles.module.css';
 
@@ -16,11 +14,11 @@ export interface AddtionalTextProps extends NativeParagraphProps {
   showIcon?: boolean;
 }
 
-const ICON_BY_STATE = {
-  default: Info,
-  success: Check,
-  error: AlertCircle,
-} as const;
+const ICON_BY_STATE: Record<AddtionalTextState, IconName> = {
+  default: 'info',
+  success: 'check',
+  error: 'circleAlert',
+};
 
 export function AddtionalText({
   message = '',
@@ -33,14 +31,14 @@ export function AddtionalText({
     return null;
   }
 
-  const Icon = ICON_BY_STATE[state];
+  const iconName = ICON_BY_STATE[state];
   const rootClassName = [styles.base, className ?? ''].filter(Boolean).join(' ');
 
   return (
     <p {...paragraphProps} className={rootClassName} data-state={state}>
       {showIcon ? (
         <span className={styles.icon} aria-hidden>
-          <FieldLucideIcon icon={Icon} size={12} />
+          <Icon name={iconName} size={12} />
         </span>
       ) : null}
       <span className={styles.message}>{message}</span>

@@ -10,7 +10,8 @@
  * - [x] 시맨틱 header + heading 구조
  */
 
-import { Icon } from '@/commons/components/icons';
+import { Icon, LogoIcon } from '@/commons/components/icons';
+import type { IconName } from '@/commons/components/icons';
 
 import styles from './styles.module.css';
 
@@ -23,8 +24,11 @@ const COPY = {
 export type HeaderProps = {
   className?: string;
   title?: string;
+  showLogo?: boolean;
   showLeftIcon?: boolean;
   showRightIcon?: boolean;
+  leftIconName?: IconName;
+  rightIconName?: IconName;
   onLeftIconClick?: () => void;
   onRightIconClick?: () => void;
 };
@@ -32,8 +36,11 @@ export type HeaderProps = {
 export function Header({
   className,
   title = COPY.runningCourse,
+  showLogo = false,
   showLeftIcon = true,
   showRightIcon = true,
+  leftIconName = 'chevronLeft',
+  rightIconName = 'chevronRight',
   onLeftIconClick,
   onRightIconClick,
 }: HeaderProps) {
@@ -42,14 +49,16 @@ export function Header({
   return (
     <header className={rootClass}>
       <div className={styles.inner}>
-        {showLeftIcon ? (
+        {showLogo ? (
+          <LogoIcon size={32} className={styles.logo} />
+        ) : showLeftIcon ? (
           <button
             type="button"
             className={styles.iconButton}
             aria-label={COPY.leftIconAriaLabel}
             onClick={onLeftIconClick}
           >
-            <Icon name="chevronLeft" size={24} strokeWidth={2} />
+            <Icon name={leftIconName} size={24} strokeWidth={2} />
           </button>
         ) : null}
         <h1 className={styles.title}>{title}</h1>
@@ -60,7 +69,7 @@ export function Header({
             aria-label={COPY.rightIconAriaLabel}
             onClick={onRightIconClick}
           >
-            <Icon name="chevronRight" size={24} strokeWidth={2} />
+            <Icon name={rightIconName} size={24} strokeWidth={2} />
           </button>
         ) : (
           <span className={styles.iconPlaceholder} aria-hidden />

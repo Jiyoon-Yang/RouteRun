@@ -12,6 +12,7 @@
 import { Header } from './header';
 import { NavigationBar } from './navigation-bar';
 import styles from './styles.module.css';
+
 import type { ReactNode } from 'react';
 
 type LayoutProps = {

@@ -12,10 +12,10 @@
 
   /* Body/B2 */
   font-family: var(--typography-body-2-ko-desktop-bold-font-family);
-  font-size: 14px;
+  font-size: var(--typography-body-2-ko-desktop-bold-font-size);
   font-style: normal;
   font-weight: var(--typography-body-2-ko-desktop-bold-font-weight);
-  line-height: 17px;
+  line-height: var(--typography-body-2-ko-desktop-bold-line-height);
   letter-spacing: var(--typography-body-2-ko-desktop-bold-letter-spacing);
 
   cursor: pointer;

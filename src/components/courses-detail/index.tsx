@@ -43,95 +43,99 @@ export function Courses() {
         </section>
 
         <article className={styles.content}>
-        <section className={styles.userSection} aria-label="작성자 정보">
-          <div className={styles.userRow}>
-            <div className={styles.avatarWrap} aria-hidden>
-              <Icon name="userRound" color="var(--color-white-500)" />
+          <section className={styles.userSection} aria-label="작성자 정보">
+            <div className={styles.userRow}>
+              <div className={styles.avatarWrap} aria-hidden>
+                <Icon name="userRound" color="var(--color-white-500)" />
+              </div>
+              <p className={styles.userName}>{COPY.userName}</p>
             </div>
-            <p className={styles.userName}>{COPY.userName}</p>
-          </div>
-        </section>
+          </section>
 
-        <section className={styles.summarySection} aria-label="코스 요약 정보">
-          <div className={styles.titleBlock}>
-            <h2 className={styles.courseTitle}>{COPY.courseTitle}</h2>
-            <div className={styles.metaRow}>
-              <span className={styles.distance}>{COPY.distance}</span>
-              <span className={styles.separator} aria-hidden>
-                |
-              </span>
-              <span className={styles.locationWrap}>
-                <span className={styles.locationIcon} aria-hidden>
-                  <Icon name="mapPin" size={16} color="var(--color-grey-500)" />
+          <section className={styles.summarySection} aria-label="코스 요약 정보">
+            <div className={styles.titleBlock}>
+              <h2 className={styles.courseTitle}>{COPY.courseTitle}</h2>
+              <div className={styles.metaRow}>
+                <span className={styles.distance}>{COPY.distance}</span>
+                <span className={styles.separator} aria-hidden>
+                  |
                 </span>
-                <span className={styles.location}>{COPY.location}</span>
-              </span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className={styles.likeButton}
-            aria-pressed={true}
-            aria-label="찜한 코스"
-          >
-            <Icon name="heartFilled" color="var(--color-red-500)" />
-            <span className={styles.likeCount}>{COPY.likes}</span>
-          </button>
-        </section>
-
-        <section className={styles.descriptionSection} aria-label={COPY.descriptionTitle}>
-          <h3 className={styles.sectionTitle}>{COPY.descriptionTitle}</h3>
-          <p className={styles.description}>{COPY.description}</p>
-        </section>
-
-        <section className={styles.imageSection} aria-label={COPY.imageTitle}>
-          <h3 className={styles.sectionTitle}>{COPY.imageTitle}</h3>
-
-          <div className={styles.carousel}>
-            <div className={styles.carouselViewport}>
-              <div className={styles.carouselTrack} aria-label="코스 이미지 캐러셀">
-                {COURSE_IMAGES.map((imageLabel, index) => {
-                  const imageClassName = [
-                    styles.carouselItem,
-                    index === 0 ? styles.carouselItemPrimary : styles.carouselItemSecondary,
-                  ]
-                    .filter(Boolean)
-                    .join(' ');
-
-                  return (
-                    <figure
-                      key={imageLabel}
-                      className={imageClassName}
-                      aria-label={`${COPY.imageAltPrefix} ${index + 1}`}
-                    >
-                      <span className={styles.carouselCaption}>{imageLabel}</span>
-                    </figure>
-                  );
-                })}
-              </div>
-
-              <div className={styles.carouselControls}>
-                <button
-                  type="button"
-                  className={styles.carouselButton}
-                  aria-label={COPY.previousImage}
-                >
-                  <Icon name="chevronLeft" size={16} color="var(--color-black-900)" />
-                </button>
-                <button type="button" className={styles.carouselButton} aria-label={COPY.nextImage}>
-                  <Icon name="chevronRight" size={16} color="var(--color-black-900)" />
-                </button>
-              </div>
-
-              <div className={styles.carouselIndicators} aria-label="이미지 위치 표시">
-                <span className={styles.indicatorActive} aria-hidden />
-                <span className={styles.indicator} aria-hidden />
-                <span className={styles.indicator} aria-hidden />
+                <span className={styles.locationWrap}>
+                  <span className={styles.locationIcon} aria-hidden>
+                    <Icon name="mapPin" size={16} color="var(--color-grey-500)" />
+                  </span>
+                  <span className={styles.location}>{COPY.location}</span>
+                </span>
               </div>
             </div>
-          </div>
-        </section>
+
+            <button
+              type="button"
+              className={styles.likeButton}
+              aria-pressed={true}
+              aria-label="찜한 코스"
+            >
+              <Icon name="heartFilled" color="var(--color-red-500)" />
+              <span className={styles.likeCount}>{COPY.likes}</span>
+            </button>
+          </section>
+
+          <section className={styles.descriptionSection} aria-label={COPY.descriptionTitle}>
+            <h3 className={styles.sectionTitle}>{COPY.descriptionTitle}</h3>
+            <p className={styles.description}>{COPY.description}</p>
+          </section>
+
+          <section className={styles.imageSection} aria-label={COPY.imageTitle}>
+            <h3 className={styles.sectionTitle}>{COPY.imageTitle}</h3>
+
+            <div className={styles.carousel}>
+              <div className={styles.carouselViewport}>
+                <div className={styles.carouselTrack} aria-label="코스 이미지 캐러셀">
+                  {COURSE_IMAGES.map((imageLabel, index) => {
+                    const imageClassName = [
+                      styles.carouselItem,
+                      index === 0 ? styles.carouselItemPrimary : styles.carouselItemSecondary,
+                    ]
+                      .filter(Boolean)
+                      .join(' ');
+
+                    return (
+                      <figure
+                        key={imageLabel}
+                        className={imageClassName}
+                        aria-label={`${COPY.imageAltPrefix} ${index + 1}`}
+                      >
+                        <span className={styles.carouselCaption}>{imageLabel}</span>
+                      </figure>
+                    );
+                  })}
+                </div>
+
+                <div className={styles.carouselControls}>
+                  <button
+                    type="button"
+                    className={styles.carouselButton}
+                    aria-label={COPY.previousImage}
+                  >
+                    <Icon name="chevronLeft" size={16} color="var(--color-black-900)" />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.carouselButton}
+                    aria-label={COPY.nextImage}
+                  >
+                    <Icon name="chevronRight" size={16} color="var(--color-black-900)" />
+                  </button>
+                </div>
+
+                <div className={styles.carouselIndicators} aria-label="이미지 위치 표시">
+                  <span className={styles.indicatorActive} aria-hidden />
+                  <span className={styles.indicator} aria-hidden />
+                  <span className={styles.indicator} aria-hidden />
+                </div>
+              </div>
+            </div>
+          </section>
         </article>
       </div>
     </main>

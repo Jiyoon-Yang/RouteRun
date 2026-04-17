@@ -69,10 +69,7 @@ export const HEADER_ROUTES = [ROUTES.HOME, ROUTES.COURSES.NEW, ROUTES.MYPAGE] as
 export const PRIVATE_ROUTES = [ROUTES.COURSES.NEW, ROUTES.MYPAGE] as const;
 
 /** 동적 라우트 패턴 — header O */
-export const HEADER_DYNAMIC_PATTERNS: RegExp[] = [
-  /^\/courses\/[^/]+$/,
-  /^\/courses\/[^/]+\/edit$/,
-];
+export const HEADER_DYNAMIC_PATTERNS: RegExp[] = [/^\/courses\/[^/]+$/, /^\/courses\/[^/]+\/edit$/];
 
 /** 동적 라우트 패턴 — navigationBar O */
 export const NAVIGATION_BAR_DYNAMIC_PATTERNS: RegExp[] = [

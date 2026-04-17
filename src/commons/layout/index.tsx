@@ -14,10 +14,7 @@
 
 import { usePathname } from 'next/navigation';
 
-import {
-  NAVIGATION_BAR_DYNAMIC_PATTERNS,
-  NAVIGATION_BAR_ROUTES,
-} from '@/commons/constants/url';
+import { NAVIGATION_BAR_DYNAMIC_PATTERNS, NAVIGATION_BAR_ROUTES } from '@/commons/constants/url';
 
 import { NavigationBar } from './navigation-bar';
 import styles from './styles.module.css';

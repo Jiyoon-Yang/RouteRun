@@ -39,15 +39,51 @@ type TabType = 'my-course' | 'liked-course';
 
 // 샘플 카드 데이터
 const MY_COURSES = [
-  { id: 1, title: '한강 러닝 코스', location: '여의도 한강공원', distanceText: '5km', likeCount: 234 },
-  { id: 2, title: '한강 러닝 코스', location: '여의도 한강공원', distanceText: '5km', likeCount: 234 },
-  { id: 3, title: '한강 러닝 코스', location: '여의도 한강공원', distanceText: '5km', likeCount: 234 },
+  {
+    id: 1,
+    title: '한강 러닝 코스',
+    location: '여의도 한강공원',
+    distanceText: '5km',
+    likeCount: 234,
+  },
+  {
+    id: 2,
+    title: '한강 러닝 코스',
+    location: '여의도 한강공원',
+    distanceText: '5km',
+    likeCount: 234,
+  },
+  {
+    id: 3,
+    title: '한강 러닝 코스',
+    location: '여의도 한강공원',
+    distanceText: '5km',
+    likeCount: 234,
+  },
 ];
 
 const LIKED_COURSES = [
-  { id: 1, title: '한강 러닝 코스', location: '여의도 한강공원', distanceText: '5km', likeCount: 234 },
-  { id: 2, title: '한강 러닝 코스', location: '여의도 한강공원', distanceText: '5km', likeCount: 234 },
-  { id: 3, title: '한강 러닝 코스', location: '여의도 한강공원', distanceText: '5km', likeCount: 234 },
+  {
+    id: 1,
+    title: '한강 러닝 코스',
+    location: '여의도 한강공원',
+    distanceText: '5km',
+    likeCount: 234,
+  },
+  {
+    id: 2,
+    title: '한강 러닝 코스',
+    location: '여의도 한강공원',
+    distanceText: '5km',
+    likeCount: 234,
+  },
+  {
+    id: 3,
+    title: '한강 러닝 코스',
+    location: '여의도 한강공원',
+    distanceText: '5km',
+    likeCount: 234,
+  },
 ];
 
 export default function Mypage() {
@@ -71,13 +107,7 @@ export default function Mypage() {
           </div>
           <span className={styles.userName}>{TEXTS.USER_NAME}</span>
         </div>
-        <Button
-          variant="outline"
-          borderRadius="r12"
-          size="small"
-          color="dark"
-          onClick={() => {}}
-        >
+        <Button variant="outline" borderRadius="r12" size="small" color="dark" onClick={() => {}}>
           {TEXTS.EDIT_PROFILE}
         </Button>
       </section>

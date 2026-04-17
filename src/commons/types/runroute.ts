@@ -12,7 +12,7 @@ export interface Route {
   title: string;
   description?: string;
   distance_meters: number;
-  path_data: any; // Tmap 경로 JSON 데이터
+  path_data: Record<string, unknown>; // Tmap 경로 JSON 데이터
   start_lat: number;
   start_lng: number;
   image_urls: string[];

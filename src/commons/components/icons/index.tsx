@@ -110,11 +110,6 @@ export function FieldLucideIcon({
   className,
 }: FieldLucideIconProps) {
   return (
-    <LucideComponent
-      size={size}
-      color={color}
-      strokeWidth={strokeWidth}
-      className={className}
-    />
+    <LucideComponent size={size} color={color} strokeWidth={strokeWidth} className={className} />
   );
 }

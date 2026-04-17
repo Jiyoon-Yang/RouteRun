@@ -16,6 +16,7 @@
 
 'use client';
 
+import Image from 'next/image';
 import { useRef, useState } from 'react';
 
 import { Button } from '@/commons/components/button';
@@ -139,7 +140,13 @@ export default function CourseSubmit({ mode, courseId: _courseId }: CourseSubmit
             {/* 업로드된 이미지 목록 */}
             {images.map((src, idx) => (
               <div key={src} className={styles.imageItem}>
-                <img src={src} alt={`업로드 이미지 ${idx + 1}`} className={styles.imageThumb} />
+                <Image
+                  src={src}
+                  alt={`업로드 이미지 ${idx + 1}`}
+                  className={styles.imageThumb}
+                  width={80}
+                  height={80}
+                />
                 <button
                   type="button"
                   className={styles.deleteImageButton}

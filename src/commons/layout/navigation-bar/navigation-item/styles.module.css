@@ -14,8 +14,8 @@
   justify-content: center;
   padding: 0;
   margin: 0;
-  border: none;
-  /* Figma 상단 구분선 #737373 — globals에 동일 값 토큰 없음 */
+  border: 0;
+  border-top: 1px solid var(--color-grey-100);
   background: var(--color-white-500);
   cursor: pointer;
   text-decoration: none;

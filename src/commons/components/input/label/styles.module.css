@@ -5,10 +5,10 @@
   width: fit-content;
   color: var(--color-black-500);
   font-family: var(--typography-body-2-ko-desktop-regular-font-family);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
+  font-size: var(--typography-body-2-ko-desktop-regular-font-size);
+  line-height: var(--typography-body-2-ko-desktop-regular-line-height);
   font-weight: 500; /* 500 weight token 부재 */
-  letter-spacing: -0.0125rem; /* -0.2px token 부재 */
+  letter-spacing: var(--Body-lg-letter-spacing);
   cursor: pointer;
 }
 

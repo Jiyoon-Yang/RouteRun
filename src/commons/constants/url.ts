@@ -57,7 +57,9 @@ export const ROUTE_CONFIG: Record<string, RouteConfig> = {
   },
 };
 
+/** 루트 `/`는 `src/app/page.tsx` 홈과 동일 — GNB 노출 경로에 포함 */
 export const NAVIGATION_BAR_ROUTES = [
+  '/',
   ROUTES.LOGIN,
   ROUTES.HOME,
   ROUTES.COURSES.NEW,

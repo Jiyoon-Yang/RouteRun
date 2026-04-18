@@ -16,7 +16,9 @@ const TAB_ITEMS = [
 export function Home() {
   return (
     <section className={styles.container}>
-      <Header showLogo showLeftIcon={false} showRightIcon={false} title="RouteRun" />
+      <div className={styles.topChrome}>
+        <Header showLogo showLeftIcon={false} showRightIcon={false} title="RouteRun" />
+      </div>
       <div className={styles.tab}>
         <div className={styles.tabScroll}>
           {TAB_ITEMS.map((tab) => (
@@ -29,11 +31,12 @@ export function Home() {
         </div>
       </div>
 
-      <div className={styles.map}>
-        <span className={styles.mapPlaceholder}>[MAP AREA]</span>
+      <div className={styles.mapStage}>
+        <div className={styles.map}>
+          <span className={styles.mapPlaceholder}>[MAP AREA]</span>
+        </div>
+        <CoursesList />
       </div>
-
-      <CoursesList />
     </section>
   );
 }

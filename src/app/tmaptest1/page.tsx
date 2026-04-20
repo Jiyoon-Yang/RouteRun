@@ -11,8 +11,17 @@ declare global {
 export default function RouteDetail() {
   const mapInstance = useRef<any>(null);
   const [route, setRoute] = useState<any>(null);
+  const [tmapReady, setTmapReady] = useState(false);
   const elementsRef = useRef<any[]>([]); // 라인과 마커들을 관리 (초기화용)
   const tmapAppKey = process.env.NEXT_PUBLIC_TMAP_API_KEY ?? '';
+
+  // layout.tsx의 동기 <script>로 로드되므로 useEffect 시점엔 SDK가 준비되어 있어야 함
+  // 안전을 위해 Map 생성자 존재 여부로 준비 확인
+  useEffect(() => {
+    if (window.Tmapv2?.Map) {
+      setTmapReady(true);
+    }
+  }, []);
 
   useEffect(() => {
     // 1. 로컬스토리지에서 데이터 가져오기 (가장 최근 등록된 코스 기준)
@@ -27,8 +36,8 @@ export default function RouteDetail() {
   }, []);
 
   useEffect(() => {
-    // 2. 지도 초기화 및 경로 그리기
-    if (route && window.Tmapv2 && !mapInstance.current) {
+    // 2. 지도 초기화 및 경로 그리기 — tmapReady로 SDK 완전 로드 확인
+    if (route && tmapReady && !mapInstance.current) {
       const { path_data } = route;
       const { start } = path_data;
 
@@ -41,7 +50,7 @@ export default function RouteDetail() {
       mapInstance.current = map;
       drawRouteAndMarkers();
     }
-  }, [route]);
+  }, [route, tmapReady]);
 
   const drawRouteAndMarkers = async () => {
     if (!route) return;

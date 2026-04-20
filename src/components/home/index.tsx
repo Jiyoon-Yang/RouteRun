@@ -3,6 +3,7 @@
 import { TabButton } from '@/commons/components/tab';
 import { Header } from '@/commons/layout/header';
 import { CoursesList } from '@/components/courses-list';
+import { TmapHome } from '@/components/tmap/home';
 
 import styles from './styles.module.css';
 
@@ -33,7 +34,7 @@ export function Home() {
 
       <div className={styles.mapStage}>
         <div className={styles.map}>
-          <span className={styles.mapPlaceholder}>[MAP AREA]</span>
+          <TmapHome />
         </div>
         <CoursesList />
       </div>

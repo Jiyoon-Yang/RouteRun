@@ -20,11 +20,9 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
-        <Script
-          id="tmap-sdk"
-          strategy="afterInteractive"
+        <script
           src={`https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=${process.env.NEXT_PUBLIC_TMAP_API_KEY}`}
-        />
+        ></script>
       </head>
       <body className="antialiased">
         <AuthProvider>

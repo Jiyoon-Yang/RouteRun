@@ -174,6 +174,7 @@ export default function RunRouteMap() {
   return (
     <div className="p-4 max-w-3xl mx-auto flex flex-col gap-4 text-black">
       <h2 className="text-2xl font-bold text-center">러닝 코스 등록</h2>
+
       <div id="map_div" className="w-full border rounded-lg overflow-hidden" />
       <div className="flex gap-2">
         <button

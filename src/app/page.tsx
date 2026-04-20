@@ -1,3 +1,5 @@
-export default function Home() {
-  return <div>메렁</div>;
+import Home from '@/components/home';
+
+export default function Page() {
+  return <Home />;
 }

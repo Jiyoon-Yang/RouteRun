@@ -1,0 +1,13 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+
+1. 명시한 컬럼만 추가할 것. 
+    - 임의로 created_at, updated_at 등을 추가하지 말 것.
+
+2. schema는 supabase MCP를 사용하여 확인하고 그대로 적용할 것.
+    - 임의로 UUID, TEXT 등을 구현하지 말 것.
+
+3. rpc 과정에서 발생되는 에러를 디버깅 할 수 있도록 로그를 남길 것.

@@ -1,0 +1,395 @@
+/**
+ * Courses styles — 코스 상세 검색 UI
+ * 버전: 2.0.0 · 수정: 2026-04-16
+ * 체크리스트:
+ * - [x] 색상 하드코딩 없음
+ * - [x] CSS Module만 사용
+ * - [x] 인라인 스타일 없음
+ * - [x] flexbox 기반 구조 유지
+ * - [x] 피그마 섹션 순서 반영
+ * - [x] 캐러셀/상태 스타일 포함
+ */
+
+/* layout */
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-white-500);
+}
+
+.mapPreview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 100%;
+  height: 272px;
+  background: var(--color-white_grey-300);
+  border-bottom: 1px solid var(--color-grey-100);
+}
+
+.mapLabel {
+  color: var(--color-blue-900);
+  opacity: 1;
+  font-family: var(--typography-body-lg-ko-desktop-semibold-font-family);
+  font-size: var(--typography-body-lg-ko-desktop-semibold-font-size);
+  font-style: var(--typography-body-lg-ko-desktop-semibold-font-style);
+  font-weight: var(--typography-body-lg-ko-desktop-semibold-font-weight);
+  line-height: var(--typography-body-lg-ko-desktop-semibold-line-height);
+  letter-spacing: var(--typography-body-lg-ko-desktop-semibold-letter-spacing);
+}
+
+.scrollArea {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollArea::-webkit-scrollbar {
+  display: none;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  padding: 16px;
+  background: var(--color-white-500);
+}
+
+.userSection,
+.summarySection,
+.descriptionSection,
+.imageSection {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.userSection {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-grey-100);
+}
+
+.userRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+}
+
+.avatarWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background: var(--color-black-700);
+}
+
+.userName {
+  margin: 0;
+  color: var(--color-black-900);
+  font-family: var(--typography-body-1-ko-desktop-font-family);
+  font-size: var(--typography-body-1-ko-desktop-font-size);
+  font-style: var(--typography-body-1-ko-desktop-font-style);
+  font-weight: var(--typography-body-1-ko-desktop-font-weight);
+  line-height: var(--typography-body-1-ko-desktop-line-height);
+  letter-spacing: var(--typography-body-1-ko-desktop-letter-spacing);
+}
+
+.summarySection {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--color-grey-100);
+}
+
+.titleBlock {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.courseTitle {
+  margin: 0;
+  color: var(--color-black-900);
+  font-family: var(--typography-heading-3-ko-desktop-semibold-font-family);
+  font-size: var(--typography-heading-3-ko-desktop-semibold-font-size);
+  font-style: normal;
+  font-weight: var(--typography-heading-3-ko-desktop-semibold-font-weight);
+  line-height: var(--typography-heading-3-ko-desktop-semibold-line-height);
+  letter-spacing: var(--typography-heading-3-ko-desktop-semibold-letter-spacing);
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.distance {
+  color: var(--color-black-900);
+  font-family: var(--typography-body-2-ko-desktop-semibold-font-family);
+  font-size: var(--typography-body-2-ko-desktop-semibold-font-size);
+  font-style: var(--typography-body-2-ko-desktop-semibold-font-style);
+  font-weight: var(--typography-body-2-ko-desktop-semibold-font-weight);
+  line-height: var(--typography-body-2-ko-desktop-semibold-line-height);
+  letter-spacing: var(--typography-body-2-ko-desktop-semibold-letter-spacing);
+}
+
+.separator {
+  color: var(--color-grey-300);
+  font-family: var(--typography-body-2-ko-desktop-regular-font-family);
+  font-size: var(--typography-body-2-ko-desktop-regular-font-size);
+  font-style: var(--typography-body-2-ko-desktop-regular-font-style);
+  font-weight: var(--typography-body-2-ko-desktop-regular-font-weight);
+  line-height: var(--typography-body-2-ko-desktop-regular-line-height);
+  letter-spacing: var(--typography-body-2-ko-desktop-regular-letter-spacing);
+}
+
+.locationWrap {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.locationIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  line-height: 0;
+}
+
+.locationIcon > svg {
+  display: block;
+}
+
+.location {
+  color: var(--color-grey-500);
+  font-family: var(--typography-body-2-ko-desktop-regular-font-family);
+  font-size: var(--typography-body-2-ko-desktop-regular-font-size);
+  font-style: var(--typography-body-2-ko-desktop-regular-font-style);
+  font-weight: var(--typography-body-2-ko-desktop-regular-font-weight);
+  line-height: var(--typography-body-2-ko-desktop-regular-line-height);
+  letter-spacing: var(--typography-body-2-ko-desktop-regular-letter-spacing);
+}
+
+.likeButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  color: var(--color-red-500);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.likeCount {
+  color: var(--color-grey-500);
+  font-family: var(--typography-caption-1-ko-desktop-font-family);
+  font-size: var(--typography-caption-1-ko-desktop-font-size);
+  font-style: var(--typography-caption-1-ko-desktop-font-style);
+  font-weight: var(--typography-caption-1-ko-desktop-font-weight);
+  line-height: var(--typography-caption-1-ko-desktop-line-height);
+  letter-spacing: var(--typography-caption-1-ko-desktop-letter-spacing);
+}
+
+.descriptionSection {
+  gap: 8px;
+}
+
+.sectionTitle {
+  margin: 0;
+  color: var(--color-black-900);
+  font-family: var(--typography-body-1-ko-desktop-font-family);
+  font-size: var(--typography-body-1-ko-desktop-font-size);
+  font-style: var(--typography-body-1-ko-desktop-font-style);
+  font-weight: var(--typography-body-1-ko-desktop-font-weight);
+  line-height: var(--typography-body-1-ko-desktop-line-height);
+  letter-spacing: var(--typography-body-1-ko-desktop-letter-spacing);
+}
+
+.description {
+  margin: 0;
+  color: var(--color-grey-700);
+  font-family: var(--typography-body-2-ko-desktop-regular-font-family);
+  font-size: var(--typography-body-2-ko-desktop-regular-font-size);
+  font-style: var(--typography-body-2-ko-desktop-regular-font-style);
+  font-weight: var(--typography-body-2-ko-desktop-regular-font-weight);
+  line-height: var(--typography-body-2-ko-desktop-regular-line-height);
+  letter-spacing: var(--typography-body-2-ko-desktop-regular-letter-spacing);
+}
+
+.imageSection {
+  gap: 8px;
+}
+
+/* components */
+.carousel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.carouselViewport {
+  display: grid;
+  width: 100%;
+}
+
+.carouselTrack {
+  display: flex;
+  gap: 12px;
+  grid-area: 1 / 1;
+  width: 100%;
+  overflow: hidden;
+}
+
+.carouselItem {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  flex-shrink: 0;
+  width: 100%;
+  height: 200px;
+  padding: 16px;
+  border: 1px solid var(--color-grey-100);
+  border-radius: 16px;
+}
+
+.carouselItemPrimary {
+  background:
+    linear-gradient(180deg, transparent 0%, var(--color-black-500) 100%),
+    linear-gradient(135deg, var(--color-white_grey-300) 0%, var(--color-grey-300) 100%);
+}
+
+.carouselItemSecondary {
+  width: 72%;
+  background:
+    linear-gradient(180deg, transparent 0%, var(--color-black-500) 100%),
+    linear-gradient(135deg, var(--color-white_grey-200) 0%, var(--color-grey-200) 100%);
+}
+
+.carouselCaption {
+  color: var(--color-white-500);
+  font-family: var(--typography-body-2-ko-desktop-semibold-font-family);
+  font-size: var(--typography-body-2-ko-desktop-semibold-font-size);
+  font-style: var(--typography-body-2-ko-desktop-semibold-font-style);
+  font-weight: var(--typography-body-2-ko-desktop-semibold-font-weight);
+  line-height: var(--typography-body-2-ko-desktop-semibold-line-height);
+  letter-spacing: var(--typography-body-2-ko-desktop-semibold-letter-spacing);
+}
+
+.carouselControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  grid-area: 1 / 1;
+  align-self: center;
+  width: 100%;
+  padding: 0 8px;
+}
+
+.carouselButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: var(--color-white-500);
+  border: 1px solid var(--color-grey-100);
+  border-radius: 9999px;
+  cursor: pointer;
+}
+
+.carouselIndicators {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  grid-area: 1 / 1;
+  align-self: end;
+  justify-self: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.indicatorActive,
+.indicator {
+  display: flex;
+  flex-shrink: 0;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--color-grey-300);
+}
+
+.indicatorActive {
+  width: 24px;
+  background: var(--color-white-500);
+  border: 1px solid var(--color-grey-200);
+}
+
+.indicator {
+  width: 8px;
+}
+
+/* utilities */
+.likeButton:focus-visible,
+.carouselButton:focus-visible {
+  outline: 2px solid var(--color-blue-500);
+  outline-offset: 2px;
+}
+
+/* 화면 높이 구간별 사이즈 (mapPreview : 코스이미지 = 6 : 5 유지) */
+/* @media (max-height: 739px) {
+  .mapPreview {
+    height: 216px;
+  }
+
+  .carouselItem {
+    height: 180px;
+  }
+}
+
+@media (min-height: 900px) {
+  .mapPreview {
+    height: 288px;
+  }
+
+  .carouselItem {
+    height: 240px;
+  }
+}
+
+@media (min-height: 1024px) {
+  .mapPreview {
+    height: 336px;
+  }
+
+  .carouselItem {
+    height: 280px;
+  }
+} */

@@ -1,0 +1,119 @@
+아래의 조건을 모두 적용하여, 아래의 요구사항을 모두 구현할 것.
+구현 결과를 체크리스트로 반환할 것.
+
+==============================================
+
+조건-커서룰) 아래의 커서룰을 적용하여 작업하고, 이 작업이 끝나면 해당 rules 적용 결과를 체크리스트로 반환할 것.
+            - .cursor/rules/01-common.mdc
+            - .cursor/rules/04-func.mdc
+
+==============================================
+
+조건-파일경로) 연동할 API  파일경로: remote-billing/src/pages/api/billings-payments-purchase/card-payment-form.ts
+조건-파일경로) 참고할 TSX  파일경로: remote-billing/src/components/billings-payments-purchase/card-payment-form/index.tsx
+조건-파일경로) 참고할 CSS  파일경로: remote-billing/src/components/billings-payments-purchase/card-payment-form/styles.module.css
+조건-파일경로) 구현될 HOOK 파일경로: remote-billing/src/components/billings-payments-purchase/card-payment-form/hooks/index.form.submit.hook.ts
+조건-파일경로) 구현될 TEST 파일경로: remote-billing/src/components/billings-payments-purchase/card-payment-form/tests/index.form.submit.hook.spec.ts
+
+==============================================
+
+핵심요구사항) 다음의 기능을 playwright 테스트를 활용하여 TDD기반으로 구현하고, 테스트에 통과할 때까지 반복할 것.
+            1) 테스트 제외 라이브러리
+                - jest
+                - @testing-library/react
+
+            2) 테스트 조건
+                - timeout은 network 통신인 경우 2000ms 미만으로 설정할 것.
+                - timeout은 network 통신이 아닌 경우 설정하지 않거나, 500ms 미만으로 설정할 것.
+                - 연결된 index.tsx 내의 최상위 wrapper 컴포넌트가 완전히 로드된 후 테스트할 것.
+                    - 페이지 로드 식별 요구사항: 고정식별자 data-testid 대기 방법
+                    - 페이지 로드 식별 금지사항: networkidle 대기 방법
+
+            3) 테스트 API 조건
+                3-1) 성공시나리오
+                    - API 모킹할 것.
+
+                3-2) 실패시나리오
+                    - API 모킹할 것.
+
+핵심요구사항) 제공된 API를 사용하여 아래 기능을 step-by-step 으로 구현하고, 적용 결과를 체크리스트로 반환할 것.
+            1) 라이브러리 조건
+                - 이미 설치된 아래의 라이브러리를 사용할 것.
+                - API: @tanstack/react-query를 사용할 것.
+                - 폼 제출 및 검증: react-hook-form, zod 를 사용할 것.
+
+            2) 유저 시나리오(결제하기)
+                1. 정상적인 페이지 접근 검증
+                    1-1) kind in ["Subscription", "Credit"]에 포함되지 않는 경우 에러 처리
+                    1-2) Subscription의 경우, type in ["Starter", "Standard", "Pro"]에 포함되지 않는 경우 에러 처리
+                    1-3) Credit의 경우, type in ["500C", "1000C", "3000C", "5000C", "10000C"]에 포함되지 않는 경우 에러 처리
+
+                        - 에러메시지: "잘못된 접근입니다."
+                            - 리다이렉트: /photos
+
+                2. 결제정보 작성
+                    - 이메일 입력
+                    - 카드번호 4자리-4자리-4자리-4자리 입력
+                    - 유효기간 월/연도 입력
+                    - 생년월일 6자리 입력
+                    
+                    - 이용약관동의 체크
+                    - 개인정보 처리방침 동의 체크
+                    - 정기결제 동의 체크
+                    - 만 14세 이상입니다 체크
+
+                3. 결제하기 버튼 클릭하여 카드저장 API 요청
+                    3-1) 요청오리진: process.env.NEXT_PUBLIC_REMOTE_BILLING_ORIGIN
+                    3-2) API엔드포인트: remote-billing/src/pages/api/billings-payments-purchase/card-payment-form.ts
+                    3-3) 메서드: POST
+                    3-4) 요청데이터: {
+                        "cardNumber": "1234123412341234",
+                        "expiryYear": "28",
+                        "expiryMonth": "04",
+                        "birthdate": "890907"
+                    }
+                    3-5) 응답데이터: {
+                        success
+                    }
+
+                4. 카드저장에 성공하면, 결제 API 요청
+                    4-1) Subscription 결제인 상황
+                        - 요청오리진: process.env.NEXT_PUBLIC_REMOTE_BILLING_ORIGIN
+                        - API엔드포인트: /api/webhook/billings/payments-transactions-subscriptions/submit
+                        - 메서드: POST
+                        - 요청데이터: {
+                            "orderName": "Starter" | "Standard" | "Pro"
+                        }
+                        - 응답데이터: {
+                            success
+                        }
+
+                    4-2) Credit 결제인 상황
+                        - 요청오리진: process.env.NEXT_PUBLIC_REMOTE_BILLING_ORIGIN
+                        - API엔드포인트: /api/webhook/billings/payments-transactions-credits/submit
+                        - 메서드: POST
+                        - 요청데이터: {
+                            "orderName": "500C" | "1000C" | "3000C" | "5000C" | "10000C"
+                        }
+                        - 응답데이터: {
+                            success
+                        }
+
+                5. 등록에 성공하면 간단한 alert 표시 후, /photos 페이지로 이동할 것.
+                    - 이동경로: /photos => src/commons/constants/url.ts 임포트하여 연결할 것.
+
+                6. 결제가 완료되면, 사용자의 구독 정보 또는 크레딧 정보를 갱신할 것.
+                    6-1) useQueryClient() 를 활용할 것.
+                    6-2) useAuth() 를 활용하여 accessToken 을 조회할 것.
+                    6-3) 아래 정확한 쿼리키를 통해 리페치할 것.
+                        - 구독 정보: queryClient.invalidateQueries({
+                            queryKey: ["user-subscription", accessToken]
+                        });
+                        
+                        - 크레딧 정보: queryClient.invalidateQueries({
+                            queryKey: ["user-credit", accessToken]  
+                        });
+                        
+                        - 쿼터 정보 queryClient.invalidateQueries({
+                            queryKey: ["user-quota", accessToken]
+                        });

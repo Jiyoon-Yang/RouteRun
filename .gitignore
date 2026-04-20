@@ -176,3 +176,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 >>>>>>> b4aa45a (Initial commit from Create Next App)
+
+*storybook.log
+storybook-static
+
+.cursor-assets/
+.cursor-figma-assets/

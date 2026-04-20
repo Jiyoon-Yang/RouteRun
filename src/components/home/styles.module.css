@@ -1,0 +1,79 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  background: var(--color-white-500);
+  overflow: hidden;
+}
+
+.topChrome {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.tab {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 100%;
+  height: 60px;
+  padding: 12px 16px;
+  background: var(--color-white-500);
+}
+
+.tabScroll {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.tabItem {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.tabItem > button {
+  width: 100%;
+}
+
+/* 지도(배경층) + 코스 목록(오버레이) — 헤더·탭 아래 ~ 레이아웃 GNB 위까지만 차지 */
+.mapStage {
+  position: relative;
+  z-index: 0;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.map {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: var(--color-white_grey-400);
+}
+
+.mapPlaceholder {
+  color: var(--color-blue-900);
+  opacity: 0.6;
+  font-family: var(--typography-body-lg-ko-desktop-semibold-font-family);
+  font-size: var(--typography-body-lg-ko-desktop-semibold-font-size);
+  font-style: var(--typography-body-lg-ko-desktop-semibold-font-style);
+  font-weight: var(--typography-body-lg-ko-desktop-semibold-font-weight);
+  letter-spacing: var(--typography-body-lg-ko-desktop-semibold-letter-spacing);
+  line-height: var(--typography-body-lg-ko-desktop-semibold-line-height);
+}

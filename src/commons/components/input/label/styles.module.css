@@ -1,0 +1,83 @@
+.base {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: fit-content;
+  color: var(--color-black-500);
+  font-family: var(--typography-body-2-ko-desktop-regular-font-family);
+  font-size: var(--typography-body-2-ko-desktop-regular-font-size);
+  line-height: var(--typography-body-2-ko-desktop-regular-line-height);
+  font-weight: 500; /* 500 weight token 부재 */
+  letter-spacing: var(--Body-lg-letter-spacing);
+  cursor: pointer;
+}
+
+.text {
+  color: inherit;
+}
+
+.meta {
+  color: var(--color-light_black-200); /* #A4A4A4: #A4A7AE와 가장 근접한 기존 토큰 */
+  display: none;
+}
+
+.requiredMark {
+  color: var(--color-red-600);
+  font-weight: var(--typography-body-2-ko-desktop-bold-font-weight);
+  display: none;
+}
+
+.infoIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-grey-600);
+}
+
+.requiredSrOnly {
+  font-size: 0;
+  line-height: 0;
+  color: transparent;
+  display: none;
+}
+
+.base[data-type='optional'] .meta {
+  display: inline;
+}
+
+.base[data-type='required'] .requiredMark {
+  display: inline;
+}
+
+.base[data-type='required'] .requiredSrOnly {
+  display: inline;
+}
+
+.base:focus-visible:not([data-disabled='true']),
+.base:focus-within:not([data-disabled='true']) {
+  color: var(--color-black-500);
+  outline: none;
+}
+
+.base:focus-visible:not([data-disabled='true']) .infoIcon,
+.base:focus-within:not([data-disabled='true']) .infoIcon {
+  color: var(--color-black-500);
+}
+
+/* disabled가 최우선으로 모든 상태를 덮어쓴다 */
+.base[data-disabled='true'] {
+  color: var(--color-grey-500);
+  cursor: not-allowed;
+}
+
+.base[data-disabled='true'] .meta {
+  color: var(--color-grey-500);
+}
+
+.base[data-disabled='true'] .requiredMark {
+  color: var(--color-grey-500);
+}
+
+.base[data-disabled='true'] .infoIcon {
+  color: var(--color-grey-500);
+}

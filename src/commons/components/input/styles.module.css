@@ -1,0 +1,9 @@
+/* 복합 Input 래퍼 — Figma node 139:2557 (label + field + 보조문구) */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  width: 100%;
+}

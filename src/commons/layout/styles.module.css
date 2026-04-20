@@ -1,0 +1,57 @@
+/* wrapper: 전체 화면을 채우고 컨테이너를 수평 중앙 정렬 */
+.wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: #f0f0f0;
+}
+
+/* container: 모바일 전용 max-width 375px, 세로 flex */
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 769px;
+  height: 100%;
+  background-color: #ffffff;
+}
+
+/* top: 상단 헤더 영역 60px 고정 */
+.top {
+  display: flex;
+  flex-shrink: 0;
+  width: 100%;
+  height: 60px;
+}
+
+/* middle: children 영역 — 남은 공간 전부 차지, 내부 스크롤 */
+.middle {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  width: 100%;
+}
+
+.middle::-webkit-scrollbar {
+  display: none;
+}
+
+/* bottom: 하단 네비게이션 바 영역 56px 고정 */
+.bottom {
+  display: flex;
+  flex-shrink: 0;
+  width: 100%;
+  height: 56px;
+}
+/* 
+@media (min-width: 769px) {
+  .container {
+    max-width: 375px;
+  }
+} */

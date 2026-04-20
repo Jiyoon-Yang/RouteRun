@@ -1,0 +1,234 @@
+/* 왼/오 아이콘 */
+.iconBase {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.iconBase > svg,
+.iconBase > img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+/* Figma 카드 액션 버튼 등: 아이콘 프레임 18×18 */
+.iconSmall {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.iconMedium {
+  width: 20px;
+  height: 20px;
+}
+
+.iconLarge {
+  width: 20px;
+  height: 20px;
+}
+
+.iconXLarge {
+  width: 24px;
+  height: 24px;
+}
+
+/* 내용 */
+.base {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* align-self: stretch; */
+  border: 1px solid transparent;
+  gap: 8px;
+  width: fit-content;
+  text-align: center;
+
+  font-family: var(--typography-body-lg-ko-desktop-semibold-font-family);
+  font-weight: var(--typography-body-lg-ko-desktop-semibold-font-weight);
+  font-style: var(--typography-body-lg-ko-desktop-semibold-font-style);
+  letter-spacing: var(--typography-body-lg-ko-desktop-semibold-letter-spacing);
+  line-height: var(--typography-body-lg-ko-desktop-semibold-line-height);
+  cursor: pointer;
+}
+
+/* 버튼 모서리 반경 */
+.r12 {
+  border-radius: 12px;
+}
+.r16 {
+  border-radius: 16px;
+}
+
+/* 버튼 크기 */
+.small {
+  height: 36px;
+  padding: 12px 24px;
+  font-size: 14px;
+}
+
+.medium {
+  height: 48px;
+  padding: 12px 20px;
+  font-size: 16px;
+}
+
+.large {
+  height: 52px;
+  padding: 12px 20px;
+  font-size: 16px;
+}
+
+.Xlarge {
+  height: 56px;
+  padding: 16px 24px;
+  font-size: 18px;
+}
+
+/* 버튼 타입 */
+.fill {
+  border: 1px solid transparent;
+}
+
+.outline {
+  background: transparent;
+  border-width: 1px;
+  border-style: solid;
+}
+
+/* 공통 비활성화 */
+.base:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* blue 상태 */
+.fill.blue {
+  background: var(--color-blue-500);
+  color: var(--color-white-500);
+}
+
+.fill.blue:hover:not(:disabled) {
+  background: var(--color-blue-600);
+}
+
+.fill.blue:active:not(:disabled) {
+  background: var(--color-blue-700);
+}
+
+.fill.blue:disabled {
+  background: var(--color-white_grey-400);
+  color: var(--color-dark_grey-300);
+}
+
+.outline.blue {
+  background: transparent;
+  border-color: var(--color-blue-100);
+  color: var(--color-blue-500);
+}
+
+.outline.blue:hover:not(:disabled) {
+  background: var(--color-blue-50);
+  border-color: var(--color-blue-300);
+}
+
+.outline.blue:active:not(:disabled) {
+  border-color: var(--color-blue-600);
+  color: var(--color-blue-600);
+  background: var(--color-blue-100);
+}
+
+.outline.blue:disabled {
+  background: var(--color-dark_grey-50);
+  border-color: var(--color-blue-200);
+  color: var(--color-blue-200);
+}
+
+/* red 상태 */
+.fill.red {
+  background: var(--color-red-500);
+  color: var(--color-white-500);
+}
+
+.fill.red:hover:not(:disabled) {
+  background: var(--color-red-600);
+}
+
+.fill.red:active:not(:disabled) {
+  background: var(--color-red-700);
+}
+
+.fill.red:disabled {
+  background: var(--color-red-50);
+  color: var(--color-dark_grey-300);
+}
+
+.outline.red {
+  background: transparent;
+  border-color: var(--color-red-100);
+  color: var(--color-red-500);
+}
+
+.outline.red:hover:not(:disabled) {
+  background: var(--color-red-50);
+  border-color: var(--color-red-300);
+}
+
+.outline.red:active:not(:disabled) {
+  border-color: var(--color-red-600);
+  color: var(--color-red-600);
+  background: var(--color-red-100);
+}
+
+.outline.red:disabled {
+  background: var(--color-dark_grey-50);
+  border-color: var(--color-red-200);
+  color: var(--color-red-200);
+}
+
+/* dark 상태 */
+.fill.dark {
+  background: var(--color-light_black-500);
+  color: var(--color-white-500);
+}
+
+.fill.dark:hover:not(:disabled) {
+  background: var(--color-dark_grey-900);
+}
+
+.fill.dark:active:not(:disabled) {
+  background: var(--color-black-900);
+}
+
+.fill.dark:disabled {
+  background: var(--color-dark_grey-100);
+  color: var(--color-dark_grey-300);
+}
+
+.outline.dark {
+  background: transparent;
+  border-color: var(--color-light_black-100);
+  color: var(--color-black-300);
+}
+
+.outline.dark:hover:not(:disabled) {
+  background: var(--color-dark_grey-50);
+  border-color: var(--color-black-300);
+  color: var(--color-black-400);
+}
+
+.outline.dark:active:not(:disabled) {
+  border-color: var(--color-black-500);
+  color: var(--color-black-900);
+  background: var(--color-dark_grey-100);
+}
+
+.outline.dark:disabled {
+  background: var(--color-dark_grey-50);
+  border-color: var(--color-dark_grey-300);
+  color: var(--color-dark_grey-300);
+}

@@ -1,0 +1,32 @@
+.base {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: fit-content;
+  min-height: var(--typography-caption-2-ko-desktop-line-height);
+  color: #535862; /* Figma color/text/secondary 토큰과 매칭되는 전역 토큰 부재 */
+  font-family: var(--typography-caption-2-ko-desktop-font-family);
+  font-size: var(--typography-caption-2-ko-desktop-font-size);
+  line-height: var(--typography-caption-2-ko-desktop-line-height);
+  font-weight: var(--typography-caption-2-ko-desktop-font-weight);
+  letter-spacing: var(--typography-caption-2-ko-desktop-letter-spacing);
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+}
+
+.message {
+  color: inherit;
+}
+
+.base[data-state='success'] {
+  color: var(--color-green-500);
+}
+
+.base[data-state='error'] {
+  color: var(--color-red-500);
+}

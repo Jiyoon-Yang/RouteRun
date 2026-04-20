@@ -1,3 +1,56 @@
 {
-  "extends": ["next/core-web-vitals", "next/typescript"]
+  "extends": [
+    "next/core-web-vitals",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
+    "plugin:storybook/recommended" // 👈 스토리북 공식 권장 규칙 추가
+  ],
+  "rules": {
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "react/self-closing-comp": "error",
+    "no-console": ["warn", { "allow": ["warn", "error", "info"] }],
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          "builtin",
+          "external",
+          "internal",
+          ["parent", "sibling"],
+          "index",
+          "object",
+          "type"
+        ],
+        "pathGroups": [{ "pattern": "@/**", "group": "internal", "position": "after" }],
+        "newlines-between": "always",
+        "alphabetize": { "order": "asc", "caseInsensitive": true }
+      }
+    ]
+  },
+  // 👇 스토리북 파일(*.stories.tsx 등)에만 적용되는 예외 처리 구역
+  "overrides": [
+    {
+      "files": ["*.stories.@(ts|tsx|js|jsx|mjs|cjs)"],
+      "rules": {
+        // 스토리북은 메타데이터 정의 시 익명 default export를 자주 쓰므로 에러 무시
+        "import/no-anonymous-default-export": "off",
+
+        // 스토리를 작성하며 테스트용으로 console.log를 자유롭게 쓸 수 있게 허용
+        "no-console": "off",
+
+        // 스토리 내부에서 Props로 넘길 때 빈 함수(empty function) 사용을 허용
+        "@typescript-eslint/no-empty-function": "off"
+      }
+    }
+  ]
 }

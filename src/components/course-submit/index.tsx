@@ -121,7 +121,7 @@ export default function CourseSubmit({ mode, courseId: _courseId }: CourseSubmit
                 aria-label="이미지 추가"
               >
                 <span className={styles.addImageCircle}>
-                  <Icon name="circlePlus" size={12} color="var(--color-white_grey-600)" />
+                  <Icon name="plus" size={12} color="var(--color-white-500)" />
                 </span>
                 <span className={styles.addImageCount}>
                   {images.length}/{TEXTS.MAX_IMAGES}

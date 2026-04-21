@@ -36,7 +36,7 @@ export function useLogout(): UseLogoutResult {
       // 서버 로그아웃 실패해도 클라이언트 상태는 초기화 (멱등성)
     } finally {
       logout();
-      router.replace('/login');
+      // router.replace('/login');
       setIsPending(false);
     }
   }, [getAccessToken, logout, router]);

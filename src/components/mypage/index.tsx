@@ -24,6 +24,7 @@ import { Card } from '@/commons/components/card';
 import { Icon } from '@/commons/components/icons';
 import { Header } from '@/commons/layout/header';
 
+import { useLogout } from './hooks/index.logout.hook';
 import styles from './styles.module.css';
 
 // i18n 대비 텍스트 상수 분리
@@ -88,6 +89,7 @@ const LIKED_COURSES = [
 
 export default function Mypage() {
   const [activeTab, setActiveTab] = useState<TabType>('my-course');
+  const { trigger: handleLogout, isPending: isLogoutPending } = useLogout();
 
   return (
     <div className={styles.container}>
@@ -96,7 +98,7 @@ export default function Mypage() {
         showLeftIcon={false}
         showRightIcon={true}
         rightIconName="logOut"
-        onRightIconClick={() => {}}
+        onRightIconClick={isLogoutPending ? undefined : handleLogout}
       />
 
       {/* 프로필 섹션 */}

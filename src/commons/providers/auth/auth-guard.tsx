@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import { PRIVATE_DYNAMIC_PATTERNS, PRIVATE_ROUTES } from '@/commons/constants/url';
+import { Spinner } from '@/commons/components/spinner';
 import { useModal } from '@/commons/providers/modal/modal.provider';
 
 import { useAuth } from './auth.provider';
@@ -38,7 +39,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   if (isLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
-        <span className="text-sm text-gray-500">로딩 중...</span>
+        <Spinner size="lg" />
       </div>
     );
   }

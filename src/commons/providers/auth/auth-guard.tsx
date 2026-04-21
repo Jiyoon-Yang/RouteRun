@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import { PRIVATE_DYNAMIC_PATTERNS, PRIVATE_ROUTES } from '@/commons/constants/url';
+import { useModal } from '@/commons/providers/modal/modal.provider';
 
 import { useAuth } from './auth.provider';
 
@@ -16,6 +17,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const { isLoggedIn, isLoading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const { openModal } = useModal();
 
   const isPrivateRoute =
     PRIVATE_ROUTES.some((route) => route === pathname) ||
@@ -26,9 +28,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
     if (!isPrivateRoute) return;
     if (isLoggedIn) return;
 
-    alert('로그인이 필요한 서비스입니다.');
-    router.replace(`/login?next=${pathname}`);
-  }, [isLoading, isLoggedIn, isPrivateRoute, pathname, router]);
+    openModal({
+      type: 'alert',
+      title: '로그인이 필요한 서비스입니다.',
+      onConfirm: () => router.replace(`/login?next=${pathname}`),
+    });
+  }, [isLoading, isLoggedIn, isPrivateRoute, pathname, router, openModal]);
 
   if (isLoading) {
     return (

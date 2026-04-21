@@ -1,6 +1,7 @@
 import { Layout } from '@/commons/layout';
 import { AuthGuard } from '@/commons/providers/auth/auth-guard';
 import { AuthProvider } from '@/commons/providers/auth/auth.provider';
+import { ModalProvider } from '@/commons/providers/modal/modal.provider';
 
 import type { Metadata } from 'next';
 
@@ -28,9 +29,11 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <AuthProvider>
-          <AuthGuard>
-            <Layout>{children}</Layout>
-          </AuthGuard>
+          <ModalProvider>
+            <AuthGuard>
+              <Layout>{children}</Layout>
+            </AuthGuard>
+          </ModalProvider>
         </AuthProvider>
       </body>
     </html>

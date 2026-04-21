@@ -1,9 +1,56 @@
 .root {
   width: 100%;
   max-width: 890px;
+  height: 100%;
 }
 
 .map {
   width: 100%;
-  height: 400px;
+  height: 100%;
+}
+
+/** * [추가] 현재 위치 재검색 버튼 스타일 */
+.refreshButton {
+  /* 위치 설정: 지도 왼쪽 하단에서 20px씩 띄움 */
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  /* 지도보다 위에 뜨도록 z-index 설정 */
+  z-index: 10;
+
+  /* 모양 및 색상: 노란색 원형 버튼 */
+  width: 50px;
+  height: 50px;
+  background-color: #ffeb3b; /* 노란색 */
+  border: none;
+  border-radius: 50%; /* 원형 */
+
+  /* 그림자 효과 */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+
+  /* 내부 아이콘 중앙 정렬 (flex 활용) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* 마우스 포인터 변경 및 트랜지션 */
+  cursor: pointer;
+  transition:
+    background-color 0.3s,
+    transform 0.1s;
+}
+
+/* 버튼 위에 마우스를 올렸을 때 색상 변경 */
+.refreshButton:hover {
+  background-color: #fdd835;
+}
+
+/* 버튼을 클릭했을 때 살짝 눌리는 효과 */
+.refreshButton:active {
+  transform: scale(0.95);
+}
+
+/* 버튼 내부 아이콘 스타일 (SVG나 이모지 사용) */
+.refreshIcon {
+  font-size: 24px;
 }

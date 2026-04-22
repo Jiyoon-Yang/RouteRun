@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
 
 import { Icon } from '@/commons/components/icons';
+import type { Route } from '@/commons/types/runroute';
 
 import styles from './styles.module.css';
 
@@ -10,29 +11,53 @@ import styles from './styles.module.css';
 const DEFAULT_CENTER = { lat: 37.566481622437934, lng: 126.98502302169841 };
 
 type TmapV2API = {
-  Map: new (id: string, options: Record<string, unknown>) => any;
-  LatLng: new (lat: number, lng: number) => any;
-  Marker: new (options: Record<string, unknown>) => any;
+  Map: new (id: string, options: Record<string, unknown>) => TmapMap;
+  LatLng: new (lat: number, lng: number) => TmapLatLng;
+  Marker: new (options: Record<string, unknown>) => TmapMarker;
 };
 
-function getTmapv2(): TmapV2API | undefined {
-  return (window as any).Tmapv2;
+declare global {
+  interface Window {
+    Tmapv2: TmapV2API | undefined;
+  }
 }
+
+function getTmapv2(): TmapV2API | undefined {
+  return window.Tmapv2;
+}
+
+type TmapLatLng = {
+  lat: () => number;
+  lng: () => number;
+};
+
+type TmapMarker = {
+  setMap: (map: TmapMap | null) => void;
+  setPosition: (position: TmapLatLng) => void;
+};
+
+type TmapMap = {
+  setCenter: (center: TmapLatLng) => void;
+};
 
 type TmapHomeProps = {
   bottomSheetVisibleHeight?: number;
   isBottomSheetExpanded?: boolean;
+  routes?: Route[];
 };
 
 export function TmapHome({
   bottomSheetVisibleHeight = 24,
   isBottomSheetExpanded = false,
+  routes = [],
 }: TmapHomeProps) {
-  const mapInstance = useRef<any>(null);
-  const currentLocationMarkerRef = useRef<any>(null);
+  const mapInstance = useRef<TmapMap | null>(null);
+  const currentLocationMarkerRef = useRef<TmapMarker | null>(null);
+  const routeMarkerMapRef = useRef<Map<string, TmapMarker>>(new Map());
+  const routesRef = useRef<Route[]>(routes);
 
   // 현재 위치 마커를 생성하거나 기존 마커 위치를 갱신
-  const createCustomMarker = (map: any, lat: number, lng: number) => {
+  const createCustomMarker = (map: TmapMap, lat: number, lng: number) => {
     const Tmapv2 = getTmapv2();
     if (!Tmapv2) return;
 
@@ -52,6 +77,38 @@ export function TmapHome({
 
     currentLocationMarkerRef.current = marker;
   };
+
+  const isValidCoordinate = (route: Route) =>
+    Number.isFinite(route.start_lat) &&
+    Number.isFinite(route.start_lng) &&
+    Math.abs(route.start_lat) <= 90 &&
+    Math.abs(route.start_lng) <= 180;
+
+  const syncRouteMarkers = useCallback((map: TmapMap, nextRoutes: Route[]) => {
+    const Tmapv2 = getTmapv2();
+    if (!Tmapv2) return;
+
+    const normalizedRoutes = nextRoutes.filter(isValidCoordinate);
+    const nextRouteIds = new Set(normalizedRoutes.map((route) => route.id));
+
+    routeMarkerMapRef.current.forEach((marker, routeId) => {
+      if (!nextRouteIds.has(routeId)) {
+        marker.setMap(null);
+        routeMarkerMapRef.current.delete(routeId);
+      }
+    });
+
+    normalizedRoutes.forEach((route) => {
+      if (routeMarkerMapRef.current.has(route.id)) return;
+
+      const marker = new Tmapv2.Marker({
+        position: new Tmapv2.LatLng(route.start_lat, route.start_lng),
+        map,
+        title: route.title,
+      });
+      routeMarkerMapRef.current.set(route.id, marker);
+    });
+  }, []);
 
   // 버튼 클릭 시 실행될 현재 위치 갱신 함수
   const handleRefreshLocation = () => {
@@ -75,6 +132,10 @@ export function TmapHome({
   };
 
   useEffect(() => {
+    routesRef.current = routes;
+  }, [routes]);
+
+  useEffect(() => {
     let cancelled = false;
 
     const initTmap = (lat: number, lng: number) => {
@@ -91,6 +152,7 @@ export function TmapHome({
 
       createCustomMarker(map, lat, lng);
       mapInstance.current = map;
+      syncRouteMarkers(map, routesRef.current);
     };
 
     const startWithLocation = () => {
@@ -118,12 +180,22 @@ export function TmapHome({
 
     checkLibrary();
 
+    const routeMarkerMap = routeMarkerMapRef.current;
+
     return () => {
       cancelled = true;
+      routeMarkerMap.forEach((marker) => marker.setMap(null));
+      routeMarkerMap.clear();
       mapInstance.current = null;
       currentLocationMarkerRef.current = null;
     };
-  }, []);
+  }, [syncRouteMarkers]);
+
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!map) return;
+    syncRouteMarkers(map, routes);
+  }, [routes, syncRouteMarkers]);
 
   const refreshButtonStyle = {
     '--sheet-visible-height': `${bottomSheetVisibleHeight}px`,

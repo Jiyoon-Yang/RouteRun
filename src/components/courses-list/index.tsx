@@ -20,6 +20,11 @@ type BottomSheetState = 'collapsed' | 'peek' | 'expanded';
 
 const SHEET_ORDER: BottomSheetState[] = ['collapsed', 'peek', 'expanded'];
 
+type SheetPositionPayload = {
+  state: BottomSheetState;
+  visibleHeight: number;
+};
+
 function getNextState(current: BottomSheetState, direction: 'up' | 'down'): BottomSheetState {
   const currentIndex = SHEET_ORDER.indexOf(current);
   if (direction === 'up') {
@@ -28,7 +33,11 @@ function getNextState(current: BottomSheetState, direction: 'up' | 'down'): Bott
   return SHEET_ORDER[Math.max(currentIndex - 1, 0)];
 }
 
-export function CoursesList() {
+type CoursesListProps = {
+  onSheetPositionChange?: (payload: SheetPositionPayload) => void;
+};
+
+export function CoursesList({ onSheetPositionChange }: CoursesListProps) {
   const [sheetState, setSheetState] = useState<BottomSheetState>('peek');
   const [peekVisibleHeight, setPeekVisibleHeight] = useState(260);
   const [sheetHeight, setSheetHeight] = useState(0);
@@ -133,6 +142,13 @@ export function CoursesList() {
       : sheetState === 'peek'
         ? Math.max(0, sheetHeight - peekVisibleHeight)
         : 30;
+
+  useEffect(() => {
+    onSheetPositionChange?.({
+      state: sheetState,
+      visibleHeight: Math.max(0, sheetHeight - sheetY),
+    });
+  }, [onSheetPositionChange, sheetHeight, sheetState, sheetY]);
 
   return (
     <motion.div

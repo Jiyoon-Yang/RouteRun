@@ -1,11 +1,10 @@
 'use client';
 
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
-import { usePathname, useRouter } from 'next/navigation';
-
-import { PRIVATE_DYNAMIC_PATTERNS, PRIVATE_ROUTES } from '@/commons/constants/url';
 import { Spinner } from '@/commons/components/spinner';
+import { PRIVATE_DYNAMIC_PATTERNS, PRIVATE_ROUTES } from '@/commons/constants/url';
 import { useModal } from '@/commons/providers/modal/modal.provider';
 
 import { useAuth } from './auth.provider';

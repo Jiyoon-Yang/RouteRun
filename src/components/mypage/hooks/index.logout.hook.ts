@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 import { useAuth } from '@/commons/providers/auth/auth.provider';
 
@@ -13,7 +12,6 @@ interface UseLogoutResult {
 
 export function useLogout(): UseLogoutResult {
   const { getAccessToken, logout } = useAuth();
-  const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [isError, setIsError] = useState(false);
 
@@ -39,7 +37,7 @@ export function useLogout(): UseLogoutResult {
       // router.replace('/login');
       setIsPending(false);
     }
-  }, [getAccessToken, logout, router]);
+  }, [getAccessToken, logout]);
 
   return { trigger, isPending, isError };
 }

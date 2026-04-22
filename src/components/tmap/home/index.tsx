@@ -14,6 +14,12 @@ type TmapV2API = {
   Map: new (id: string, options: Record<string, unknown>) => TmapMap;
   LatLng: new (lat: number, lng: number) => TmapLatLng;
   Marker: new (options: Record<string, unknown>) => TmapMarker;
+  event?: {
+    addListener: (target: TmapMarker, eventName: string, callback: () => void) => void;
+  };
+  Event?: {
+    addListener: (target: TmapMarker, eventName: string, callback: () => void) => void;
+  };
 };
 
 declare global {
@@ -44,12 +50,14 @@ type TmapHomeProps = {
   bottomSheetVisibleHeight?: number;
   isBottomSheetExpanded?: boolean;
   routes?: Route[];
+  onCourseMarkerClick?: (courseId: string) => void;
 };
 
 export function TmapHome({
   bottomSheetVisibleHeight = 24,
   isBottomSheetExpanded = false,
   routes = [],
+  onCourseMarkerClick,
 }: TmapHomeProps) {
   const mapInstance = useRef<TmapMap | null>(null);
   const currentLocationMarkerRef = useRef<TmapMarker | null>(null);
@@ -84,31 +92,58 @@ export function TmapHome({
     Math.abs(route.start_lat) <= 90 &&
     Math.abs(route.start_lng) <= 180;
 
-  const syncRouteMarkers = useCallback((map: TmapMap, nextRoutes: Route[]) => {
-    const Tmapv2 = getTmapv2();
-    if (!Tmapv2) return;
+  const bindMarkerClick = useCallback(
+    (marker: TmapMarker, courseId: string) => {
+      if (!onCourseMarkerClick) return;
 
-    const normalizedRoutes = nextRoutes.filter(isValidCoordinate);
-    const nextRouteIds = new Set(normalizedRoutes.map((route) => route.id));
+      const Tmapv2 = getTmapv2();
+      if (!Tmapv2) return;
 
-    routeMarkerMapRef.current.forEach((marker, routeId) => {
-      if (!nextRouteIds.has(routeId)) {
-        marker.setMap(null);
-        routeMarkerMapRef.current.delete(routeId);
+      if (Tmapv2.event) {
+        Tmapv2.event.addListener(marker, 'click', () => {
+          onCourseMarkerClick(courseId);
+        });
+        return;
       }
-    });
 
-    normalizedRoutes.forEach((route) => {
-      if (routeMarkerMapRef.current.has(route.id)) return;
+      if (Tmapv2.Event) {
+        Tmapv2.Event.addListener(marker, 'click', () => {
+          onCourseMarkerClick(courseId);
+        });
+      }
+    },
+    [onCourseMarkerClick],
+  );
 
-      const marker = new Tmapv2.Marker({
-        position: new Tmapv2.LatLng(route.start_lat, route.start_lng),
-        map,
-        title: route.title,
+  const syncRouteMarkers = useCallback(
+    (map: TmapMap, nextRoutes: Route[]) => {
+      const Tmapv2 = getTmapv2();
+      if (!Tmapv2) return;
+
+      const normalizedRoutes = nextRoutes.filter(isValidCoordinate);
+      const nextRouteIds = new Set(normalizedRoutes.map((route) => route.id));
+
+      routeMarkerMapRef.current.forEach((marker, routeId) => {
+        if (!nextRouteIds.has(routeId)) {
+          marker.setMap(null);
+          routeMarkerMapRef.current.delete(routeId);
+        }
       });
-      routeMarkerMapRef.current.set(route.id, marker);
-    });
-  }, []);
+
+      normalizedRoutes.forEach((route) => {
+        if (routeMarkerMapRef.current.has(route.id)) return;
+
+        const marker = new Tmapv2.Marker({
+          position: new Tmapv2.LatLng(route.start_lat, route.start_lng),
+          map,
+          title: route.title,
+        });
+        bindMarkerClick(marker, route.id);
+        routeMarkerMapRef.current.set(route.id, marker);
+      });
+    },
+    [bindMarkerClick],
+  );
 
   // 버튼 클릭 시 실행될 현재 위치 갱신 함수
   const handleRefreshLocation = () => {

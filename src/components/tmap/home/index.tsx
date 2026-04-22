@@ -4,11 +4,9 @@ import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
 
 import { Icon } from '@/commons/components/icons';
 import type { Route } from '@/commons/types/runroute';
+import { hasValidRouteStartCoordinate, SEOUL_CITY_HALL_COORDINATE } from '@/commons/utils/geo';
 
 import styles from './styles.module.css';
-
-// 비상용 기본 좌표 (서울시청) _ 위치권한 비허용 시 기본 좌표
-const DEFAULT_CENTER = { lat: 37.566481622437934, lng: 126.98502302169841 };
 
 type TmapV2API = {
   Map: new (id: string, options: Record<string, unknown>) => TmapMap;
@@ -22,14 +20,8 @@ type TmapV2API = {
   };
 };
 
-declare global {
-  interface Window {
-    Tmapv2: TmapV2API | undefined;
-  }
-}
-
 function getTmapv2(): TmapV2API | undefined {
-  return window.Tmapv2;
+  return (window as unknown as { Tmapv2?: TmapV2API }).Tmapv2;
 }
 
 type TmapLatLng = {
@@ -86,12 +78,6 @@ export function TmapHome({
     currentLocationMarkerRef.current = marker;
   };
 
-  const isValidCoordinate = (route: Route) =>
-    Number.isFinite(route.start_lat) &&
-    Number.isFinite(route.start_lng) &&
-    Math.abs(route.start_lat) <= 90 &&
-    Math.abs(route.start_lng) <= 180;
-
   const bindMarkerClick = useCallback(
     (marker: TmapMarker, courseId: string) => {
       if (!onCourseMarkerClick) return;
@@ -120,7 +106,7 @@ export function TmapHome({
       const Tmapv2 = getTmapv2();
       if (!Tmapv2) return;
 
-      const normalizedRoutes = nextRoutes.filter(isValidCoordinate);
+      const normalizedRoutes = nextRoutes.filter(hasValidRouteStartCoordinate);
       const nextRouteIds = new Set(normalizedRoutes.map((route) => route.id));
 
       routeMarkerMapRef.current.forEach((marker, routeId) => {
@@ -197,11 +183,11 @@ export function TmapHome({
             initTmap(position.coords.latitude, position.coords.longitude);
           },
           () => {
-            initTmap(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
+            initTmap(SEOUL_CITY_HALL_COORDINATE.lat, SEOUL_CITY_HALL_COORDINATE.lng);
           },
         );
       } else {
-        initTmap(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
+        initTmap(SEOUL_CITY_HALL_COORDINATE.lat, SEOUL_CITY_HALL_COORDINATE.lng);
       }
     };
 

@@ -4,17 +4,9 @@ import { motion, type PanInfo } from 'framer-motion';
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 
 import { Card } from '@/commons/components/card';
+import type { CourseCardView } from '@/commons/types/runroute';
 
 import styles from './styles.module.css';
-
-const COURSE_ITEMS = [
-  { title: '올림픽 공원 둘레길', location: '서울 송파구', distanceText: '2.8km' },
-  { title: '올림픽 공원 둘레길', location: '서울 송파구', distanceText: '2.8km' },
-  { title: '올림픽 공원 둘레길', location: '서울 송파구', distanceText: '2.8km' },
-  { title: '올림픽 공원 둘레길', location: '서울 송파구', distanceText: '2.8km' },
-  { title: '올림픽 공원 둘레길', location: '서울 송파구', distanceText: '2.8km' },
-  { title: '올림픽 공원 둘레길', location: '서울 송파구', distanceText: '2.8km' },
-] as const;
 
 type BottomSheetState = 'collapsed' | 'peek' | 'expanded';
 
@@ -34,10 +26,16 @@ function getNextState(current: BottomSheetState, direction: 'up' | 'down'): Bott
 }
 
 type CoursesListProps = {
+  cards?: CourseCardView[];
+  isLoading?: boolean;
   onSheetPositionChange?: (payload: SheetPositionPayload) => void;
 };
 
-export function CoursesList({ onSheetPositionChange }: CoursesListProps) {
+export function CoursesList({
+  cards = [],
+  isLoading = false,
+  onSheetPositionChange,
+}: CoursesListProps) {
   const [sheetState, setSheetState] = useState<BottomSheetState>('peek');
   const [peekVisibleHeight, setPeekVisibleHeight] = useState(260);
   const [sheetHeight, setSheetHeight] = useState(0);
@@ -88,11 +86,11 @@ export function CoursesList({ onSheetPositionChange }: CoursesListProps) {
       const cardListElement = cardListRef.current;
       const firstCardElement = firstCardRef.current;
 
-      if (!sheetElement || !cardListElement || !firstCardElement) {
+      if (!sheetElement || !cardListElement) {
         return;
       }
 
-      const cardHeight = firstCardElement.getBoundingClientRect().height;
+      const cardHeight = firstCardElement?.getBoundingClientRect().height ?? 144;
       const rowGap = parseFloat(getComputedStyle(cardListElement).rowGap || '12') || 12;
       const sheetHeight = sheetElement.clientHeight;
       setSheetHeight(sheetHeight);
@@ -172,20 +170,23 @@ export function CoursesList({ onSheetPositionChange }: CoursesListProps) {
       </motion.div>
       <h2 className={styles.courseListTitle}>러닝코스 목록</h2>
       <div ref={cardListRef} className={styles.cardList}>
-        {COURSE_ITEMS.map((course, index) => (
-          <div key={`${course.title}-${index}`} ref={index === 0 ? firstCardRef : undefined}>
+        {cards.map((card, index) => (
+          <div key={card.courseId} ref={index === 0 ? firstCardRef : undefined}>
             <Card
               className={styles.cardWidth}
               type="default"
               isLiked
-              isSelected={index === 0}
-              title={course.title}
-              location={course.location}
-              distanceText={course.distanceText}
+              isSelected={card.isPinnedTop}
+              title={card.title}
+              location={card.location}
+              distanceText={card.distanceText}
               likeCount={10}
             />
           </div>
         ))}
+        {!isLoading && cards.length === 0 ? (
+          <p className={styles.emptyState}>표시할 코스가 없습니다.</p>
+        ) : null}
       </div>
     </motion.div>
   );

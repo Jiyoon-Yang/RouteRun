@@ -1,15 +1,21 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { TabButton } from '@/commons/components/tab';
 import { Header } from '@/commons/layout/header';
+import type { ReferenceLocation } from '@/commons/types/runroute';
 import { CoursesList } from '@/components/courses-list';
 import { TmapHome } from '@/components/tmap/home';
 
 import { useRoutes } from './hooks/use-routes';
 import styles from './styles.module.css';
-import { filterRoutesByCategories, type DistanceCategory } from './utils/course-filter';
+import {
+  buildCourseCardViews,
+  filterRoutesByCategories,
+  SEOUL_CITY_HALL_REFERENCE,
+  type DistanceCategory,
+} from './utils/course-filter';
 
 const TAB_ITEMS = [
   { label: '~3km', variant: 'blue' as const, category: 'UNDER_3' as const },
@@ -22,12 +28,54 @@ export function Home() {
   const [sheetVisibleHeight, setSheetVisibleHeight] = useState(24);
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<DistanceCategory>>(new Set());
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [referenceLocation, setReferenceLocation] =
+    useState<ReferenceLocation>(SEOUL_CITY_HALL_REFERENCE);
   const { routes, isLoading, errorMessage } = useRoutes();
 
   const filteredRoutes = useMemo(
     () => filterRoutesByCategories(routes, selectedCategories),
     [routes, selectedCategories],
   );
+  const courseCards = useMemo(
+    () => buildCourseCardViews(filteredRoutes, referenceLocation, selectedCourseId),
+    [filteredRoutes, referenceLocation, selectedCourseId],
+  );
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    if (!navigator.geolocation) {
+      setReferenceLocation(SEOUL_CITY_HALL_REFERENCE);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        if (isCancelled) return;
+        setReferenceLocation({
+          type: 'CURRENT_USER_LOCATION',
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      () => {
+        if (isCancelled) return;
+        setReferenceLocation(SEOUL_CITY_HALL_REFERENCE);
+      },
+      { enableHighAccuracy: false, timeout: 5000 },
+    );
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCourseId) return;
+    if (filteredRoutes.some((route) => route.id === selectedCourseId)) return;
+    setSelectedCourseId(null);
+  }, [filteredRoutes, selectedCourseId]);
 
   const toggleCategory = (category: DistanceCategory) => {
     setSelectedCategories((previous) => {
@@ -63,7 +111,7 @@ export function Home() {
       </div>
 
       {errorMessage ? (
-        <p role="status" style={{ padding: '0 16px', color: '#e74c3c', fontSize: '14px' }}>
+        <p role="status" className={styles.errorMessage}>
           {errorMessage}
         </p>
       ) : null}
@@ -74,9 +122,12 @@ export function Home() {
             bottomSheetVisibleHeight={sheetVisibleHeight}
             isBottomSheetExpanded={isSheetExpanded}
             routes={filteredRoutes}
+            onCourseMarkerClick={setSelectedCourseId}
           />
         </div>
         <CoursesList
+          cards={courseCards}
+          isLoading={isLoading}
           onSheetPositionChange={({ state, visibleHeight }) => {
             setIsSheetExpanded(state === 'expanded');
             setSheetVisibleHeight(visibleHeight);
@@ -84,7 +135,7 @@ export function Home() {
         />
       </div>
       {isLoading ? (
-        <p role="status" style={{ padding: '8px 16px', color: '#5f6876', fontSize: '12px' }}>
+        <p role="status" className={styles.loadingMessage}>
           코스 정보를 불러오는 중...
         </p>
       ) : null}

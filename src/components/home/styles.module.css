@@ -76,3 +76,27 @@
   letter-spacing: var(--typography-body-lg-ko-desktop-semibold-letter-spacing);
   line-height: var(--typography-body-lg-ko-desktop-semibold-line-height);
 }
+
+.errorMessage {
+  margin: 0;
+  padding: 0 16px;
+  color: var(--color-red-500);
+  font-family: var(--typography-body-sm-ko-mobile-medium-font-family);
+  font-size: var(--typography-body-sm-ko-mobile-medium-font-size);
+  font-style: var(--typography-body-sm-ko-mobile-medium-font-style);
+  font-weight: var(--typography-body-sm-ko-mobile-medium-font-weight);
+  letter-spacing: var(--typography-body-sm-ko-mobile-medium-letter-spacing);
+  line-height: var(--typography-body-sm-ko-mobile-medium-line-height);
+}
+
+.loadingMessage {
+  margin: 0;
+  padding: 8px 16px;
+  color: var(--color-grey-600);
+  font-family: var(--typography-body-xs-ko-mobile-regular-font-family);
+  font-size: var(--typography-body-xs-ko-mobile-regular-font-size);
+  font-style: var(--typography-body-xs-ko-mobile-regular-font-style);
+  font-weight: var(--typography-body-xs-ko-mobile-regular-font-weight);
+  letter-spacing: var(--typography-body-xs-ko-mobile-regular-letter-spacing);
+  line-height: var(--typography-body-xs-ko-mobile-regular-line-height);
+}

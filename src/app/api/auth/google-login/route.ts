@@ -71,6 +71,8 @@ function buildBridgePage({
   };
   try {
     localStorage.setItem(storageKey, JSON.stringify(session));
+    localStorage.setItem("accesstoken", accessToken);
+    localStorage.setItem("refreshtoken", refreshToken);
   } catch (_) {}
 
   window.location.replace(returnTo);

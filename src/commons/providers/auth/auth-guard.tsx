@@ -1,0 +1,51 @@
+'use client';
+
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
+import { Spinner } from '@/commons/components/spinner';
+import { PRIVATE_DYNAMIC_PATTERNS, PRIVATE_ROUTES } from '@/commons/constants/url';
+import { useModal } from '@/commons/providers/modal/modal.provider';
+
+import { useAuth } from './auth.provider';
+
+interface AuthGuardProps {
+  children: React.ReactNode;
+}
+
+export function AuthGuard({ children }: AuthGuardProps) {
+  const { isLoggedIn, isLoading } = useAuth();
+  const pathname = usePathname();
+  const router = useRouter();
+  const { openModal } = useModal();
+
+  const isPrivateRoute =
+    PRIVATE_ROUTES.some((route) => route === pathname) ||
+    PRIVATE_DYNAMIC_PATTERNS.some((pattern) => pattern.test(pathname));
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!isPrivateRoute) return;
+    if (isLoggedIn) return;
+
+    openModal({
+      type: 'alert',
+      title: '로그인이 필요한 서비스입니다.',
+      onConfirm: () => router.replace(`/login?next=${pathname}`),
+    });
+  }, [isLoading, isLoggedIn, isPrivateRoute, pathname, router, openModal]);
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (isPrivateRoute && !isLoggedIn) {
+    return null;
+  }
+
+  return <>{children}</>;
+}

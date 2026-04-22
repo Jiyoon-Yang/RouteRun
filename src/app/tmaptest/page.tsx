@@ -1,10 +1,31 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
+
+interface TmapLatLng {
+  lat(): number;
+  lng(): number;
+}
+
+interface TmapMapElement {
+  setMap(map: TmapMapInstance | null): void;
+}
+
+interface TmapMapInstance {
+  addListener(event: string, handler: (evt: { latLng: TmapLatLng }) => void): void;
+}
+
+interface TmapV2SDK {
+  Map: new (id: string, options: Record<string, unknown>) => TmapMapInstance;
+  LatLng: new (lat: number, lng: number) => TmapLatLng;
+  Marker: new (options: Record<string, unknown>) => TmapMapElement;
+  Polyline: new (options: Record<string, unknown>) => TmapMapElement;
+}
 
 declare global {
   interface Window {
-    Tmapv2: any;
+    Tmapv2: TmapV2SDK;
   }
 }
 
@@ -13,10 +34,20 @@ interface Coord {
   lng: number;
 }
 
+interface TmapRouteFeature {
+  geometry: {
+    type: string;
+    coordinates: [number, number][];
+  };
+  properties: {
+    totalDistance?: number;
+  };
+}
+
 export default function RunRouteMap() {
-  const mapInstance = useRef<any>(null);
-  const markers = useRef<any[]>([]);
-  const polylines = useRef<any[]>([]);
+  const mapInstance = useRef<TmapMapInstance | null>(null);
+  const markers = useRef<TmapMapElement[]>([]);
+  const polylines = useRef<TmapMapElement[]>([]);
 
   const [coords, setCoords] = useState<Coord[]>([]);
   const [distance, setDistance] = useState<number | null>(null);
@@ -36,7 +67,7 @@ export default function RunRouteMap() {
       });
       mapInstance.current = map;
 
-      map.addListener('click', (evt: any) => {
+      map.addListener('click', (evt: { latLng: TmapLatLng }) => {
         const latlng = evt.latLng;
         setCoords((prev) => {
           if (prev.length >= 7) {
@@ -92,14 +123,14 @@ export default function RunRouteMap() {
           }),
         },
       );
-      const data = await response.json();
+      const data = (await response.json()) as { features: TmapRouteFeature[] };
       if (data.features) {
-        setDistance(data.features[0].properties.totalDistance);
+        setDistance(data.features[0].properties.totalDistance ?? null);
         polylines.current.forEach((l) => l.setMap(null));
-        const path: any[] = [];
-        data.features.forEach((f: any) => {
+        const path: TmapLatLng[] = [];
+        data.features.forEach((f: TmapRouteFeature) => {
           if (f.geometry.type === 'LineString') {
-            f.geometry.coordinates.forEach((c: any) =>
+            f.geometry.coordinates.forEach((c: [number, number]) =>
               path.push(new window.Tmapv2.LatLng(c[1], c[0])),
             );
           }
@@ -130,22 +161,19 @@ export default function RunRouteMap() {
   const handleSave = () => {
     if (distance === null || !title) return alert('경로 계산과 제목 입력이 필요합니다.');
 
-    // 수파베이스 테이블 구조와 동일한 객체 생성
     const newRoute = {
-      id: Date.now().toString(), // 임시 ID
+      id: Date.now().toString(),
       title,
       description,
-      distance_meters: Math.floor(distance), // 정수형 미터 단위
-      // JSONB 컬럼인 path_data 구조와 동일하게 묶기
+      distance_meters: Math.floor(distance),
       path_data: {
         start: coords[0],
         end: coords[coords.length - 1],
         waypoints: coords.slice(1, -1),
       },
-      // 검색 필터링용 개별 컬럼
       start_lat: coords[0].lat,
       start_lng: coords[0].lng,
-      image_urls: images, // 나중에 스토리지 URL이 들어갈 자리
+      image_urls: images,
       created_at: new Date().toISOString(),
     };
 
@@ -153,7 +181,6 @@ export default function RunRouteMap() {
     try {
       localStorage.setItem('runRoutes', JSON.stringify([...prev, newRoute]));
       alert('등록 완료!');
-      // window.location.reload(); // 테스트를 위해 리로드는 잠시 주석처리 하셔도 됩니다.
     } catch {
       alert('저장 공간 부족 (이미지 용량을 줄여주세요)');
     }
@@ -216,11 +243,14 @@ export default function RunRouteMap() {
         />
         <div className="flex gap-2 overflow-x-auto">
           {images.map((img, i) => (
-            <img
+            <Image
               key={i}
               src={img}
+              width={80}
+              height={80}
               className="w-20 h-20 object-cover rounded border"
               alt="preview"
+              unoptimized
             />
           ))}
         </div>

@@ -56,6 +56,7 @@ interface AuthState {
   accessToken: string | null;
   isLoggedIn: boolean;
   isAnonymous: boolean;
+  isLoading: boolean;
 }
 
 export interface AuthContextValue extends AuthState {
@@ -79,17 +80,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     accessToken: null,
     isLoggedIn: false,
     isAnonymous: false,
+    isLoading: true,
   });
 
   // 초기 복원: 앱 시작 시 저장된 토큰으로 인증 상태 복원
   useEffect(() => {
     const stored = loadAccessToken();
-    if (!stored) return;
+
+    if (!stored) {
+      setAuthState((prev) => ({ ...prev, isLoading: false }));
+      return;
+    }
 
     setAuthState({
       accessToken: stored,
       isLoggedIn: true,
       isAnonymous: extractIsAnonymous(stored),
+      isLoading: false,
     });
   }, []);
 
@@ -99,6 +106,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       accessToken,
       isLoggedIn: true,
       isAnonymous: extractIsAnonymous(accessToken),
+      isLoading: false,
     });
   }, []);
 
@@ -108,6 +116,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       accessToken: null,
       isLoggedIn: false,
       isAnonymous: false,
+      isLoading: false,
     });
   }, []);
 

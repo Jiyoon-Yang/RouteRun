@@ -1,6 +1,14 @@
-import type { Route } from '@/commons/types/runroute';
+import type { CourseCardView, ReferenceLocation, Route } from '@/commons/types/runroute';
 
 export type DistanceCategory = 'UNDER_3' | 'BETWEEN_3_AND_5' | 'BETWEEN_5_AND_10' | 'OVER_10';
+
+const EARTH_RADIUS_METERS = 6_371_000;
+
+export const SEOUL_CITY_HALL_REFERENCE: ReferenceLocation = {
+  type: 'SEOUL_CITY_HALL_DEFAULT',
+  lat: 37.566481622437934,
+  lng: 126.98502302169841,
+};
 
 export function getDistanceCategory(distanceMeters: number): DistanceCategory {
   const distanceKm = distanceMeters / 1000;
@@ -36,4 +44,92 @@ export function filterRoutesByCategories(
 
     return selectedCategories.has(getDistanceCategory(route.distance_meters));
   });
+}
+
+function toRadian(value: number): number {
+  return (value * Math.PI) / 180;
+}
+
+function hasValidCoordinate(route: Route): boolean {
+  return (
+    Number.isFinite(route.start_lat) &&
+    Number.isFinite(route.start_lng) &&
+    Math.abs(route.start_lat) <= 90 &&
+    Math.abs(route.start_lng) <= 180
+  );
+}
+
+function calculateLinearDistanceMeters(
+  origin: Pick<ReferenceLocation, 'lat' | 'lng'>,
+  target: Pick<Route, 'start_lat' | 'start_lng'>,
+): number {
+  const deltaLat = toRadian(target.start_lat - origin.lat);
+  const deltaLng = toRadian(target.start_lng - origin.lng);
+  const lat1 = toRadian(origin.lat);
+  const lat2 = toRadian(target.start_lat);
+
+  const haversine =
+    Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+
+  return 2 * EARTH_RADIUS_METERS * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+}
+
+function toDistanceText(distanceMeters: number): string {
+  return `${(distanceMeters / 1000).toFixed(1)}km`;
+}
+
+function toLocationText(route: Route): string {
+  return `시작 좌표 ${route.start_lat.toFixed(4)}, ${route.start_lng.toFixed(4)}`;
+}
+
+export function pinToTopIfVisible(
+  cards: CourseCardView[],
+  selectedCourseId: string | null,
+): CourseCardView[] {
+  if (!selectedCourseId) {
+    return cards.map((card) => ({ ...card, isPinnedTop: false }));
+  }
+
+  const index = cards.findIndex((card) => card.courseId === selectedCourseId);
+  if (index < 0) {
+    return cards.map((card) => ({ ...card, isPinnedTop: false }));
+  }
+
+  const pinned = { ...cards[index], isPinnedTop: true };
+  const rest = cards
+    .filter((_, cardIndex) => cardIndex !== index)
+    .map((card) => ({ ...card, isPinnedTop: false }));
+
+  return [pinned, ...rest];
+}
+
+export function buildCourseCardViews(
+  routes: Route[],
+  referenceLocation: ReferenceLocation,
+  selectedCourseId: string | null,
+): CourseCardView[] {
+  const baseCards = dedupeRoutesById(routes)
+    .filter(hasValidCoordinate)
+    .map((route) => {
+      const distanceFromReference = calculateLinearDistanceMeters(referenceLocation, route);
+      return {
+        courseId: route.id,
+        title: route.title,
+        location: toLocationText(route),
+        distanceKm: route.distance_meters / 1000,
+        distanceFromReference,
+        distanceText: toDistanceText(route.distance_meters),
+        isPinnedTop: false,
+      };
+    })
+    .sort((left, right) => {
+      if (left.distanceFromReference !== right.distanceFromReference) {
+        return left.distanceFromReference - right.distanceFromReference;
+      }
+
+      return left.title.localeCompare(right.title, 'ko');
+    });
+
+  return pinToTopIfVisible(baseCards, selectedCourseId);
 }

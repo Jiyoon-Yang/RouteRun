@@ -8,7 +8,7 @@ import type { ReferenceLocation } from '@/commons/types/runroute';
 import { CoursesList } from '@/components/courses-list';
 import { TmapHome } from '@/components/tmap/home';
 
-import { useRoutes } from './hooks/use-routes';
+import { useRoutes } from './hooks/index.use-routes';
 import styles from './styles.module.css';
 import {
   buildCourseCardViews,

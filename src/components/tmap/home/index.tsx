@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 
 import { Icon } from '@/commons/components/icons';
 
 import styles from './styles.module.css';
 
-// 비상용 기본 좌표 (서울시청)
+// 비상용 기본 좌표 (서울시청) _ 위치권한 비허용 시 기본 좌표
 const DEFAULT_CENTER = { lat: 37.566481622437934, lng: 126.98502302169841 };
 
 type TmapV2API = {
@@ -19,7 +19,15 @@ function getTmapv2(): TmapV2API | undefined {
   return (window as any).Tmapv2;
 }
 
-export function TmapHome() {
+type TmapHomeProps = {
+  bottomSheetVisibleHeight?: number;
+  isBottomSheetExpanded?: boolean;
+};
+
+export function TmapHome({
+  bottomSheetVisibleHeight = 24,
+  isBottomSheetExpanded = false,
+}: TmapHomeProps) {
   const mapInstance = useRef<any>(null);
   const currentLocationMarkerRef = useRef<any>(null);
 
@@ -117,10 +125,19 @@ export function TmapHome() {
     };
   }, []);
 
+  const refreshButtonStyle = {
+    '--sheet-visible-height': `${bottomSheetVisibleHeight}px`,
+  } as CSSProperties;
+
   return (
     <div className={styles.root}>
       <div id="map_div" className={styles.map} />
-      <button type="button" className={styles.refreshButton} onClick={handleRefreshLocation}>
+      <button
+        type="button"
+        className={`${styles.refreshButton} ${isBottomSheetExpanded ? styles.refreshButtonHidden : ''}`}
+        style={refreshButtonStyle}
+        onClick={handleRefreshLocation}
+      >
         <Icon name="locateFixed" size={24} className={styles.refreshIcon} />
       </button>
     </div>

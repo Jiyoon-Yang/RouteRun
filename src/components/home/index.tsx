@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { TabButton } from '@/commons/components/tab';
 import { Header } from '@/commons/layout/header';
 import { CoursesList } from '@/components/courses-list';
@@ -15,6 +17,9 @@ const TAB_ITEMS = [
 ];
 
 export function Home() {
+  const [sheetVisibleHeight, setSheetVisibleHeight] = useState(24);
+  const [isSheetExpanded, setIsSheetExpanded] = useState(false);
+
   return (
     <section className={styles.container}>
       <div className={styles.topChrome}>
@@ -34,9 +39,17 @@ export function Home() {
 
       <div className={styles.mapStage}>
         <div className={styles.map}>
-          <TmapHome />
+          <TmapHome
+            bottomSheetVisibleHeight={sheetVisibleHeight}
+            isBottomSheetExpanded={isSheetExpanded}
+          />
         </div>
-        <CoursesList />
+        <CoursesList
+          onSheetPositionChange={({ state, visibleHeight }) => {
+            setIsSheetExpanded(state === 'expanded');
+            setSheetVisibleHeight(visibleHeight);
+          }}
+        />
       </div>
     </section>
   );

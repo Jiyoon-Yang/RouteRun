@@ -18,10 +18,10 @@
   left: 20px;
   z-index: 10;
 
-  /* 모양 및 색상: 노란색 원형 버튼 */
   width: 50px;
   height: 50px;
-  background-color: #ffeb3b; /* 노란색 */
+  background-color: #fafafa;
+  opacity: 0.75;
   border: none;
   border-radius: 50%; /* 원형 */
 
@@ -44,12 +44,13 @@
 
 /* 버튼 위에 마우스를 올렸을 때 색상 변경 */
 .refreshButton:hover {
-  background-color: #fdd835;
+  background-color: #fafafa;
+  opacity: 0.95;
 }
 
 /* 버튼을 클릭했을 때 살짝 눌리는 효과 */
 .refreshButton:active {
-  transform: scale(0.95);
+  transform: scale(1);
 }
 
 /* 버튼 내부 아이콘 스타일 (SVG나 이모지 사용) */

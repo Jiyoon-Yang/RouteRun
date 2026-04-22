@@ -120,9 +120,9 @@ export default function CourseSubmit({ mode, courseId: _courseId }: CourseSubmit
                 onClick={() => fileInputRef.current?.click()}
                 aria-label="이미지 추가"
               >
-                {/* <span className={styles.addImageCircle}> */}
-                <Icon name="circlePlus" strokeWidth={1.5} size={20} color="var(--color-grey-300)" />
-                {/* </span> */}
+                <span className={styles.addImageCircle}>
+                  <Icon name="plus" size={12} color="var(--color-white-500)" />
+                </span>
                 <span className={styles.addImageCount}>
                   {images.length}/{TEXTS.MAX_IMAGES}
                 </span>

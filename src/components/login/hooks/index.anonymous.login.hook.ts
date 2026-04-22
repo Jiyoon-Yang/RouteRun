@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState, useCallback } from 'react';
 
+import { useAuth } from '@/commons/providers/auth/auth.provider';
+
 interface UseAnonymousLoginOptions {
   returnTo?: string;
 }
@@ -19,6 +21,7 @@ export function useAnonymousLogin({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { login } = useAuth();
 
   const trigger = useCallback(async () => {
     setIsLoading(true);
@@ -38,8 +41,7 @@ export function useAnonymousLogin({
         return;
       }
 
-      localStorage.setItem('access_token', data.access_token);
-      localStorage.setItem('refresh_token', data.refresh_token);
+      login({ accessToken: data.access_token, refreshToken: data.refresh_token });
 
       router.push(data.returnTo ?? returnTo ?? '/');
     } catch {
@@ -47,7 +49,7 @@ export function useAnonymousLogin({
     } finally {
       setIsLoading(false);
     }
-  }, [returnTo, router]);
+  }, [returnTo, router, login]);
 
   return { trigger, isLoading, error };
 }

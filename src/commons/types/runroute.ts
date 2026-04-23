@@ -19,3 +19,21 @@ export interface Route {
   likes_count: number;
   created_at: string;
 }
+
+export type ReferenceLocationType = 'CURRENT_USER_LOCATION' | 'SEOUL_CITY_HALL_DEFAULT';
+
+export interface ReferenceLocation {
+  type: ReferenceLocationType;
+  lat: number;
+  lng: number;
+}
+
+export interface CourseCardView {
+  courseId: string;
+  title: string;
+  location: string;
+  distanceKm: number;
+  distanceFromReference: number;
+  distanceText: string;
+  isPinnedTop: boolean;
+}

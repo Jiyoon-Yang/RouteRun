@@ -4,26 +4,25 @@ import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
 
 import { Icon } from '@/commons/components/icons';
 import type { Route } from '@/commons/types/runroute';
+import { hasValidRouteStartCoordinate, SEOUL_CITY_HALL_COORDINATE } from '@/commons/utils/geo';
 
 import styles from './styles.module.css';
-
-// 비상용 기본 좌표 (서울시청) _ 위치권한 비허용 시 기본 좌표
-const DEFAULT_CENTER = { lat: 37.566481622437934, lng: 126.98502302169841 };
 
 type TmapV2API = {
   Map: new (id: string, options: Record<string, unknown>) => TmapMap;
   LatLng: new (lat: number, lng: number) => TmapLatLng;
   Marker: new (options: Record<string, unknown>) => TmapMarker;
+  event?: {
+    addListener: (target: TmapMarker, eventName: string, callback: () => void) => void;
+  };
+  Event?: {
+    addListener: (target: TmapMarker, eventName: string, callback: () => void) => void;
+  };
 };
 
-declare global {
-  interface Window {
-    Tmapv2: TmapV2API | undefined;
-  }
-}
-
+// [유틸] 전역 Tmapv2 객체 접근 래퍼
 function getTmapv2(): TmapV2API | undefined {
-  return window.Tmapv2;
+  return (window as unknown as { Tmapv2?: TmapV2API }).Tmapv2;
 }
 
 type TmapLatLng = {
@@ -44,19 +43,22 @@ type TmapHomeProps = {
   bottomSheetVisibleHeight?: number;
   isBottomSheetExpanded?: boolean;
   routes?: Route[];
+  onCourseMarkerClick?: (courseId: string) => void;
 };
 
 export function TmapHome({
   bottomSheetVisibleHeight = 24,
   isBottomSheetExpanded = false,
   routes = [],
+  onCourseMarkerClick,
 }: TmapHomeProps) {
+  // [상태] 지도/마커 인스턴스 참조 관리
   const mapInstance = useRef<TmapMap | null>(null);
   const currentLocationMarkerRef = useRef<TmapMarker | null>(null);
   const routeMarkerMapRef = useRef<Map<string, TmapMarker>>(new Map());
   const routesRef = useRef<Route[]>(routes);
 
-  // 현재 위치 마커를 생성하거나 기존 마커 위치를 갱신
+  // [마커] 현재 위치 마커 생성 및 좌표 갱신
   const createCustomMarker = (map: TmapMap, lat: number, lng: number) => {
     const Tmapv2 = getTmapv2();
     if (!Tmapv2) return;
@@ -78,39 +80,62 @@ export function TmapHome({
     currentLocationMarkerRef.current = marker;
   };
 
-  const isValidCoordinate = (route: Route) =>
-    Number.isFinite(route.start_lat) &&
-    Number.isFinite(route.start_lng) &&
-    Math.abs(route.start_lat) <= 90 &&
-    Math.abs(route.start_lng) <= 180;
+  const bindMarkerClick = useCallback(
+    (marker: TmapMarker, courseId: string) => {
+      // [이벤트] 코스 마커 클릭 이벤트 연결
+      if (!onCourseMarkerClick) return;
 
-  const syncRouteMarkers = useCallback((map: TmapMap, nextRoutes: Route[]) => {
-    const Tmapv2 = getTmapv2();
-    if (!Tmapv2) return;
+      const Tmapv2 = getTmapv2();
+      if (!Tmapv2) return;
 
-    const normalizedRoutes = nextRoutes.filter(isValidCoordinate);
-    const nextRouteIds = new Set(normalizedRoutes.map((route) => route.id));
-
-    routeMarkerMapRef.current.forEach((marker, routeId) => {
-      if (!nextRouteIds.has(routeId)) {
-        marker.setMap(null);
-        routeMarkerMapRef.current.delete(routeId);
+      if (Tmapv2.event) {
+        Tmapv2.event.addListener(marker, 'click', () => {
+          onCourseMarkerClick(courseId);
+        });
+        return;
       }
-    });
 
-    normalizedRoutes.forEach((route) => {
-      if (routeMarkerMapRef.current.has(route.id)) return;
+      if (Tmapv2.Event) {
+        Tmapv2.Event.addListener(marker, 'click', () => {
+          onCourseMarkerClick(courseId);
+        });
+      }
+    },
+    [onCourseMarkerClick],
+  );
 
-      const marker = new Tmapv2.Marker({
-        position: new Tmapv2.LatLng(route.start_lat, route.start_lng),
-        map,
-        title: route.title,
+  const syncRouteMarkers = useCallback(
+    (map: TmapMap, nextRoutes: Route[]) => {
+      // [동기화] 코스 마커 목록 증분 동기화
+      const Tmapv2 = getTmapv2();
+      if (!Tmapv2) return;
+
+      const normalizedRoutes = nextRoutes.filter(hasValidRouteStartCoordinate);
+      const nextRouteIds = new Set(normalizedRoutes.map((route) => route.id));
+
+      routeMarkerMapRef.current.forEach((marker, routeId) => {
+        if (!nextRouteIds.has(routeId)) {
+          marker.setMap(null);
+          routeMarkerMapRef.current.delete(routeId);
+        }
       });
-      routeMarkerMapRef.current.set(route.id, marker);
-    });
-  }, []);
 
-  // 버튼 클릭 시 실행될 현재 위치 갱신 함수
+      normalizedRoutes.forEach((route) => {
+        if (routeMarkerMapRef.current.has(route.id)) return;
+
+        const marker = new Tmapv2.Marker({
+          position: new Tmapv2.LatLng(route.start_lat, route.start_lng),
+          map,
+          title: route.title,
+        });
+        bindMarkerClick(marker, route.id);
+        routeMarkerMapRef.current.set(route.id, marker);
+      });
+    },
+    [bindMarkerClick],
+  );
+
+  // [이벤트] 현재 위치 재탐색 버튼 처리
   const handleRefreshLocation = () => {
     const map = mapInstance.current;
     if (!map || !navigator.geolocation) return;
@@ -136,6 +161,7 @@ export function TmapHome({
   }, [routes]);
 
   useEffect(() => {
+    // [초기화] 지도 라이브러리 로드 대기 및 최초 지도 생성
     let cancelled = false;
 
     const initTmap = (lat: number, lng: number) => {
@@ -162,11 +188,11 @@ export function TmapHome({
             initTmap(position.coords.latitude, position.coords.longitude);
           },
           () => {
-            initTmap(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
+            initTmap(SEOUL_CITY_HALL_COORDINATE.lat, SEOUL_CITY_HALL_COORDINATE.lng);
           },
         );
       } else {
-        initTmap(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
+        initTmap(SEOUL_CITY_HALL_COORDINATE.lat, SEOUL_CITY_HALL_COORDINATE.lng);
       }
     };
 
@@ -192,6 +218,7 @@ export function TmapHome({
   }, [syncRouteMarkers]);
 
   useEffect(() => {
+    // [동기화] 코스 데이터 변경 시 마커 반영
     const map = mapInstance.current;
     if (!map) return;
     syncRouteMarkers(map, routes);

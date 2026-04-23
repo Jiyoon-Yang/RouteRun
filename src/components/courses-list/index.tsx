@@ -4,17 +4,9 @@ import { motion, type PanInfo } from 'framer-motion';
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 
 import { Card } from '@/commons/components/card';
+import type { CourseCardView } from '@/commons/types/runroute';
 
 import styles from './styles.module.css';
-
-const COURSE_ITEMS = [
-  { title: '올림픽 공원 둘레길', location: '서울 송파구', distanceText: '2.8km' },
-  { title: '올림픽 공원 둘레길', location: '서울 송파구', distanceText: '2.8km' },
-  { title: '올림픽 공원 둘레길', location: '서울 송파구', distanceText: '2.8km' },
-  { title: '올림픽 공원 둘레길', location: '서울 송파구', distanceText: '2.8km' },
-  { title: '올림픽 공원 둘레길', location: '서울 송파구', distanceText: '2.8km' },
-  { title: '올림픽 공원 둘레길', location: '서울 송파구', distanceText: '2.8km' },
-] as const;
 
 type BottomSheetState = 'collapsed' | 'peek' | 'expanded';
 
@@ -25,6 +17,7 @@ type SheetPositionPayload = {
   visibleHeight: number;
 };
 
+// [계산] 바텀시트 다음 상태 계산
 function getNextState(current: BottomSheetState, direction: 'up' | 'down'): BottomSheetState {
   const currentIndex = SHEET_ORDER.indexOf(current);
   if (direction === 'up') {
@@ -34,10 +27,17 @@ function getNextState(current: BottomSheetState, direction: 'up' | 'down'): Bott
 }
 
 type CoursesListProps = {
+  cards?: CourseCardView[];
+  isLoading?: boolean;
   onSheetPositionChange?: (payload: SheetPositionPayload) => void;
 };
 
-export function CoursesList({ onSheetPositionChange }: CoursesListProps) {
+export function CoursesList({
+  cards = [],
+  isLoading = false,
+  onSheetPositionChange,
+}: CoursesListProps) {
+  // [상태] 바텀시트 표시 상태 관리
   const [sheetState, setSheetState] = useState<BottomSheetState>('peek');
   const [peekVisibleHeight, setPeekVisibleHeight] = useState(260);
   const [sheetHeight, setSheetHeight] = useState(0);
@@ -45,10 +45,12 @@ export function CoursesList({ onSheetPositionChange }: CoursesListProps) {
   const cardListRef = useRef<HTMLDivElement | null>(null);
   const firstCardRef = useRef<HTMLDivElement | null>(null);
 
+  // [이벤트] 핸들 클릭 기반 상태 토글
   const handleToggleByClick = () => {
     setSheetState((prev) => (prev === 'expanded' ? 'peek' : getNextState(prev, 'up')));
   };
 
+  // [이벤트] 드래그 제스처 기반 상태 전환
   const handlePanEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const DRAG_THRESHOLD = 36;
     const VELOCITY_THRESHOLD = 360;
@@ -63,6 +65,7 @@ export function CoursesList({ onSheetPositionChange }: CoursesListProps) {
     }
   };
 
+  // [접근성] 키보드 입력 기반 상태 전환
   const handleHandleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -83,16 +86,17 @@ export function CoursesList({ onSheetPositionChange }: CoursesListProps) {
   };
 
   useEffect(() => {
+    // [레이아웃] 카드 크기 기반 peek 높이 재계산
     const recalculateSheetHeights = () => {
       const sheetElement = sheetRef.current;
       const cardListElement = cardListRef.current;
       const firstCardElement = firstCardRef.current;
 
-      if (!sheetElement || !cardListElement || !firstCardElement) {
+      if (!sheetElement || !cardListElement) {
         return;
       }
 
-      const cardHeight = firstCardElement.getBoundingClientRect().height;
+      const cardHeight = firstCardElement?.getBoundingClientRect().height ?? 144;
       const rowGap = parseFloat(getComputedStyle(cardListElement).rowGap || '12') || 12;
       const sheetHeight = sheetElement.clientHeight;
       setSheetHeight(sheetHeight);
@@ -144,6 +148,7 @@ export function CoursesList({ onSheetPositionChange }: CoursesListProps) {
         : 30;
 
   useEffect(() => {
+    // [동기화] 부모 컴포넌트에 시트 위치 전달
     onSheetPositionChange?.({
       state: sheetState,
       visibleHeight: Math.max(0, sheetHeight - sheetY),
@@ -172,20 +177,23 @@ export function CoursesList({ onSheetPositionChange }: CoursesListProps) {
       </motion.div>
       <h2 className={styles.courseListTitle}>러닝코스 목록</h2>
       <div ref={cardListRef} className={styles.cardList}>
-        {COURSE_ITEMS.map((course, index) => (
-          <div key={`${course.title}-${index}`} ref={index === 0 ? firstCardRef : undefined}>
+        {cards.map((card, index) => (
+          <div key={card.courseId} ref={index === 0 ? firstCardRef : undefined}>
             <Card
               className={styles.cardWidth}
               type="default"
               isLiked
-              isSelected={index === 0}
-              title={course.title}
-              location={course.location}
-              distanceText={course.distanceText}
+              isSelected={card.isPinnedTop}
+              title={card.title}
+              location={card.location}
+              distanceText={card.distanceText}
               likeCount={10}
             />
           </div>
         ))}
+        {!isLoading && cards.length === 0 ? (
+          <p className={styles.emptyState}>표시할 코스가 없습니다.</p>
+        ) : null}
       </div>
     </motion.div>
   );

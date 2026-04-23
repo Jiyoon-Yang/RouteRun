@@ -25,6 +25,7 @@ type RouteRow = {
   created_at: string | null;
 };
 
+// [정규화] DB 응답을 앱 Route 타입으로 변환
 function toRoute(row: RouteRow): Route | null {
   if (
     !row.id ||
@@ -61,6 +62,7 @@ export function useRoutes(): UseRoutesResult {
   useEffect(() => {
     let isMounted = true;
 
+    // [조회] 코스 목록 요청 및 상태 갱신 처리
     const loadRoutes = async () => {
       setIsLoading(true);
       setErrorMessage(null);
@@ -84,6 +86,7 @@ export function useRoutes(): UseRoutesResult {
           .filter((route): route is Route => route !== null);
         setRoutes(normalized);
       } catch (error) {
+        // [오류] 조회 실패 메시지 상태 반영
         if (!isMounted) return;
         console.error('코스 조회 실패:', error);
         setErrorMessage('코스 정보를 불러오지 못했습니다.');
@@ -97,6 +100,7 @@ export function useRoutes(): UseRoutesResult {
     loadRoutes();
 
     return () => {
+      // [정리] 언마운트 이후 상태 업데이트 방지
       isMounted = false;
     };
   }, []);

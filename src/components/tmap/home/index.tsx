@@ -20,6 +20,7 @@ type TmapV2API = {
   };
 };
 
+// [유틸] 전역 Tmapv2 객체 접근 래퍼
 function getTmapv2(): TmapV2API | undefined {
   return (window as unknown as { Tmapv2?: TmapV2API }).Tmapv2;
 }
@@ -51,12 +52,13 @@ export function TmapHome({
   routes = [],
   onCourseMarkerClick,
 }: TmapHomeProps) {
+  // [상태] 지도/마커 인스턴스 참조 관리
   const mapInstance = useRef<TmapMap | null>(null);
   const currentLocationMarkerRef = useRef<TmapMarker | null>(null);
   const routeMarkerMapRef = useRef<Map<string, TmapMarker>>(new Map());
   const routesRef = useRef<Route[]>(routes);
 
-  // 현재 위치 마커를 생성하거나 기존 마커 위치를 갱신
+  // [마커] 현재 위치 마커 생성 및 좌표 갱신
   const createCustomMarker = (map: TmapMap, lat: number, lng: number) => {
     const Tmapv2 = getTmapv2();
     if (!Tmapv2) return;
@@ -80,6 +82,7 @@ export function TmapHome({
 
   const bindMarkerClick = useCallback(
     (marker: TmapMarker, courseId: string) => {
+      // [이벤트] 코스 마커 클릭 이벤트 연결
       if (!onCourseMarkerClick) return;
 
       const Tmapv2 = getTmapv2();
@@ -103,6 +106,7 @@ export function TmapHome({
 
   const syncRouteMarkers = useCallback(
     (map: TmapMap, nextRoutes: Route[]) => {
+      // [동기화] 코스 마커 목록 증분 동기화
       const Tmapv2 = getTmapv2();
       if (!Tmapv2) return;
 
@@ -131,7 +135,7 @@ export function TmapHome({
     [bindMarkerClick],
   );
 
-  // 버튼 클릭 시 실행될 현재 위치 갱신 함수
+  // [이벤트] 현재 위치 재탐색 버튼 처리
   const handleRefreshLocation = () => {
     const map = mapInstance.current;
     if (!map || !navigator.geolocation) return;
@@ -157,6 +161,7 @@ export function TmapHome({
   }, [routes]);
 
   useEffect(() => {
+    // [초기화] 지도 라이브러리 로드 대기 및 최초 지도 생성
     let cancelled = false;
 
     const initTmap = (lat: number, lng: number) => {
@@ -213,6 +218,7 @@ export function TmapHome({
   }, [syncRouteMarkers]);
 
   useEffect(() => {
+    // [동기화] 코스 데이터 변경 시 마커 반영
     const map = mapInstance.current;
     if (!map) return;
     syncRouteMarkers(map, routes);

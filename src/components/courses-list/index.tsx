@@ -17,6 +17,7 @@ type SheetPositionPayload = {
   visibleHeight: number;
 };
 
+// [계산] 바텀시트 다음 상태 계산
 function getNextState(current: BottomSheetState, direction: 'up' | 'down'): BottomSheetState {
   const currentIndex = SHEET_ORDER.indexOf(current);
   if (direction === 'up') {
@@ -36,6 +37,7 @@ export function CoursesList({
   isLoading = false,
   onSheetPositionChange,
 }: CoursesListProps) {
+  // [상태] 바텀시트 표시 상태 관리
   const [sheetState, setSheetState] = useState<BottomSheetState>('peek');
   const [peekVisibleHeight, setPeekVisibleHeight] = useState(260);
   const [sheetHeight, setSheetHeight] = useState(0);
@@ -43,10 +45,12 @@ export function CoursesList({
   const cardListRef = useRef<HTMLDivElement | null>(null);
   const firstCardRef = useRef<HTMLDivElement | null>(null);
 
+  // [이벤트] 핸들 클릭 기반 상태 토글
   const handleToggleByClick = () => {
     setSheetState((prev) => (prev === 'expanded' ? 'peek' : getNextState(prev, 'up')));
   };
 
+  // [이벤트] 드래그 제스처 기반 상태 전환
   const handlePanEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const DRAG_THRESHOLD = 36;
     const VELOCITY_THRESHOLD = 360;
@@ -61,6 +65,7 @@ export function CoursesList({
     }
   };
 
+  // [접근성] 키보드 입력 기반 상태 전환
   const handleHandleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -81,6 +86,7 @@ export function CoursesList({
   };
 
   useEffect(() => {
+    // [레이아웃] 카드 크기 기반 peek 높이 재계산
     const recalculateSheetHeights = () => {
       const sheetElement = sheetRef.current;
       const cardListElement = cardListRef.current;
@@ -142,6 +148,7 @@ export function CoursesList({
         : 30;
 
   useEffect(() => {
+    // [동기화] 부모 컴포넌트에 시트 위치 전달
     onSheetPositionChange?.({
       state: sheetState,
       visibleHeight: Math.max(0, sheetHeight - sheetY),

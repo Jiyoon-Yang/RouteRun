@@ -21,18 +21,21 @@ function toRadian(value: number): number {
   return (value * Math.PI) / 180;
 }
 
+// [검증] 위경도 범위 및 숫자 유효성 검증
 export function isValidCoordinate(lat: number, lng: number): boolean {
   return (
     Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180
   );
 }
 
+// [검증] 코스 시작 좌표 유효성 검증
 export function hasValidRouteStartCoordinate(
   route: Pick<Route, 'start_lat' | 'start_lng'>,
 ): boolean {
   return isValidCoordinate(route.start_lat, route.start_lng);
 }
 
+// [계산] Haversine 기반 직선거리 계산
 export function calculateLinearDistanceMeters(origin: Coordinate, target: Coordinate): number {
   const deltaLat = toRadian(target.lat - origin.lat);
   const deltaLng = toRadian(target.lng - origin.lng);

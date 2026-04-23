@@ -25,6 +25,7 @@ const TAB_ITEMS = [
 ];
 
 export function Home() {
+  // [상태] 홈 화면 기본 상태 관리
   const [sheetVisibleHeight, setSheetVisibleHeight] = useState(24);
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<DistanceCategory>>(new Set());
@@ -33,6 +34,7 @@ export function Home() {
     useState<ReferenceLocation>(SEOUL_CITY_HALL_REFERENCE);
   const { routes, isLoading, errorMessage } = useRoutes();
 
+  // [파생데이터] 필터/정렬 결과 계산
   const filteredRoutes = useMemo(
     () => filterRoutesByCategories(routes, selectedCategories),
     [routes, selectedCategories],
@@ -42,6 +44,7 @@ export function Home() {
     [filteredRoutes, referenceLocation, selectedCourseId],
   );
 
+  // [초기화] 사용자 위치 기반 기준 좌표 설정
   useEffect(() => {
     let isCancelled = false;
 
@@ -71,12 +74,14 @@ export function Home() {
     };
   }, []);
 
+  // [동기화] 필터 결과와 선택 코스 정합성 유지
   useEffect(() => {
     if (!selectedCourseId) return;
     if (filteredRoutes.some((route) => route.id === selectedCourseId)) return;
     setSelectedCourseId(null);
   }, [filteredRoutes, selectedCourseId]);
 
+  // [이벤트] 거리 카테고리 선택 토글 처리
   const toggleCategory = (category: DistanceCategory) => {
     setSelectedCategories((previous) => {
       const next = new Set(previous);
@@ -91,9 +96,11 @@ export function Home() {
 
   return (
     <section className={styles.container}>
+      {/* [UI] 상단 헤더 영역 */}
       <div className={styles.topChrome}>
         <Header showLogo showLeftIcon={false} showRightIcon={false} title="RouteRun" />
       </div>
+      {/* [UI] 거리 카테고리 탭 영역 */}
       <div className={styles.tab}>
         <div className={styles.tabScroll}>
           {TAB_ITEMS.map((tab) => (
@@ -110,12 +117,14 @@ export function Home() {
         </div>
       </div>
 
+      {/* [UI] 조회 실패 메시지 영역 */}
       {errorMessage ? (
         <p role="status" className={styles.errorMessage}>
           {errorMessage}
         </p>
       ) : null}
 
+      {/* [UI] 지도/코스 목록 연동 영역 */}
       <div className={styles.mapStage}>
         <div className={styles.map}>
           <TmapHome
@@ -134,6 +143,7 @@ export function Home() {
           }}
         />
       </div>
+      {/* [UI] 조회 중 로딩 메시지 영역 */}
       {isLoading ? (
         <p role="status" className={styles.loadingMessage}>
           코스 정보를 불러오는 중...

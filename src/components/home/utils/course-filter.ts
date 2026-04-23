@@ -51,7 +51,7 @@ function toDistanceText(distanceMeters: number): string {
   return `${(distanceMeters / 1000).toFixed(1)}km`;
 }
 
-function toLocationText(route: Route): string {
+function toCoordinateLocationText(route: Route): string {
   return `시작 좌표 ${route.start_lat.toFixed(4)}, ${route.start_lng.toFixed(4)}`;
 }
 
@@ -82,6 +82,7 @@ export function buildCourseCardViews(
   routes: Route[],
   referenceLocation: ReferenceLocation,
   selectedCourseId: string | null,
+  locationByCourseId: Record<string, string | null> = {},
 ): CourseCardView[] {
   const baseCards = dedupeRoutesById(routes)
     .filter(hasValidRouteStartCoordinate)
@@ -90,10 +91,12 @@ export function buildCourseCardViews(
         lat: route.start_lat,
         lng: route.start_lng,
       });
+      const resolvedLocation = locationByCourseId[route.id];
+
       return {
         courseId: route.id,
         title: route.title,
-        location: toLocationText(route),
+        location: resolvedLocation ?? toCoordinateLocationText(route),
         distanceKm: route.distance_meters / 1000,
         distanceFromReference,
         distanceText: toDistanceText(route.distance_meters),

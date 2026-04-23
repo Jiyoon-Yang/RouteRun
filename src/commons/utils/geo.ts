@@ -5,6 +5,22 @@ type Coordinate = {
   lng: number;
 };
 
+type ReverseGeocodingAddressInfo = {
+  city_do?: string;
+  gu_gun?: string;
+};
+
+type ReverseGeocodingResponse = {
+  addressInfo?: ReverseGeocodingAddressInfo;
+};
+
+type ReverseGeocodeRegionParams = {
+  lat: number;
+  lng: number;
+  appKey: string;
+  signal?: AbortSignal;
+};
+
 const EARTH_RADIUS_METERS = 6_371_000;
 
 export const SEOUL_CITY_HALL_COORDINATE: Coordinate = {
@@ -47,4 +63,54 @@ export function calculateLinearDistanceMeters(origin: Coordinate, target: Coordi
     Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
 
   return 2 * EARTH_RADIUS_METERS * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+}
+
+function formatRegionAddress(addressInfo?: ReverseGeocodingAddressInfo): string | null {
+  if (!addressInfo) {
+    return null;
+  }
+
+  const city = addressInfo.city_do?.trim() ?? '';
+  const district = addressInfo.gu_gun?.trim() ?? '';
+  const formatted = [city, district].filter(Boolean).join(' ');
+  return formatted || null;
+}
+
+// [조회] 리버스지오코딩으로 시/도 + 구/군 주소 반환
+export async function reverseGeocodeRegion({
+  lat,
+  lng,
+  appKey,
+  signal,
+}: ReverseGeocodeRegionParams): Promise<string | null> {
+  if (!isValidCoordinate(lat, lng) || !appKey.trim()) {
+    return null;
+  }
+
+  const searchParams = new URLSearchParams({
+    version: '1',
+    format: 'json',
+    coordType: 'WGS84GEO',
+    addressType: 'A10',
+    lon: String(lng),
+    lat: String(lat),
+  });
+
+  const response = await fetch(
+    `https://apis.openapi.sk.com/tmap/geo/reversegeocoding?${searchParams.toString()}`,
+    {
+      method: 'GET',
+      headers: {
+        appKey,
+      },
+      signal,
+    },
+  );
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = (await response.json()) as ReverseGeocodingResponse;
+  return formatRegionAddress(data.addressInfo);
 }

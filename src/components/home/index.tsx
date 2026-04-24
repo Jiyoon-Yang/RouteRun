@@ -193,12 +193,14 @@ export function Home() {
             bottomSheetVisibleHeight={sheetVisibleHeight}
             isBottomSheetExpanded={isSheetExpanded}
             routes={filteredRoutes}
+            selectedCourseId={selectedCourseId}
             onCourseMarkerClick={setSelectedCourseId}
           />
         </div>
         <CoursesList
           cards={courseCards}
           isLoading={isLoading}
+          onCourseSelect={setSelectedCourseId}
           onSheetPositionChange={({ state, visibleHeight }) => {
             setIsSheetExpanded(state === 'expanded');
             setSheetVisibleHeight(visibleHeight);

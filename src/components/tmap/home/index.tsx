@@ -46,6 +46,8 @@ type TmapMarker = {
 
 type TmapMap = {
   setCenter: (center: TmapLatLng) => void;
+  getZoom?: () => number;
+  addListener?: (eventName: string, callback: () => void) => void;
 };
 
 type TmapHomeProps = {
@@ -59,7 +61,67 @@ type TmapHomeProps = {
 type RouteMarkerEntry = {
   marker: TmapMarker;
   category: DistanceCategory;
+  title: string;
 };
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function toSvgDataUrl(svgMarkup: string): string {
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgMarkup)}`;
+}
+
+function getLabelScaleByZoom(zoomLevel: number | undefined): number {
+  const zoom = typeof zoomLevel === 'number' ? zoomLevel : 15;
+  if (zoom <= 13) return 0.88;
+  if (zoom === 14) return 0.94;
+  if (zoom === 15) return 1;
+  if (zoom === 16) return 1.08;
+  return 1.14;
+}
+
+function getLabelIconSize(
+  title: string,
+  zoomLevel: number | undefined,
+): { width: number; height: number } {
+  const scale = getLabelScaleByZoom(zoomLevel);
+  const baseWidth = Math.max(120, Math.min(300, title.length * 12 + 32)) * scale;
+  const baseHeight = 40 * scale;
+  const evenWidth = baseWidth % 2 === 0 ? baseWidth : baseWidth + 1;
+  const evenHeight = baseHeight % 2 === 0 ? baseHeight : baseHeight + 1;
+  return { width: Math.round(evenWidth), height: Math.round(evenHeight) };
+}
+
+function buildMarkerLabelIconUrl(
+  title: string,
+  width: number,
+  height: number,
+  zoomLevel: number | undefined,
+): string {
+  const safeTitle = escapeHtml(title);
+  const scale = getLabelScaleByZoom(zoomLevel);
+  const liftGap = Math.round(84 * scale);
+  const totalHeight = height + liftGap;
+  const y = height / 2 + 1;
+  const textX = width / 2;
+  const radius = Math.round(12 * scale);
+  const fontSize = Math.round(14 * scale);
+
+  const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${totalHeight}" viewBox="0 0 ${width} ${totalHeight}">
+  <rect x="0" y="0" width="${width}" height="${height}" rx="${radius}" fill="#2F3146"/>
+  <text x="${textX}" y="${y}" text-anchor="middle" dominant-baseline="middle" fill="#FFFFFF" font-size="${fontSize}" font-weight="700">${safeTitle}</text>
+</svg>
+`.trim();
+
+  return toSvgDataUrl(svg);
+}
 
 export function TmapHome({
   bottomSheetVisibleHeight = 24,
@@ -71,6 +133,7 @@ export function TmapHome({
   // [상태] 지도/마커 인스턴스 참조 관리
   const mapInstance = useRef<TmapMap | null>(null);
   const currentLocationMarkerRef = useRef<TmapMarker | null>(null);
+  const selectedLabelMarkerRef = useRef<TmapMarker | null>(null);
   const routeMarkerMapRef = useRef<Map<string, RouteMarkerEntry>>(new Map());
   const routesRef = useRef<Route[]>(routes);
   const selectedRouteIdRef = useRef<string | null>(null);
@@ -103,6 +166,40 @@ export function TmapHome({
 
     currentLocationMarkerRef.current = marker;
   };
+
+  const upsertSelectedLabelMarker = useCallback((courseId: string | null) => {
+    const map = mapInstance.current;
+    const Tmapv2 = getTmapv2();
+    if (!map || !Tmapv2 || !courseId) {
+      selectedLabelMarkerRef.current?.setMap(null);
+      return;
+    }
+
+    const route = routesRef.current.find((item) => item.id === courseId);
+    if (!route || !hasValidRouteStartCoordinate(route)) {
+      selectedLabelMarkerRef.current?.setMap(null);
+      return;
+    }
+
+    const zoomLevel = map.getZoom?.();
+    const { width, height } = getLabelIconSize(route.title, zoomLevel);
+    const labelIconHeight = height + Math.round(40 * getLabelScaleByZoom(zoomLevel));
+    const icon = buildMarkerLabelIconUrl(route.title, width, height, zoomLevel);
+    const position = new Tmapv2.LatLng(route.start_lat, route.start_lng);
+    const options: Record<string, unknown> = {
+      position,
+      map,
+      icon,
+      iconSize: new Tmapv2.Size(width, labelIconHeight),
+    };
+    if (Tmapv2.Point) {
+      options.iconAnchor = new Tmapv2.Point(width / 2, labelIconHeight);
+    }
+
+    // SDK 내부 상태(null screenSize) 충돌을 피하기 위해 라벨 마커는 갱신 시 재생성한다.
+    selectedLabelMarkerRef.current?.setMap(null);
+    selectedLabelMarkerRef.current = new Tmapv2.Marker(options);
+  }, []);
 
   const addMarkerListener = useCallback(
     (marker: TmapMarker, eventName: 'click' | 'mouseover' | 'mouseout', callback: () => void) => {
@@ -149,9 +246,28 @@ export function TmapHome({
     );
   }, []);
 
+  const setRouteMarkerLabelVisible = useCallback(
+    (courseId: string, visible: boolean) => {
+      if (!visible) {
+        selectedLabelMarkerRef.current?.setMap(null);
+        return;
+      }
+      upsertSelectedLabelMarker(courseId);
+    },
+    [upsertSelectedLabelMarker],
+  );
+
+  const clearAllRouteMarkerLabels = useCallback(() => {
+    routeMarkerMapRef.current.forEach((_entry, routeId) => {
+      setRouteMarkerLabelVisible(routeId, false);
+    });
+  }, [setRouteMarkerLabelVisible]);
+
   const syncSelectedMarkerVisual = useCallback(
     (nextSelectedCourseId: string | null) => {
       const previousSelectedId = selectedRouteIdRef.current;
+
+      clearAllRouteMarkerLabels();
 
       if (previousSelectedId && previousSelectedId !== nextSelectedCourseId) {
         setRouteMarkerVisualState(previousSelectedId, 'default');
@@ -161,9 +277,10 @@ export function TmapHome({
 
       if (nextSelectedCourseId) {
         setRouteMarkerVisualState(nextSelectedCourseId, 'clicked');
+        setRouteMarkerLabelVisible(nextSelectedCourseId, true);
       }
     },
-    [setRouteMarkerVisualState],
+    [clearAllRouteMarkerLabels, setRouteMarkerLabelVisible, setRouteMarkerVisualState],
   );
 
   const syncRouteMarkers = useCallback(
@@ -190,9 +307,12 @@ export function TmapHome({
         const existingMarker = routeMarkerMapRef.current.get(route.id);
         if (existingMarker) {
           existingMarker.category = category;
+          existingMarker.title = route.title;
+          existingMarker.marker.setPosition(new Tmapv2.LatLng(route.start_lat, route.start_lng));
           const state: MarkerVisualState =
             selectedRouteIdRef.current === route.id ? 'clicked' : 'default';
           existingMarker.marker.setIcon(getRunningCourseMarkerIconUrlForCategory(category, state));
+          setRouteMarkerLabelVisible(route.id, selectedRouteIdRef.current === route.id);
           return;
         }
 
@@ -200,7 +320,8 @@ export function TmapHome({
         const markerOptions: Record<string, unknown> = {
           position: new Tmapv2.LatLng(route.start_lat, route.start_lng),
           map,
-          title: route.title,
+          title: '',
+          label: '',
           icon,
           iconSize: new Tmapv2.Size(36, 48),
         };
@@ -208,7 +329,11 @@ export function TmapHome({
           markerOptions.iconAnchor = new Tmapv2.Point(18, 46);
         }
         const marker = new Tmapv2.Marker(markerOptions);
-        routeMarkerMapRef.current.set(route.id, { marker, category });
+        routeMarkerMapRef.current.set(route.id, {
+          marker,
+          category,
+          title: route.title,
+        });
 
         addMarkerListener(marker, 'mouseover', () => {
           if (selectedRouteIdRef.current === route.id) return;
@@ -226,7 +351,13 @@ export function TmapHome({
         });
       });
     },
-    [addMarkerListener, onCourseMarkerClick, setRouteMarkerVisualState, syncSelectedMarkerVisual],
+    [
+      addMarkerListener,
+      onCourseMarkerClick,
+      setRouteMarkerLabelVisible,
+      setRouteMarkerVisualState,
+      syncSelectedMarkerVisual,
+    ],
   );
 
   // [이벤트] 현재 위치 재탐색 버튼 처리
@@ -304,10 +435,14 @@ export function TmapHome({
 
     return () => {
       cancelled = true;
-      routeMarkerMap.forEach((entry) => entry.marker.setMap(null));
+      routeMarkerMap.forEach((entry) => {
+        entry.marker.setMap(null);
+      });
+      selectedLabelMarkerRef.current?.setMap(null);
       routeMarkerMap.clear();
       mapInstance.current = null;
       currentLocationMarkerRef.current = null;
+      selectedLabelMarkerRef.current = null;
       selectedRouteIdRef.current = null;
     };
   }, [syncRouteMarkers]);
@@ -336,6 +471,14 @@ export function TmapHome({
 
     map.setCenter(new Tmapv2.LatLng(selectedRoute.start_lat, selectedRoute.start_lng));
   }, [routes, selectedCourseId]);
+
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!map || typeof map.addListener !== 'function') return;
+    map.addListener('zoom_changed', () => {
+      upsertSelectedLabelMarker(selectedRouteIdRef.current);
+    });
+  }, [upsertSelectedLabelMarker]);
 
   const refreshButtonStyle = {
     '--sheet-visible-height': `${bottomSheetVisibleHeight}px`,

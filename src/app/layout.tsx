@@ -1,5 +1,4 @@
 import { Layout } from '@/commons/layout';
-import { AuthGuard } from '@/commons/providers/auth/auth-guard';
 import { AuthProvider } from '@/commons/providers/auth/auth.provider';
 import { ModalProvider } from '@/commons/providers/modal/modal.provider';
 
@@ -30,9 +29,7 @@ export default function RootLayout({
       <body className="antialiased">
         <AuthProvider>
           <ModalProvider>
-            <AuthGuard>
-              <Layout>{children}</Layout>
-            </AuthGuard>
+            <Layout>{children}</Layout>
           </ModalProvider>
         </AuthProvider>
       </body>

@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
+
+import { signInWithGoogle } from '@/actions/auth.action';
 
 interface UseGoogleLoginOptions {
+  /** 기본값 `/` — 로그인 페이지에서는 pathname을 쓰면 `/login`으로 고정되는 문제가 있어 명시적으로 넘긴다. */
   returnTo?: string;
 }
 
@@ -23,23 +26,15 @@ export function useGoogleLogin({
     setIsError(false);
 
     try {
-      const response = await fetch('/api/auth/google-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'google', returnTo }),
-      });
+      const result = await signInWithGoogle(returnTo);
 
-      const data = await response.json();
-
-      if (!response.ok || !data.url) {
+      // 성공 시 redirect()가 발생하므로 이 블록은 실행되지 않음
+      if (result?.error) {
         setIsError(true);
-        return;
+        setIsPending(false);
       }
-
-      window.location.href = data.url;
     } catch {
       setIsError(true);
-    } finally {
       setIsPending(false);
     }
   }, [returnTo]);

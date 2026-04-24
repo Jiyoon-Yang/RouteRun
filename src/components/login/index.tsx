@@ -28,6 +28,11 @@ const TEXTS = {
   GUEST_LOGIN: '게스트 로그인',
 } as const;
 
+export type LoginProps = {
+  /** 로그인 성공 후 이동할 경로 (미들웨어 `?next=` 등에서 전달) */
+  returnTo?: string;
+};
+
 /*
  * Google G 브랜드 아이콘 (lucide-react 미지원 → 인라인 SVG 사용)
  * 브랜드 컬러: #4285F4, #34A853, #FBBC05, #EA4335 (Google 공식 브랜드 컬러 — CSS 변수 없음)
@@ -60,9 +65,9 @@ const GoogleIcon = () => (
   </svg>
 );
 
-export default function Login() {
-  const { trigger: googleLogin, isPending: isGooglePending } = useGoogleLogin();
-  const { trigger: anonymousLogin, isLoading: isGuestPending } = useAnonymousLogin();
+export default function Login({ returnTo = '/' }: LoginProps) {
+  const { trigger: googleLogin, isPending: isGooglePending } = useGoogleLogin({ returnTo });
+  const { trigger: anonymousLogin, isLoading: isGuestPending } = useAnonymousLogin({ returnTo });
 
   return (
     <div className={styles.container}>

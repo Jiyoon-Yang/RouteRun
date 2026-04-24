@@ -1,5 +1,6 @@
 import { Layout } from '@/commons/layout';
 import { AuthProvider } from '@/commons/providers/auth/auth.provider';
+import { ModalProvider } from '@/commons/providers/modal/modal.provider';
 
 import type { Metadata } from 'next';
 
@@ -27,7 +28,9 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <AuthProvider>
-          <Layout>{children}</Layout>
+          <ModalProvider>
+            <Layout>{children}</Layout>
+          </ModalProvider>
         </AuthProvider>
       </body>
     </html>

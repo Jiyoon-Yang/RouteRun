@@ -1,68 +1,28 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
-// ─── 스토리지 키 ────────────────────────────────────────────────────────────────
+import { createClient } from '@/lib/supabase/client';
 
-const STORAGE_KEY_ACCESS = 'accesstoken';
-const STORAGE_KEY_REFRESH = 'refreshtoken';
+import type { User } from '@supabase/supabase-js';
 
-// ─── 토큰 저장소 유틸 ───────────────────────────────────────────────────────────
+// ─── JWT 기반 익명 사용자 판별 ──────────────────────────────────────────────────
 
-function saveTokens(accessToken: string, refreshToken: string): void {
-  localStorage.setItem(STORAGE_KEY_ACCESS, accessToken);
-  localStorage.setItem(STORAGE_KEY_REFRESH, refreshToken);
-}
-
-function loadAccessToken(): string | null {
-  return localStorage.getItem(STORAGE_KEY_ACCESS);
-}
-
-function clearTokens(): void {
-  localStorage.removeItem(STORAGE_KEY_ACCESS);
-  localStorage.removeItem(STORAGE_KEY_REFRESH);
-}
-
-// ─── JWT 디코딩 유틸 ────────────────────────────────────────────────────────────
-
-function decodeJwtPayload(token: string): Record<string, unknown> | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    const decoded = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
-    return JSON.parse(decoded) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
-function extractIsAnonymous(token: string): boolean {
-  const payload = decodeJwtPayload(token);
-  return payload?.is_anonymous === true;
+function extractIsAnonymous(user: User | null): boolean {
+  if (!user) return false;
+  return user.is_anonymous === true;
 }
 
 // ─── 타입 ──────────────────────────────────────────────────────────────────────
 
-export interface AuthLoginOptions {
-  accessToken: string;
-  refreshToken: string;
-}
-
-export interface AuthLogoutOptions {
-  callApi?: boolean;
-}
-
 interface AuthState {
-  accessToken: string | null;
+  user: User | null;
   isLoggedIn: boolean;
   isAnonymous: boolean;
+  isLoading: boolean;
 }
 
-export interface AuthContextValue extends AuthState {
-  login: (options: AuthLoginOptions) => void;
-  logout: (options?: AuthLogoutOptions) => void;
-  getAccessToken: () => string | null;
-}
+export type AuthContextValue = AuthState;
 
 // ─── Context ───────────────────────────────────────────────────────────────────
 
@@ -76,52 +36,42 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [authState, setAuthState] = useState<AuthState>({
-    accessToken: null,
+    user: null,
     isLoggedIn: false,
     isAnonymous: false,
+    isLoading: true,
   });
 
-  // 초기 복원: 앱 시작 시 저장된 토큰으로 인증 상태 복원
   useEffect(() => {
-    const stored = loadAccessToken();
-    if (!stored) return;
+    const supabase = createClient();
 
-    setAuthState({
-      accessToken: stored,
-      isLoggedIn: true,
-      isAnonymous: extractIsAnonymous(stored),
+    // 앱 마운트 시 쿠키 기반 세션 초기 확인
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setAuthState({
+        user,
+        isLoggedIn: !!user,
+        isAnonymous: extractIsAnonymous(user),
+        isLoading: false,
+      });
     });
+
+    // 쿠키 기반 세션 변화(로그인·로그아웃·토큰 갱신) 감지
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user ?? null;
+      setAuthState({
+        user,
+        isLoggedIn: !!user,
+        isAnonymous: extractIsAnonymous(user),
+        isLoading: false,
+      });
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = useCallback(({ accessToken, refreshToken }: AuthLoginOptions) => {
-    saveTokens(accessToken, refreshToken);
-    setAuthState({
-      accessToken,
-      isLoggedIn: true,
-      isAnonymous: extractIsAnonymous(accessToken),
-    });
-  }, []);
-
-  const logout = useCallback((_options?: AuthLogoutOptions) => {
-    clearTokens();
-    setAuthState({
-      accessToken: null,
-      isLoggedIn: false,
-      isAnonymous: false,
-    });
-  }, []);
-
-  const getAccessToken = useCallback(() => authState.accessToken, [authState.accessToken]);
-
-  const value = useMemo<AuthContextValue>(
-    () => ({
-      ...authState,
-      login,
-      logout,
-      getAccessToken,
-    }),
-    [authState, login, logout, getAccessToken],
-  );
+  const value = useMemo<AuthContextValue>(() => ({ ...authState }), [authState]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

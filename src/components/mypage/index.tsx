@@ -17,77 +17,36 @@
 
 'use client';
 
-import { useState } from 'react';
-
 import { Button } from '@/commons/components/button';
-import { Card } from '@/commons/components/card';
 import { Icon } from '@/commons/components/icons';
 import { Header } from '@/commons/layout/header';
+import type { MypageProfileProps, MypageRouteCardData } from '@/commons/types/mypage';
+import { useMyPageTabs } from '@/hooks/useMyPageTabs';
 
+import { useLogout } from './hooks/index.logout.hook';
+import { RouteCard } from './RouteCard';
 import styles from './styles.module.css';
 
-// i18n 대비 텍스트 상수 분리
 const TEXTS = {
   TITLE: '마이페이지',
-  USER_NAME: '러닝러버',
   EDIT_PROFILE: '프로필 수정',
   TAB_MY_COURSE: '내가 작성한 코스',
   TAB_LIKED_COURSE: '좋아요한 코스',
+  EMPTY_MY: '작성한 코스가 없습니다.',
+  EMPTY_LIKED: '좋아요한 코스가 없습니다.',
 } as const;
 
-type TabType = 'my-course' | 'liked-course';
+export type MypageProps = {
+  profile: MypageProfileProps;
+  myRoutes: MypageRouteCardData[];
+  likedRoutes: MypageRouteCardData[];
+};
 
-// 샘플 카드 데이터
-const MY_COURSES = [
-  {
-    id: 1,
-    title: '한강 러닝 코스',
-    location: '여의도 한강공원',
-    distanceText: '5km',
-    likeCount: 234,
-  },
-  {
-    id: 2,
-    title: '한강 러닝 코스',
-    location: '여의도 한강공원',
-    distanceText: '5km',
-    likeCount: 234,
-  },
-  {
-    id: 3,
-    title: '한강 러닝 코스',
-    location: '여의도 한강공원',
-    distanceText: '5km',
-    likeCount: 234,
-  },
-];
+export default function Mypage({ profile, myRoutes, likedRoutes }: MypageProps) {
+  const { activeTab, setTab, courses } = useMyPageTabs(myRoutes, likedRoutes);
+  const { trigger: handleLogout, isPending: isLogoutPending } = useLogout();
 
-const LIKED_COURSES = [
-  {
-    id: 1,
-    title: '한강 러닝 코스',
-    location: '여의도 한강공원',
-    distanceText: '5km',
-    likeCount: 234,
-  },
-  {
-    id: 2,
-    title: '한강 러닝 코스',
-    location: '여의도 한강공원',
-    distanceText: '5km',
-    likeCount: 234,
-  },
-  {
-    id: 3,
-    title: '한강 러닝 코스',
-    location: '여의도 한강공원',
-    distanceText: '5km',
-    likeCount: 234,
-  },
-];
-
-export default function Mypage() {
-  const [activeTab, setActiveTab] = useState<TabType>('my-course');
+  const emptyMessage = activeTab === 'my-course' ? TEXTS.EMPTY_MY : TEXTS.EMPTY_LIKED;
 
   return (
     <div className={styles.container}>
@@ -96,30 +55,28 @@ export default function Mypage() {
         showLeftIcon={false}
         showRightIcon={true}
         rightIconName="logOut"
-        onRightIconClick={() => {}}
+        onRightIconClick={isLogoutPending ? undefined : handleLogout}
       />
 
-      {/* 프로필 섹션 */}
       <section className={styles.profileSection} aria-label="프로필">
         <div className={styles.profileInfo}>
           <div className={styles.avatar} aria-hidden="true">
             <Icon name="userRound" size={32} color="var(--color-white-500)" strokeWidth={1.5} />
           </div>
-          <span className={styles.userName}>{TEXTS.USER_NAME}</span>
+          <span className={styles.userName}>{profile.nickname}</span>
         </div>
         <Button variant="outline" borderRadius="r12" size="small" color="dark" onClick={() => {}}>
           {TEXTS.EDIT_PROFILE}
         </Button>
       </section>
 
-      {/* 탭 섹션 */}
       <div className={styles.tabSection} role="tablist" aria-label="코스 목록 탭">
         <button
           type="button"
           role="tab"
           aria-selected={activeTab === 'my-course'}
           className={`${styles.tabButton} ${activeTab === 'my-course' ? styles.tabButtonActive : styles.tabButtonInactive}`}
-          onClick={() => setActiveTab('my-course')}
+          onClick={() => setTab('my-course')}
         >
           {TEXTS.TAB_MY_COURSE}
         </button>
@@ -128,46 +85,22 @@ export default function Mypage() {
           role="tab"
           aria-selected={activeTab === 'liked-course'}
           className={`${styles.tabButton} ${activeTab === 'liked-course' ? styles.tabButtonActive : styles.tabButtonInactive}`}
-          onClick={() => setActiveTab('liked-course')}
+          onClick={() => setTab('liked-course')}
         >
           {TEXTS.TAB_LIKED_COURSE}
         </button>
       </div>
 
-      {/* 카드 목록 섹션 */}
       <section
         className={styles.cardList}
         role="tabpanel"
         aria-label={activeTab === 'my-course' ? TEXTS.TAB_MY_COURSE : TEXTS.TAB_LIKED_COURSE}
       >
-        {activeTab === 'my-course' &&
-          MY_COURSES.map((course) => (
-            <Card
-              key={course.id}
-              type="my-course"
-              isLiked={false}
-              title={course.title}
-              location={course.location}
-              distanceText={course.distanceText}
-              likeCount={course.likeCount}
-              onPrimaryActionClick={() => {}}
-              onSecondaryActionClick={() => {}}
-            />
-          ))}
-        {activeTab === 'liked-course' &&
-          LIKED_COURSES.map((course) => (
-            <Card
-              key={course.id}
-              type="liked-course"
-              isLiked={true}
-              title={course.title}
-              location={course.location}
-              distanceText={course.distanceText}
-              likeCount={course.likeCount}
-              onPrimaryActionClick={() => {}}
-              onSecondaryActionClick={() => {}}
-            />
-          ))}
+        {courses.length === 0 ? (
+          <p className={styles.emptyState}>{emptyMessage}</p>
+        ) : (
+          courses.map((route) => <RouteCard key={route.id} tab={activeTab} route={route} />)
+        )}
       </section>
     </div>
   );

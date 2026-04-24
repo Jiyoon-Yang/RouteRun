@@ -99,7 +99,9 @@
   min-height: 44px;
   box-sizing: border-box;
   border-bottom: 2px solid transparent;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .tabButtonActive {
@@ -136,4 +138,16 @@
 
 .cardList::-webkit-scrollbar {
   display: none;
+}
+
+.emptyState {
+  margin: 0;
+  padding: 24px 8px;
+  text-align: center;
+  font-family: var(--typography-body-2-ko-desktop-font-family);
+  font-size: var(--typography-body-2-ko-desktop-font-size);
+  line-height: var(--typography-body-2-ko-desktop-line-height);
+  font-weight: var(--typography-body-2-ko-desktop-font-weight);
+  letter-spacing: var(--typography-body-2-ko-desktop-letter-spacing);
+  color: var(--color-card_outline-500);
 }

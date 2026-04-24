@@ -20,7 +20,6 @@ const meta = {
   },
   args: {
     type: 'form',
-    actions: 'dual',
     title: '프로필 수정',
     inputLabel: '닉네임',
     inputLabelType: 'required',
@@ -35,11 +34,7 @@ const meta = {
   argTypes: {
     type: {
       control: 'inline-radio',
-      options: ['confirm', 'form'],
-    },
-    actions: {
-      control: 'inline-radio',
-      options: ['dual'],
+      options: ['confirm', 'form', 'alert'],
     },
     onCancel: { action: 'cancel' },
     onConfirm: { action: 'confirm' },
@@ -94,5 +89,14 @@ export const ConfirmDisabled: Story = {
     cancelText: '취소',
     confirmText: '수정',
     confirmDisabled: true,
+  },
+};
+
+/** 피그마 620:951 — 제목 + 확인 버튼 1개 */
+export const Alert: Story = {
+  args: {
+    type: 'alert',
+    title: '저장되었습니다.',
+    confirmText: '확인',
   },
 };

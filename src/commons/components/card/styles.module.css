@@ -4,7 +4,7 @@
   align-items: stretch;
   gap: 0.75rem;
   box-sizing: border-box;
-  width: 21.5rem;
+  width: 100%;
   border: 0.0625rem solid var(--color-card_outline-100);
   border-radius: 1rem;
   background: var(--color-white-500);
@@ -17,7 +17,7 @@
 
 .rootWithActions {
   padding: 1.0625rem;
-  width: 21.5rem;
+  width: 100%;
 }
 
 .rootDefault:hover {

@@ -3,27 +3,27 @@ import { Input, type AddtionalTextState, type LabelType } from '@/commons/compon
 
 import styles from './styles.module.css';
 
-type ModalType = 'confirm' | 'form';
-type ModalActions = 'dual';
+type ModalType = 'confirm' | 'form' | 'alert';
 
 type ModalBaseProps = {
   className?: string;
   type: ModalType;
-  actions?: ModalActions;
   title: string;
-  cancelText?: string;
   confirmText?: string;
-  onCancel?: () => void;
   onConfirm?: () => void;
   confirmDisabled?: boolean;
 };
 
 type ConfirmModalProps = ModalBaseProps & {
   type: 'confirm';
+  cancelText?: string;
+  onCancel?: () => void;
 };
 
 type FormModalProps = ModalBaseProps & {
   type: 'form';
+  cancelText?: string;
+  onCancel?: () => void;
   inputLabel: string;
   /** 미지정 시 `inputRequired`에 따라 `required` / `none`(피그마 148:3557 — 라벨 + 필드 동시 노출) */
   inputLabelType?: LabelType;
@@ -36,26 +36,20 @@ type FormModalProps = ModalBaseProps & {
   onInputChange: (value: string) => void;
 };
 
-export type ModalProps = ConfirmModalProps | FormModalProps;
+type AlertModalProps = ModalBaseProps & {
+  type: 'alert';
+};
+
+export type ModalProps = ConfirmModalProps | FormModalProps | AlertModalProps;
 
 export function Modal(props: ModalProps) {
-  const {
-    className,
-    type,
-    actions = 'dual',
-    title,
-    cancelText = '취소',
-    confirmText,
-    onCancel,
-    onConfirm,
-    confirmDisabled = false,
-  } = props;
+  const { className, type, title, confirmText, onConfirm, confirmDisabled = false } = props;
   const rootClass = [styles.root, className].filter(Boolean).join(' ');
-  const resolvedConfirmText = confirmText ?? (type === 'form' ? '저장' : '수정');
+  const resolvedConfirmText = confirmText ?? (type === 'form' ? '저장' : '확인');
 
-  if (actions !== 'dual') {
-    return null;
-  }
+  const cancelText =
+    type === 'confirm' || type === 'form' ? (props.cancelText ?? '취소') : undefined;
+  const onCancel = type === 'confirm' || type === 'form' ? props.onCancel : undefined;
 
   return (
     <section className={rootClass} aria-label={title}>
@@ -86,16 +80,18 @@ export function Modal(props: ModalProps) {
       ) : null}
 
       <div className={styles.actions}>
-        <Button
-          variant="outline"
-          borderRadius="r16"
-          size="medium"
-          color="dark"
-          className={styles.actionButton}
-          onClick={onCancel}
-        >
-          {cancelText}
-        </Button>
+        {cancelText !== undefined && (
+          <Button
+            variant="outline"
+            borderRadius="r16"
+            size="medium"
+            color="dark"
+            className={styles.actionButton}
+            onClick={onCancel}
+          >
+            {cancelText}
+          </Button>
+        )}
 
         <Button
           variant="fill"

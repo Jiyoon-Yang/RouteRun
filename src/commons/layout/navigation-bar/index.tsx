@@ -33,8 +33,8 @@ export type NavigationBarProps = {
 
 const DEFAULT_ITEMS: NavigationBarLink[] = [
   { href: '/', label: COPY.home, icon: 'house' },
-  { href: '/tmaptest', label: COPY.courseRegister, icon: 'squarePlus' },
-  { href: '/login', label: COPY.myPage, icon: 'userRound' },
+  { href: '/courses/new', label: COPY.courseRegister, icon: 'squarePlus' },
+  { href: '/mypage', label: COPY.myPage, icon: 'userRound' },
 ];
 
 export function NavigationBar({

@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 
-import { useAuth } from '@/commons/providers/auth/auth.provider';
+import { signOut } from '@/actions/auth.action';
 
 interface UseLogoutResult {
   trigger: () => Promise<void>;
@@ -11,7 +11,6 @@ interface UseLogoutResult {
 }
 
 export function useLogout(): UseLogoutResult {
-  const { getAccessToken, logout } = useAuth();
   const [isPending, setIsPending] = useState(false);
   const [isError, setIsError] = useState(false);
 
@@ -19,25 +18,14 @@ export function useLogout(): UseLogoutResult {
     setIsPending(true);
     setIsError(false);
 
-    const accessToken = getAccessToken();
-
     try {
-      if (accessToken) {
-        await fetch('/api/auth/logout', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-      }
+      await signOut();
+      // 성공 시 redirect('/login')이 발생하여 컴포넌트 언마운트
     } catch {
-      // 서버 로그아웃 실패해도 클라이언트 상태는 초기화 (멱등성)
-    } finally {
-      logout();
-      // router.replace('/login');
+      setIsError(true);
       setIsPending(false);
     }
-  }, [getAccessToken, logout]);
+  }, []);
 
   return { trigger, isPending, isError };
 }

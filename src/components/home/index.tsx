@@ -42,7 +42,8 @@ export function Home() {
     [routes, selectedCategories],
   );
   const courseCards = useMemo(
-    () => buildCourseCardViews(filteredRoutes, referenceLocation, selectedCourseId, locationByCourseId),
+    () =>
+      buildCourseCardViews(filteredRoutes, referenceLocation, selectedCourseId, locationByCourseId),
     [filteredRoutes, locationByCourseId, referenceLocation, selectedCourseId],
   );
 
@@ -54,7 +55,8 @@ export function Home() {
     }
 
     const unresolvedRoutes = routes.filter(
-      (route) => hasValidRouteStartCoordinate(route) && typeof locationByCourseId[route.id] === 'undefined',
+      (route) =>
+        hasValidRouteStartCoordinate(route) && typeof locationByCourseId[route.id] === 'undefined',
     );
 
     if (unresolvedRoutes.length === 0) {
@@ -191,6 +193,7 @@ export function Home() {
             bottomSheetVisibleHeight={sheetVisibleHeight}
             isBottomSheetExpanded={isSheetExpanded}
             routes={filteredRoutes}
+            selectedCourseId={selectedCourseId}
             onCourseMarkerClick={setSelectedCourseId}
           />
         </div>

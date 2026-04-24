@@ -5,18 +5,24 @@ import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
 import { Icon } from '@/commons/components/icons';
 import type { Route } from '@/commons/types/runroute';
 import { hasValidRouteStartCoordinate, SEOUL_CITY_HALL_COORDINATE } from '@/commons/utils/geo';
+import { getDistanceCategory, type DistanceCategory } from '@/components/home/utils/course-filter';
 
+import {
+  getRunningCourseMarkerIconUrlForCategory,
+  type MarkerVisualState,
+} from './build-running-course-marker-icon';
 import styles from './styles.module.css';
 
 type TmapV2API = {
   Map: new (id: string, options: Record<string, unknown>) => TmapMap;
   LatLng: new (lat: number, lng: number) => TmapLatLng;
+  Size: new (width: number, height: number) => unknown;
   Marker: new (options: Record<string, unknown>) => TmapMarker;
   event?: {
-    addListener: (target: TmapMarker, eventName: string, callback: () => void) => void;
+    addListener?: (target: TmapMarker, eventName: string, callback: () => void) => void;
   };
   Event?: {
-    addListener: (target: TmapMarker, eventName: string, callback: () => void) => void;
+    addListener?: (target: TmapMarker, eventName: string, callback: () => void) => void;
   };
 };
 
@@ -33,6 +39,8 @@ type TmapLatLng = {
 type TmapMarker = {
   setMap: (map: TmapMap | null) => void;
   setPosition: (position: TmapLatLng) => void;
+  setIcon: (icon: string) => void;
+  addListener?: (eventName: string, callback: () => void) => void;
 };
 
 type TmapMap = {
@@ -43,20 +51,35 @@ type TmapHomeProps = {
   bottomSheetVisibleHeight?: number;
   isBottomSheetExpanded?: boolean;
   routes?: Route[];
+  selectedCourseId?: string | null;
   onCourseMarkerClick?: (courseId: string) => void;
+};
+
+type RouteMarkerEntry = {
+  marker: TmapMarker;
+  category: DistanceCategory;
 };
 
 export function TmapHome({
   bottomSheetVisibleHeight = 24,
   isBottomSheetExpanded = false,
   routes = [],
+  selectedCourseId = null,
   onCourseMarkerClick,
 }: TmapHomeProps) {
   // [상태] 지도/마커 인스턴스 참조 관리
   const mapInstance = useRef<TmapMap | null>(null);
   const currentLocationMarkerRef = useRef<TmapMarker | null>(null);
-  const routeMarkerMapRef = useRef<Map<string, TmapMarker>>(new Map());
+  const routeMarkerMapRef = useRef<Map<string, RouteMarkerEntry>>(new Map());
   const routesRef = useRef<Route[]>(routes);
+  const selectedRouteIdRef = useRef<string | null>(null);
+
+  const getRouteDistanceCategory = (route: Route): DistanceCategory => {
+    if (!Number.isFinite(route.distance_meters) || route.distance_meters < 0) {
+      return 'BETWEEN_3_AND_5';
+    }
+    return getDistanceCategory(route.distance_meters);
+  };
 
   // [마커] 현재 위치 마커 생성 및 좌표 갱신
   const createCustomMarker = (map: TmapMap, lat: number, lng: number) => {
@@ -80,28 +103,66 @@ export function TmapHome({
     currentLocationMarkerRef.current = marker;
   };
 
-  const bindMarkerClick = useCallback(
-    (marker: TmapMarker, courseId: string) => {
-      // [이벤트] 코스 마커 클릭 이벤트 연결
-      if (!onCourseMarkerClick) return;
-
+  const addMarkerListener = useCallback(
+    (marker: TmapMarker, eventName: 'click' | 'mouseover' | 'mouseout', callback: () => void) => {
       const Tmapv2 = getTmapv2();
       if (!Tmapv2) return;
 
-      if (Tmapv2.event) {
-        Tmapv2.event.addListener(marker, 'click', () => {
-          onCourseMarkerClick(courseId);
-        });
-        return;
+      if (typeof marker.addListener === 'function') {
+        try {
+          marker.addListener(eventName, callback);
+          return;
+        } catch {
+          // marker 인스턴스 기반 이벤트 등록 실패 시 전역 API로 폴백
+        }
       }
 
-      if (Tmapv2.Event) {
-        Tmapv2.Event.addListener(marker, 'click', () => {
-          onCourseMarkerClick(courseId);
-        });
+      const tryAddListener = (
+        eventApi:
+          | {
+              addListener?: (target: TmapMarker, name: string, cb: () => void) => void;
+            }
+          | undefined,
+      ) => {
+        if (!eventApi?.addListener) return false;
+        try {
+          // SDK 버전별로 내부 this 바인딩 요구사항이 달라 call로 안전하게 바인딩한다.
+          eventApi.addListener.call(eventApi, marker, eventName, callback);
+          return true;
+        } catch {
+          return false;
+        }
+      };
+
+      if (tryAddListener(Tmapv2.Event)) return;
+      tryAddListener(Tmapv2.event);
+    },
+    [],
+  );
+
+  const setRouteMarkerVisualState = useCallback((courseId: string, state: MarkerVisualState) => {
+    const markerEntry = routeMarkerMapRef.current.get(courseId);
+    if (!markerEntry) return;
+    markerEntry.marker.setIcon(
+      getRunningCourseMarkerIconUrlForCategory(markerEntry.category, state),
+    );
+  }, []);
+
+  const syncSelectedMarkerVisual = useCallback(
+    (nextSelectedCourseId: string | null) => {
+      const previousSelectedId = selectedRouteIdRef.current;
+
+      if (previousSelectedId && previousSelectedId !== nextSelectedCourseId) {
+        setRouteMarkerVisualState(previousSelectedId, 'default');
+      }
+
+      selectedRouteIdRef.current = nextSelectedCourseId;
+
+      if (nextSelectedCourseId) {
+        setRouteMarkerVisualState(nextSelectedCourseId, 'clicked');
       }
     },
-    [onCourseMarkerClick],
+    [setRouteMarkerVisualState],
   );
 
   const syncRouteMarkers = useCallback(
@@ -113,26 +174,54 @@ export function TmapHome({
       const normalizedRoutes = nextRoutes.filter(hasValidRouteStartCoordinate);
       const nextRouteIds = new Set(normalizedRoutes.map((route) => route.id));
 
-      routeMarkerMapRef.current.forEach((marker, routeId) => {
+      routeMarkerMapRef.current.forEach((markerEntry, routeId) => {
         if (!nextRouteIds.has(routeId)) {
-          marker.setMap(null);
+          markerEntry.marker.setMap(null);
           routeMarkerMapRef.current.delete(routeId);
+          if (selectedRouteIdRef.current === routeId) {
+            selectedRouteIdRef.current = null;
+          }
         }
       });
 
       normalizedRoutes.forEach((route) => {
-        if (routeMarkerMapRef.current.has(route.id)) return;
+        const category = getRouteDistanceCategory(route);
+        const existingMarker = routeMarkerMapRef.current.get(route.id);
+        if (existingMarker) {
+          existingMarker.category = category;
+          const state: MarkerVisualState =
+            selectedRouteIdRef.current === route.id ? 'clicked' : 'default';
+          existingMarker.marker.setIcon(getRunningCourseMarkerIconUrlForCategory(category, state));
+          return;
+        }
 
+        const icon = getRunningCourseMarkerIconUrlForCategory(category, 'default');
         const marker = new Tmapv2.Marker({
           position: new Tmapv2.LatLng(route.start_lat, route.start_lng),
           map,
           title: route.title,
+          icon,
+          iconSize: new Tmapv2.Size(24, 38),
         });
-        bindMarkerClick(marker, route.id);
-        routeMarkerMapRef.current.set(route.id, marker);
+        routeMarkerMapRef.current.set(route.id, { marker, category });
+
+        addMarkerListener(marker, 'mouseover', () => {
+          if (selectedRouteIdRef.current === route.id) return;
+          setRouteMarkerVisualState(route.id, 'hover');
+        });
+
+        addMarkerListener(marker, 'mouseout', () => {
+          if (selectedRouteIdRef.current === route.id) return;
+          setRouteMarkerVisualState(route.id, 'default');
+        });
+
+        addMarkerListener(marker, 'click', () => {
+          syncSelectedMarkerVisual(route.id);
+          onCourseMarkerClick?.(route.id);
+        });
       });
     },
-    [bindMarkerClick],
+    [addMarkerListener, onCourseMarkerClick, setRouteMarkerVisualState, syncSelectedMarkerVisual],
   );
 
   // [이벤트] 현재 위치 재탐색 버튼 처리
@@ -210,10 +299,11 @@ export function TmapHome({
 
     return () => {
       cancelled = true;
-      routeMarkerMap.forEach((marker) => marker.setMap(null));
+      routeMarkerMap.forEach((entry) => entry.marker.setMap(null));
       routeMarkerMap.clear();
       mapInstance.current = null;
       currentLocationMarkerRef.current = null;
+      selectedRouteIdRef.current = null;
     };
   }, [syncRouteMarkers]);
 
@@ -223,6 +313,24 @@ export function TmapHome({
     if (!map) return;
     syncRouteMarkers(map, routes);
   }, [routes, syncRouteMarkers]);
+
+  useEffect(() => {
+    // [동기화] 외부 선택 상태(selectedCourseId)와 마커 clicked 상태 정합성 유지
+    syncSelectedMarkerVisual(selectedCourseId);
+  }, [selectedCourseId, syncSelectedMarkerVisual]);
+
+  useEffect(() => {
+    // [동기화] 선택된 코스가 바뀌면 해당 시작 좌표로 지도 중심 이동
+    if (!selectedCourseId) return;
+    const map = mapInstance.current;
+    const Tmapv2 = getTmapv2();
+    if (!map || !Tmapv2) return;
+
+    const selectedRoute = routes.find((route) => route.id === selectedCourseId);
+    if (!selectedRoute || !hasValidRouteStartCoordinate(selectedRoute)) return;
+
+    map.setCenter(new Tmapv2.LatLng(selectedRoute.start_lat, selectedRoute.start_lng));
+  }, [routes, selectedCourseId]);
 
   const refreshButtonStyle = {
     '--sheet-visible-height': `${bottomSheetVisibleHeight}px`,

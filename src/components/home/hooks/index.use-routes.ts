@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import type { Route } from '@/commons/types/runroute';
-import { supabase } from '@/lib/supabase/initialize';
+import { createClient } from '@/lib/supabase/client';
 
 type UseRoutesResult = {
   routes: Route[];
@@ -68,6 +68,7 @@ export function useRoutes(): UseRoutesResult {
       setErrorMessage(null);
 
       try {
+        const supabase = createClient();
         const { data, error } = await supabase
           .from('routes')
           .select(

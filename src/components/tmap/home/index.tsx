@@ -201,7 +201,7 @@ export function TmapHome({
           map,
           title: route.title,
           icon,
-          iconSize: new Tmapv2.Size(24, 38),
+          iconSize: new Tmapv2.Size(36, 44),
         });
         routeMarkerMapRef.current.set(route.id, { marker, category });
 

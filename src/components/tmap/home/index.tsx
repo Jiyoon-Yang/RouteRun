@@ -17,6 +17,7 @@ type TmapV2API = {
   Map: new (id: string, options: Record<string, unknown>) => TmapMap;
   LatLng: new (lat: number, lng: number) => TmapLatLng;
   Size: new (width: number, height: number) => unknown;
+  Point?: new (x: number, y: number) => unknown;
   Marker: new (options: Record<string, unknown>) => TmapMarker;
   event?: {
     addListener?: (target: TmapMarker, eventName: string, callback: () => void) => void;
@@ -196,13 +197,17 @@ export function TmapHome({
         }
 
         const icon = getRunningCourseMarkerIconUrlForCategory(category, 'default');
-        const marker = new Tmapv2.Marker({
+        const markerOptions: Record<string, unknown> = {
           position: new Tmapv2.LatLng(route.start_lat, route.start_lng),
           map,
           title: route.title,
           icon,
-          iconSize: new Tmapv2.Size(36, 44),
-        });
+          iconSize: new Tmapv2.Size(36, 48),
+        };
+        if (Tmapv2.Point) {
+          markerOptions.iconAnchor = new Tmapv2.Point(18, 46);
+        }
+        const marker = new Tmapv2.Marker(markerOptions);
         routeMarkerMapRef.current.set(route.id, { marker, category });
 
         addMarkerListener(marker, 'mouseover', () => {

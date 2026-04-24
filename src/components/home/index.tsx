@@ -200,6 +200,7 @@ export function Home() {
         <CoursesList
           cards={courseCards}
           isLoading={isLoading}
+          onCourseSelect={setSelectedCourseId}
           onSheetPositionChange={({ state, visibleHeight }) => {
             setIsSheetExpanded(state === 'expanded');
             setSheetVisibleHeight(visibleHeight);

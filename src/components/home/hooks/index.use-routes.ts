@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type { Route } from '@/commons/types/runroute';
 import { createClient } from '@/lib/supabase/client';
@@ -9,6 +9,13 @@ type UseRoutesResult = {
   routes: Route[];
   isLoading: boolean;
   errorMessage: string | null;
+};
+
+export type RouteViewport = {
+  northEastLat: number;
+  northEastLng: number;
+  southWestLat: number;
+  southWestLng: number;
 };
 
 type RouteRow = {
@@ -54,8 +61,8 @@ function toRoute(row: RouteRow): Route | null {
   };
 }
 
-export function useRoutes(): UseRoutesResult {
-  const [routes, setRoutes] = useState<Route[]>([]);
+export function useRoutes(viewport: RouteViewport | null): UseRoutesResult {
+  const [allRoutes, setAllRoutes] = useState<Route[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -85,7 +92,7 @@ export function useRoutes(): UseRoutesResult {
         const normalized = (data ?? [])
           .map(toRoute)
           .filter((route): route is Route => route !== null);
-        setRoutes(normalized);
+        setAllRoutes(normalized);
       } catch (error) {
         // [오류] 조회 실패 메시지 상태 반영
         if (!isMounted) return;
@@ -105,6 +112,21 @@ export function useRoutes(): UseRoutesResult {
       isMounted = false;
     };
   }, []);
+
+  const routes = useMemo(() => {
+    if (!viewport) {
+      return allRoutes;
+    }
+
+    return allRoutes.filter((route) => {
+      return (
+        route.start_lat >= viewport.southWestLat &&
+        route.start_lat <= viewport.northEastLat &&
+        route.start_lng >= viewport.southWestLng &&
+        route.start_lng <= viewport.northEastLng
+      );
+    });
+  }, [allRoutes, viewport]);
 
   return { routes, isLoading, errorMessage };
 }

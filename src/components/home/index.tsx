@@ -27,7 +27,7 @@ const TAB_ITEMS = [
 
 export function Home() {
   // [상태] 홈 화면 기본 상태 관리
-  const [sheetVisibleHeight, setSheetVisibleHeight] = useState(24);
+  const [sheetVisibleHeight, setSheetVisibleHeight] = useState(260);
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<DistanceCategory>>(new Set());
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
@@ -207,12 +207,6 @@ export function Home() {
           }}
         />
       </div>
-      {/* [UI] 조회 중 로딩 메시지 영역 */}
-      {isLoading ? (
-        <p role="status" className={styles.loadingMessage}>
-          코스 정보를 불러오는 중...
-        </p>
-      ) : null}
     </section>
   );
 }

@@ -30,12 +30,14 @@ type CoursesListProps = {
   cards?: CourseCardView[];
   isLoading?: boolean;
   onSheetPositionChange?: (payload: SheetPositionPayload) => void;
+  onCourseSelect?: (courseId: string) => void;
 };
 
 export function CoursesList({
   cards = [],
   isLoading = false,
   onSheetPositionChange,
+  onCourseSelect,
 }: CoursesListProps) {
   // [상태] 바텀시트 표시 상태 관리
   const [sheetState, setSheetState] = useState<BottomSheetState>('peek');
@@ -155,6 +157,13 @@ export function CoursesList({
     });
   }, [onSheetPositionChange, sheetHeight, sheetState, sheetY]);
 
+  const handleCardKeyDown = (event: KeyboardEvent<HTMLDivElement>, courseId: string) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onCourseSelect?.(courseId);
+    }
+  };
+
   return (
     <motion.div
       ref={sheetRef}
@@ -178,7 +187,15 @@ export function CoursesList({
       <h2 className={styles.courseListTitle}>러닝코스 목록</h2>
       <div ref={cardListRef} className={styles.cardList}>
         {cards.map((card, index) => (
-          <div key={card.courseId} ref={index === 0 ? firstCardRef : undefined}>
+          <div
+            key={card.courseId}
+            ref={index === 0 ? firstCardRef : undefined}
+            role="button"
+            tabIndex={0}
+            aria-label={`${card.title} 코스 선택`}
+            onClick={() => onCourseSelect?.(card.courseId)}
+            onKeyDown={(event) => handleCardKeyDown(event, card.courseId)}
+          >
             <Card
               className={styles.cardWidth}
               type="default"

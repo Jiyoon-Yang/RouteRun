@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { Icon } from '@/commons/components/icons';
 import type { Route } from '@/commons/types/runroute';
@@ -722,24 +722,21 @@ export function TmapHome({
     return () => window.clearTimeout(timerId);
   }, [bottomSheetVisibleHeight, isBottomSheetExpanded]);
 
-  const refreshButtonStyle = {
-    '--sheet-visible-height': `${bottomSheetVisibleHeight}px`,
-  } as CSSProperties;
+  const sheetControlPositionClassName =
+    bottomSheetVisibleHeight <= 24 ? styles.sheetControlsCollapsed : styles.sheetControlsPeek;
 
   return (
     <div className={styles.root}>
       <div id="map_div" className={styles.map} />
       <button
         type="button"
-        className={`${styles.refreshButton} ${isBottomSheetExpanded ? styles.refreshButtonHidden : ''}`}
-        style={refreshButtonStyle}
+        className={`${styles.refreshButton} ${sheetControlPositionClassName} ${isBottomSheetExpanded ? styles.refreshButtonHidden : ''}`}
         onClick={handleRefreshLocation}
       >
         <Icon name="locateFixed" size={24} className={styles.refreshIcon} />
       </button>
       <div
-        className={`${styles.zoomButtonGroup} ${isBottomSheetExpanded ? styles.refreshButtonHidden : ''}`}
-        style={refreshButtonStyle}
+        className={`${styles.zoomButtonGroup} ${sheetControlPositionClassName} ${isBottomSheetExpanded ? styles.refreshButtonHidden : ''}`}
       >
         <button type="button" className={styles.zoomButton} onClick={() => adjustZoomLevel(1)}>
           <Icon name="plus" size={20} className={styles.zoomButtonIcon} />

@@ -39,7 +39,7 @@
 }
 
 .input::placeholder {
-  color: #a4a7ae; /* Figma color/text/tertiary 토큰과 매칭되는 전역 토큰 부재 */
+  color: var(--color-light_black-200); /* Figma color/text/tertiary와 가장 가까운 토큰 */
 }
 
 .iconSlot {
@@ -47,7 +47,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: #535862; /* Figma color/icon/secondary 토큰과 매칭되는 전역 토큰 부재 */
+  color: var(--color-grey-800); /* Figma color/icon/secondary와 가장 가까운 토큰 */
 }
 
 /* 값 있음: 본문색 */

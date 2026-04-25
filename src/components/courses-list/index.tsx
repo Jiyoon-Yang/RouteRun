@@ -7,7 +7,6 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  type CSSProperties,
   type KeyboardEvent,
 } from 'react';
 
@@ -138,10 +137,6 @@ export function CoursesList({
     };
   }, [recalculateSheetHeights]);
 
-  const sheetStyle = {
-    '--peek-visible-height': `${PEEK_VISIBLE_HEIGHT}px`,
-  } as CSSProperties;
-
   // [초기 렌더 보정] 실제 높이 측정 전에는 뷰포트 높이로 시트 이동값을 계산한다.
   const viewportHeight = typeof window === 'undefined' ? 0 : roundUpToEven(window.innerHeight);
   const effectiveSheetHeight = sheetHeight > 0 ? sheetHeight : viewportHeight;
@@ -175,11 +170,7 @@ export function CoursesList({
   };
 
   return (
-    <div
-      ref={sheetRef}
-      className={`${styles.courseList} ${sheetStateClassName}`}
-      style={sheetStyle}
-    >
+    <div ref={sheetRef} className={`${styles.courseList} ${sheetStateClassName}`}>
       <motion.div
         className={styles.bottomSheetHandleArea}
         role="button"

@@ -71,6 +71,18 @@ type RouteMarkerEntry = {
   title: string;
 };
 
+const DEFAULT_GEOLOCATION_OPTIONS: PositionOptions = {
+  enableHighAccuracy: false,
+  timeout: 6000,
+  maximumAge: 15000,
+};
+
+const PRECISE_GEOLOCATION_OPTIONS: PositionOptions = {
+  enableHighAccuracy: true,
+  timeout: 10000,
+  maximumAge: 0,
+};
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -84,14 +96,23 @@ function toSvgDataUrl(svgMarkup: string): string {
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgMarkup)}`;
 }
 
-function getCurrentLocationIndicatorIconUrl(): string {
+function getCurrentLocationIndicatorSizeByZoom(_zoomLevel: number | undefined): number {
+  return 40;
+}
+
+function getCurrentLocationIndicatorIconUrl(size: number): string {
   // 기본 A 마커 대신, 파란 점 + 반투명 링 형태의 현재 위치 인디케이터를 사용한다.
+  const center = size / 2;
+  const outerRingRadius = Math.round(size * 0.42);
+  const innerWhiteRadius = Math.round(size * 0.23);
+  const dotRadius = Math.round(size * 0.17);
+  const coreRadius = Math.round(size * 0.13);
   const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-  <circle cx="24" cy="24" r="20" fill="#2F80FF" opacity="0.16"/>
-  <circle cx="24" cy="24" r="11" fill="#FFFFFF" opacity="0.98"/>
-  <circle cx="24" cy="24" r="8" fill="#2F80FF"/>
-  <circle cx="24" cy="24" r="6" fill="#2F80FF"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+  <circle cx="${center}" cy="${center}" r="${outerRingRadius}" fill="#2F80FF" opacity="0.16"/>
+  <circle cx="${center}" cy="${center}" r="${innerWhiteRadius}" fill="#FFFFFF" opacity="0.98"/>
+  <circle cx="${center}" cy="${center}" r="${dotRadius}" fill="#2F80FF"/>
+  <circle cx="${center}" cy="${center}" r="${coreRadius}" fill="#2F80FF"/>
 </svg>
 `.trim();
   return toSvgDataUrl(svg);
@@ -153,6 +174,7 @@ export function TmapHome({
   // [상태] 지도/마커 인스턴스 참조 관리
   const mapInstance = useRef<TmapMap | null>(null);
   const currentLocationMarkerRef = useRef<TmapMarker | null>(null);
+  const currentLocationCoordinateRef = useRef<{ lat: number; lng: number } | null>(null);
   const selectedLabelMarkerRef = useRef<TmapMarker | null>(null);
   const routeMarkerMapRef = useRef<Map<string, RouteMarkerEntry>>(new Map());
   const routesRef = useRef<Route[]>(routes);
@@ -169,30 +191,26 @@ export function TmapHome({
   const createCustomMarker = (map: TmapMap, lat: number, lng: number) => {
     const Tmapv2 = getTmapv2();
     if (!Tmapv2) return;
+    currentLocationCoordinateRef.current = { lat, lng };
 
     const nextPosition = new Tmapv2.LatLng(lat, lng);
-    const icon = getCurrentLocationIndicatorIconUrl();
-
-    if (currentLocationMarkerRef.current) {
-      currentLocationMarkerRef.current.setMap(map);
-      currentLocationMarkerRef.current.setPosition(nextPosition);
-      currentLocationMarkerRef.current.setIcon(icon);
-      return;
-    }
-
+    const zoomLevel = map.getZoom?.();
+    const indicatorSize = getCurrentLocationIndicatorSizeByZoom(zoomLevel);
+    const icon = getCurrentLocationIndicatorIconUrl(indicatorSize);
     const markerOptions: Record<string, unknown> = {
       position: nextPosition,
       map: map,
       title: '내 현재 위치',
       icon,
-      iconSize: new Tmapv2.Size(48, 48),
+      iconSize: new Tmapv2.Size(indicatorSize, indicatorSize),
     };
     if (Tmapv2.Point) {
-      markerOptions.iconAnchor = new Tmapv2.Point(24, 24);
+      markerOptions.iconAnchor = new Tmapv2.Point(indicatorSize / 2, indicatorSize / 2);
     }
-    const marker = new Tmapv2.Marker(markerOptions);
 
-    currentLocationMarkerRef.current = marker;
+    // 줌 레벨에 따라 아이콘 크기가 달라지므로 현재 위치 마커는 갱신 시 재생성한다.
+    currentLocationMarkerRef.current?.setMap(null);
+    currentLocationMarkerRef.current = new Tmapv2.Marker(markerOptions);
   };
 
   const upsertSelectedLabelMarker = useCallback((courseId: string | null) => {
@@ -406,6 +424,7 @@ export function TmapHome({
         console.error('위치 갱신 실패:', error);
         alert('위치 정보를 가져올 수 없습니다.');
       },
+      PRECISE_GEOLOCATION_OPTIONS,
     );
   };
 
@@ -492,6 +511,7 @@ export function TmapHome({
           () => {
             initTmap(SEOUL_CITY_HALL_COORDINATE.lat, SEOUL_CITY_HALL_COORDINATE.lng);
           },
+          DEFAULT_GEOLOCATION_OPTIONS,
         );
       } else {
         initTmap(SEOUL_CITY_HALL_COORDINATE.lat, SEOUL_CITY_HALL_COORDINATE.lng);
@@ -519,6 +539,7 @@ export function TmapHome({
       routeMarkerMap.clear();
       mapInstance.current = null;
       currentLocationMarkerRef.current = null;
+      currentLocationCoordinateRef.current = null;
       selectedLabelMarkerRef.current = null;
       selectedRouteIdRef.current = null;
     };
@@ -554,6 +575,10 @@ export function TmapHome({
     if (!map || typeof map.addListener !== 'function') return;
     map.addListener('zoom_changed', () => {
       upsertSelectedLabelMarker(selectedRouteIdRef.current);
+      const currentLocation = currentLocationCoordinateRef.current;
+      if (currentLocation) {
+        createCustomMarker(map, currentLocation.lat, currentLocation.lng);
+      }
     });
   }, [upsertSelectedLabelMarker]);
 

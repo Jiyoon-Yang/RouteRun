@@ -4,7 +4,7 @@
   gap: 0.25rem;
   width: fit-content;
   min-height: var(--typography-caption-2-ko-desktop-line-height);
-  color: #535862; /* Figma color/text/secondary 토큰과 매칭되는 전역 토큰 부재 */
+  color: var(--color-grey-800); /* Figma color/text/secondary와 가장 가까운 토큰 */
   font-family: var(--typography-caption-2-ko-desktop-font-family);
   font-size: var(--typography-caption-2-ko-desktop-font-size);
   line-height: var(--typography-caption-2-ko-desktop-line-height);

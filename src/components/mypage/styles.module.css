@@ -32,7 +32,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 16px 16px 15px;
+  padding: 16px;
   border-bottom: 1px solid var(--color-card_outline-100);
   background-color: var(--color-white-500);
   box-sizing: border-box;

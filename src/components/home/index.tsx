@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { TabButton } from '@/commons/components/tab';
 import { Header } from '@/commons/layout/header';
@@ -9,7 +9,7 @@ import { hasValidRouteStartCoordinate, reverseGeocodeRegion } from '@/commons/ut
 import { CoursesList } from '@/components/courses-list';
 import { TmapHome } from '@/components/tmap/home';
 
-import { useRoutes } from './hooks/index.use-routes';
+import { useRoutes, type RouteViewport } from './hooks/index.use-routes';
 import styles from './styles.module.css';
 import {
   buildCourseCardViews,
@@ -27,14 +27,46 @@ const TAB_ITEMS = [
 
 export function Home() {
   // [상태] 홈 화면 기본 상태 관리
-  const [sheetVisibleHeight, setSheetVisibleHeight] = useState(24);
+  const [sheetVisibleHeight, setSheetVisibleHeight] = useState(260);
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<DistanceCategory>>(new Set());
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [locationByCourseId, setLocationByCourseId] = useState<Record<string, string | null>>({});
+  const [mapViewport, setMapViewport] = useState<RouteViewport | null>(null);
+  const [queryViewport, setQueryViewport] = useState<RouteViewport | null>(null);
   const [referenceLocation, setReferenceLocation] =
     useState<ReferenceLocation>(SEOUL_CITY_HALL_REFERENCE);
-  const { routes, isLoading, errorMessage } = useRoutes();
+  const { routes, isLoading, errorMessage } = useRoutes(queryViewport);
+
+  const isSameViewport = useCallback((left: RouteViewport | null, right: RouteViewport | null) => {
+    if (!left || !right) return false;
+    return (
+      left.northEastLat === right.northEastLat &&
+      left.northEastLng === right.northEastLng &&
+      left.southWestLat === right.southWestLat &&
+      left.southWestLng === right.southWestLng
+    );
+  }, []);
+
+  const handleViewportChanged = useCallback(
+    (nextViewport: RouteViewport) => {
+      setMapViewport((previous) =>
+        isSameViewport(previous, nextViewport) ? previous : nextViewport,
+      );
+      setQueryViewport((previous) => previous ?? { ...nextViewport });
+    },
+    [isSameViewport],
+  );
+
+  useEffect(() => {
+    if (!mapViewport) return;
+    const timerId = window.setTimeout(() => {
+      setQueryViewport((previous) =>
+        isSameViewport(previous, mapViewport) ? previous : { ...mapViewport },
+      );
+    }, 400);
+    return () => window.clearTimeout(timerId);
+  }, [isSameViewport, mapViewport]);
 
   // [파생데이터] 필터/정렬 결과 계산
   const filteredRoutes = useMemo(
@@ -195,6 +227,7 @@ export function Home() {
             routes={filteredRoutes}
             selectedCourseId={selectedCourseId}
             onCourseMarkerClick={setSelectedCourseId}
+            onViewportChanged={handleViewportChanged}
           />
         </div>
         <CoursesList
@@ -207,12 +240,6 @@ export function Home() {
           }}
         />
       </div>
-      {/* [UI] 조회 중 로딩 메시지 영역 */}
-      {isLoading ? (
-        <p role="status" className={styles.loadingMessage}>
-          코스 정보를 불러오는 중...
-        </p>
-      ) : null}
     </section>
   );
 }

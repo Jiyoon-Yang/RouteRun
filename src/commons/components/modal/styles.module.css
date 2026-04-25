@@ -7,7 +7,8 @@
   padding: 1.5rem;
   border-radius: 1rem;
   background: var(--color-white-500);
-  box-shadow: 0 1.5625rem 3.125rem 0 rgba(0, 0, 0, 0.25); /* global token 부재로 하드코딩 */
+  box-shadow: 0 1.5625rem 3.125rem 0
+    color-mix(in srgb, var(--color-black-500) 25%, transparent);
 }
 
 .title {

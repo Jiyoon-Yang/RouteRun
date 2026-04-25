@@ -48,6 +48,8 @@ type TmapMap = {
   setCenter: (center: TmapLatLng) => void;
   getZoom?: () => number;
   addListener?: (eventName: string, callback: () => void) => void;
+  resize?: () => void;
+  relayout?: () => void;
 };
 
 type TmapHomeProps = {
@@ -75,6 +77,19 @@ function escapeHtml(value: string): string {
 
 function toSvgDataUrl(svgMarkup: string): string {
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgMarkup)}`;
+}
+
+function getCurrentLocationIndicatorIconUrl(): string {
+  // 기본 A 마커 대신, 파란 점 + 반투명 링 형태의 현재 위치 인디케이터를 사용한다.
+  const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <circle cx="24" cy="24" r="20" fill="#2F80FF" opacity="0.16"/>
+  <circle cx="24" cy="24" r="11" fill="#FFFFFF" opacity="0.98"/>
+  <circle cx="24" cy="24" r="8" fill="#2F80FF"/>
+  <circle cx="24" cy="24" r="6" fill="#2F80FF"/>
+</svg>
+`.trim();
+  return toSvgDataUrl(svg);
 }
 
 function getLabelScaleByZoom(zoomLevel: number | undefined): number {
@@ -151,18 +166,26 @@ export function TmapHome({
     if (!Tmapv2) return;
 
     const nextPosition = new Tmapv2.LatLng(lat, lng);
+    const icon = getCurrentLocationIndicatorIconUrl();
 
     if (currentLocationMarkerRef.current) {
       currentLocationMarkerRef.current.setMap(map);
       currentLocationMarkerRef.current.setPosition(nextPosition);
+      currentLocationMarkerRef.current.setIcon(icon);
       return;
     }
 
-    const marker = new Tmapv2.Marker({
+    const markerOptions: Record<string, unknown> = {
       position: nextPosition,
       map: map,
       title: '내 현재 위치',
-    });
+      icon,
+      iconSize: new Tmapv2.Size(48, 48),
+    };
+    if (Tmapv2.Point) {
+      markerOptions.iconAnchor = new Tmapv2.Point(24, 24);
+    }
+    const marker = new Tmapv2.Marker(markerOptions);
 
     currentLocationMarkerRef.current = marker;
   };
@@ -479,6 +502,21 @@ export function TmapHome({
       upsertSelectedLabelMarker(selectedRouteIdRef.current);
     });
   }, [upsertSelectedLabelMarker]);
+
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!map) return;
+
+    const resizeMap = () => {
+      map.resize?.();
+      map.relayout?.();
+      window.dispatchEvent(new Event('resize'));
+    };
+
+    resizeMap();
+    const timerId = window.setTimeout(resizeMap, 180);
+    return () => window.clearTimeout(timerId);
+  }, [bottomSheetVisibleHeight, isBottomSheetExpanded]);
 
   const refreshButtonStyle = {
     '--sheet-visible-height': `${bottomSheetVisibleHeight}px`,

@@ -17,6 +17,11 @@ type SheetPositionPayload = {
   visibleHeight: number;
 };
 
+function roundUpToEven(value: number): number {
+  const rounded = Math.ceil(value);
+  return rounded % 2 === 0 ? rounded : rounded + 1;
+}
+
 // [계산] 바텀시트 다음 상태 계산
 function getNextState(current: BottomSheetState, direction: 'up' | 'down'): BottomSheetState {
   const currentIndex = SHEET_ORDER.indexOf(current);
@@ -114,7 +119,7 @@ export function CoursesList({
         Math.max(minPeekHeight, ratioBasedPeekHeight),
       );
 
-      setPeekVisibleHeight(clampedPeekHeight);
+      setPeekVisibleHeight(roundUpToEven(clampedPeekHeight));
     };
 
     recalculateSheetHeights();
@@ -142,12 +147,13 @@ export function CoursesList({
     '--peek-visible-height': `${peekVisibleHeight}px`,
   } as CSSProperties;
 
-  const sheetY =
+  const rawSheetY =
     sheetState === 'collapsed'
       ? Math.max(0, sheetHeight - 24)
       : sheetState === 'peek'
         ? Math.max(0, sheetHeight - peekVisibleHeight)
         : 30;
+  const sheetY = roundUpToEven(rawSheetY);
 
   useEffect(() => {
     // [동기화] 부모 컴포넌트에 시트 위치 전달

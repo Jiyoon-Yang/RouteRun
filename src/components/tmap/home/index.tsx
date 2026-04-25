@@ -46,7 +46,12 @@ type TmapMarker = {
 
 type TmapMap = {
   setCenter: (center: TmapLatLng) => void;
+  setZoom?: (zoomLevel: number) => void;
   getZoom?: () => number;
+  setZoomLevel?: (zoomLevel: number) => void;
+  getZoomLevel?: () => number;
+  zoomIn?: () => void;
+  zoomOut?: () => void;
   addListener?: (eventName: string, callback: () => void) => void;
   resize?: () => void;
   relayout?: () => void;
@@ -404,6 +409,54 @@ export function TmapHome({
     );
   };
 
+  const adjustZoomLevel = useCallback((delta: 1 | -1) => {
+    const map = mapInstance.current;
+    if (!map) return;
+    const mapAny = map as TmapMap & Record<string, unknown>;
+
+    if (delta > 0 && typeof map.zoomIn === 'function') {
+      map.zoomIn();
+      return;
+    }
+
+    if (delta < 0 && typeof map.zoomOut === 'function') {
+      map.zoomOut();
+      return;
+    }
+
+    const getZoom =
+      (typeof map.getZoomLevel === 'function' ? map.getZoomLevel.bind(map) : null) ??
+      (typeof map.getZoom === 'function' ? map.getZoom.bind(map) : null);
+    const setZoom =
+      (typeof map.setZoomLevel === 'function' ? map.setZoomLevel.bind(map) : null) ??
+      (typeof map.setZoom === 'function' ? map.setZoom.bind(map) : null);
+
+    if (getZoom && setZoom) {
+      const currentZoom = getZoom();
+      if (typeof currentZoom === 'number') {
+        setZoom(currentZoom + delta);
+        return;
+      }
+    }
+
+    // SDK 버전에 따라 메서드가 런타임 프로퍼티로만 노출될 수 있어 동적 호출을 마지막으로 시도
+    const runtimeGetter =
+      (typeof mapAny.getZoomLevel === 'function' ? (mapAny.getZoomLevel as () => number) : null) ??
+      (typeof mapAny.getZoom === 'function' ? (mapAny.getZoom as () => number) : null);
+    const runtimeSetter =
+      (typeof mapAny.setZoomLevel === 'function'
+        ? (mapAny.setZoomLevel as (zoomLevel: number) => void)
+        : null) ??
+      (typeof mapAny.setZoom === 'function'
+        ? (mapAny.setZoom as (zoomLevel: number) => void)
+        : null);
+
+    if (!runtimeGetter || !runtimeSetter) return;
+    const runtimeZoom = runtimeGetter();
+    if (typeof runtimeZoom !== 'number') return;
+    runtimeSetter(runtimeZoom + delta);
+  }, []);
+
   useEffect(() => {
     routesRef.current = routes;
   }, [routes]);
@@ -422,6 +475,7 @@ export function TmapHome({
         width: '100%',
         height: '100%',
         zoom: 15,
+        zoomControl: false,
       });
 
       createCustomMarker(map, lat, lng);
@@ -533,6 +587,17 @@ export function TmapHome({
       >
         <Icon name="locateFixed" size={24} className={styles.refreshIcon} />
       </button>
+      <div
+        className={`${styles.zoomButtonGroup} ${isBottomSheetExpanded ? styles.refreshButtonHidden : ''}`}
+        style={refreshButtonStyle}
+      >
+        <button type="button" className={styles.zoomButton} onClick={() => adjustZoomLevel(1)}>
+          <Icon name="plus" size={20} className={styles.zoomButtonIcon} />
+        </button>
+        <button type="button" className={styles.zoomButton} onClick={() => adjustZoomLevel(-1)}>
+          <Icon name="minus" size={20} className={styles.zoomButtonIcon} />
+        </button>
+      </div>
     </div>
   );
 }

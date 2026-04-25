@@ -62,3 +62,46 @@
   opacity: 0;
   pointer-events: none;
 }
+
+.zoomButtonGroup {
+  position: absolute;
+  bottom: calc(var(--sheet-visible-height, 24px) + 12px);
+  right: 20px;
+  z-index: 10;
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  border-radius: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+.zoomButton {
+  width: 40px;
+  height: 44px;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: #fafafa;
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.zoomButton:last-child {
+  border-bottom: none;
+}
+
+.zoomButton:hover {
+  opacity: 1;
+}
+
+.zoomButton:active {
+  transform: scale(0.98);
+}
+
+.zoomButtonIcon {
+  font-size: 20px;
+}

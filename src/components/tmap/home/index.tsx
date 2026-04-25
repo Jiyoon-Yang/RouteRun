@@ -323,10 +323,10 @@ export function TmapHome({
           title: '',
           label: '',
           icon,
-          iconSize: new Tmapv2.Size(36, 48),
+          iconSize: new Tmapv2.Size(30, 38),
         };
         if (Tmapv2.Point) {
-          markerOptions.iconAnchor = new Tmapv2.Point(18, 46);
+          markerOptions.iconAnchor = new Tmapv2.Point(16, 36);
         }
         const marker = new Tmapv2.Marker(markerOptions);
         routeMarkerMapRef.current.set(route.id, {

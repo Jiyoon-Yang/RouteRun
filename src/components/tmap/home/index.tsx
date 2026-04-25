@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, type CSSProperties } from 'react';
 import { Icon } from '@/commons/components/icons';
 import type { Route } from '@/commons/types/runroute';
 import { hasValidRouteStartCoordinate, SEOUL_CITY_HALL_COORDINATE } from '@/commons/utils/geo';
+import type { RouteViewport } from '@/components/home/hooks/index.use-routes';
 import { getDistanceCategory, type DistanceCategory } from '@/components/home/utils/course-filter';
 
 import {
@@ -33,8 +34,12 @@ function getTmapv2(): TmapV2API | undefined {
 }
 
 type TmapLatLng = {
-  lat: () => number;
-  lng: () => number;
+  lat?: (() => number) | number;
+  lng?: (() => number) | number;
+  _lat?: number;
+  _lng?: number;
+  latValue?: number;
+  lngValue?: number;
 };
 
 type TmapMarker = {
@@ -55,6 +60,16 @@ type TmapMap = {
   addListener?: (eventName: string, callback: () => void) => void;
   resize?: () => void;
   relayout?: () => void;
+  getBounds?: () => TmapLatLngBoundsLike | null | undefined;
+};
+
+type TmapLatLngBoundsLike = {
+  getNorthEast?: () => TmapLatLng;
+  getSouthWest?: () => TmapLatLng;
+  _ne?: TmapLatLng;
+  _sw?: TmapLatLng;
+  _northEast?: TmapLatLng;
+  _southWest?: TmapLatLng;
 };
 
 type TmapHomeProps = {
@@ -63,6 +78,7 @@ type TmapHomeProps = {
   routes?: Route[];
   selectedCourseId?: string | null;
   onCourseMarkerClick?: (courseId: string) => void;
+  onViewportChanged?: (viewport: RouteViewport) => void;
 };
 
 type RouteMarkerEntry = {
@@ -82,6 +98,8 @@ const PRECISE_GEOLOCATION_OPTIONS: PositionOptions = {
   timeout: 10000,
   maximumAge: 0,
 };
+
+const MIN_ZOOM_LEVEL = 11;
 
 function escapeHtml(value: string): string {
   return value
@@ -170,6 +188,7 @@ export function TmapHome({
   routes = [],
   selectedCourseId = null,
   onCourseMarkerClick,
+  onViewportChanged,
 }: TmapHomeProps) {
   // [상태] 지도/마커 인스턴스 참조 관리
   const mapInstance = useRef<TmapMap | null>(null);
@@ -179,6 +198,90 @@ export function TmapHome({
   const routeMarkerMapRef = useRef<Map<string, RouteMarkerEntry>>(new Map());
   const routesRef = useRef<Route[]>(routes);
   const selectedRouteIdRef = useRef<string | null>(null);
+  const viewportReportTimerRef = useRef<number | null>(null);
+  const mapListenersRegisteredRef = useRef(false);
+
+  const readCoordinateValue = (
+    point: TmapLatLng | undefined,
+    axis: 'lat' | 'lng',
+  ): number | null => {
+    if (!point) return null;
+    const rawValue = axis === 'lat' ? point.lat : point.lng;
+    if (typeof rawValue === 'function') {
+      const methodValue = rawValue();
+      if (typeof methodValue === 'number') return methodValue;
+    }
+    if (typeof rawValue === 'number') return rawValue;
+    const fallback =
+      axis === 'lat' ? (point._lat ?? point.latValue) : (point._lng ?? point.lngValue);
+    return typeof fallback === 'number' ? fallback : null;
+  };
+
+  const normalizeViewportFromMap = useCallback((map: TmapMap): RouteViewport | null => {
+    const bounds = map.getBounds?.();
+    if (!bounds) return null;
+    const northEast = bounds.getNorthEast?.() ?? bounds._ne ?? bounds._northEast;
+    const southWest = bounds.getSouthWest?.() ?? bounds._sw ?? bounds._southWest;
+    if (!northEast || !southWest) return null;
+    const northEastLat = readCoordinateValue(northEast, 'lat');
+    const northEastLng = readCoordinateValue(northEast, 'lng');
+    const southWestLat = readCoordinateValue(southWest, 'lat');
+    const southWestLng = readCoordinateValue(southWest, 'lng');
+    if (
+      northEastLat === null ||
+      northEastLng === null ||
+      southWestLat === null ||
+      southWestLng === null
+    ) {
+      return null;
+    }
+
+    return {
+      northEastLat,
+      northEastLng,
+      southWestLat,
+      southWestLng,
+    };
+  }, []);
+
+  const reportViewport = useCallback(
+    (map: TmapMap) => {
+      const viewport = normalizeViewportFromMap(map);
+      if (!viewport) return;
+      onViewportChanged?.(viewport);
+    },
+    [normalizeViewportFromMap, onViewportChanged],
+  );
+
+  const enforceMinZoomLevel = useCallback((map: TmapMap): number | null => {
+    const getZoom =
+      (typeof map.getZoomLevel === 'function' ? map.getZoomLevel.bind(map) : null) ??
+      (typeof map.getZoom === 'function' ? map.getZoom.bind(map) : null);
+    const setZoom =
+      (typeof map.setZoomLevel === 'function' ? map.setZoomLevel.bind(map) : null) ??
+      (typeof map.setZoom === 'function' ? map.setZoom.bind(map) : null);
+
+    if (!getZoom || !setZoom) return null;
+    const currentZoom = getZoom();
+    if (typeof currentZoom !== 'number') return null;
+    if (currentZoom < MIN_ZOOM_LEVEL) {
+      setZoom(MIN_ZOOM_LEVEL);
+      return MIN_ZOOM_LEVEL;
+    }
+    return currentZoom;
+  }, []);
+
+  const scheduleViewportReport = useCallback(
+    (map: TmapMap, delay = 220) => {
+      if (viewportReportTimerRef.current) {
+        window.clearTimeout(viewportReportTimerRef.current);
+      }
+      viewportReportTimerRef.current = window.setTimeout(() => {
+        reportViewport(map);
+      }, delay);
+    },
+    [reportViewport],
+  );
 
   const getRouteDistanceCategory = (route: Route): DistanceCategory => {
     if (!Number.isFinite(route.distance_meters) || route.distance_meters < 0) {
@@ -246,6 +349,32 @@ export function TmapHome({
     selectedLabelMarkerRef.current?.setMap(null);
     selectedLabelMarkerRef.current = new Tmapv2.Marker(options);
   }, []);
+
+  const registerMapListeners = useCallback(
+    (map: TmapMap) => {
+      if (mapListenersRegisteredRef.current || typeof map.addListener !== 'function') return;
+      mapListenersRegisteredRef.current = true;
+
+      map.addListener('zoom_changed', () => {
+        enforceMinZoomLevel(map);
+        upsertSelectedLabelMarker(selectedRouteIdRef.current);
+        const currentLocation = currentLocationCoordinateRef.current;
+        if (currentLocation) {
+          createCustomMarker(map, currentLocation.lat, currentLocation.lng);
+        }
+        scheduleViewportReport(map);
+      });
+
+      const reportAfterMove = () => {
+        scheduleViewportReport(map);
+      };
+
+      map.addListener('moveend', reportAfterMove);
+      map.addListener('dragend', reportAfterMove);
+      map.addListener('bounds_changed', reportAfterMove);
+    },
+    [enforceMinZoomLevel, scheduleViewportReport, upsertSelectedLabelMarker],
+  );
 
   const addMarkerListener = useCallback(
     (marker: TmapMarker, eventName: 'click' | 'mouseover' | 'mouseout', callback: () => void) => {
@@ -433,16 +562,6 @@ export function TmapHome({
     if (!map) return;
     const mapAny = map as TmapMap & Record<string, unknown>;
 
-    if (delta > 0 && typeof map.zoomIn === 'function') {
-      map.zoomIn();
-      return;
-    }
-
-    if (delta < 0 && typeof map.zoomOut === 'function') {
-      map.zoomOut();
-      return;
-    }
-
     const getZoom =
       (typeof map.getZoomLevel === 'function' ? map.getZoomLevel.bind(map) : null) ??
       (typeof map.getZoom === 'function' ? map.getZoom.bind(map) : null);
@@ -453,7 +572,9 @@ export function TmapHome({
     if (getZoom && setZoom) {
       const currentZoom = getZoom();
       if (typeof currentZoom === 'number') {
-        setZoom(currentZoom + delta);
+        const nextZoom =
+          delta < 0 ? Math.max(MIN_ZOOM_LEVEL, currentZoom + delta) : currentZoom + delta;
+        setZoom(nextZoom);
         return;
       }
     }
@@ -473,7 +594,9 @@ export function TmapHome({
     if (!runtimeGetter || !runtimeSetter) return;
     const runtimeZoom = runtimeGetter();
     if (typeof runtimeZoom !== 'number') return;
-    runtimeSetter(runtimeZoom + delta);
+    const nextZoom =
+      delta < 0 ? Math.max(MIN_ZOOM_LEVEL, runtimeZoom + delta) : runtimeZoom + delta;
+    runtimeSetter(nextZoom);
   }, []);
 
   useEffect(() => {
@@ -494,11 +617,15 @@ export function TmapHome({
         width: '100%',
         height: '100%',
         zoom: 15,
+        minZoom: MIN_ZOOM_LEVEL,
         zoomControl: false,
       });
 
       createCustomMarker(map, lat, lng);
       mapInstance.current = map;
+      enforceMinZoomLevel(map);
+      registerMapListeners(map);
+      scheduleViewportReport(map, 500);
       syncRouteMarkers(map, routesRef.current);
     };
 
@@ -542,8 +669,9 @@ export function TmapHome({
       currentLocationCoordinateRef.current = null;
       selectedLabelMarkerRef.current = null;
       selectedRouteIdRef.current = null;
+      mapListenersRegisteredRef.current = false;
     };
-  }, [syncRouteMarkers]);
+  }, [enforceMinZoomLevel, registerMapListeners, scheduleViewportReport, syncRouteMarkers]);
 
   useEffect(() => {
     // [동기화] 코스 데이터 변경 시 마커 반영
@@ -571,16 +699,13 @@ export function TmapHome({
   }, [routes, selectedCourseId]);
 
   useEffect(() => {
-    const map = mapInstance.current;
-    if (!map || typeof map.addListener !== 'function') return;
-    map.addListener('zoom_changed', () => {
-      upsertSelectedLabelMarker(selectedRouteIdRef.current);
-      const currentLocation = currentLocationCoordinateRef.current;
-      if (currentLocation) {
-        createCustomMarker(map, currentLocation.lat, currentLocation.lng);
+    return () => {
+      if (viewportReportTimerRef.current) {
+        window.clearTimeout(viewportReportTimerRef.current);
+        viewportReportTimerRef.current = null;
       }
-    });
-  }, [upsertSelectedLabelMarker]);
+    };
+  }, []);
 
   useEffect(() => {
     const map = mapInstance.current;

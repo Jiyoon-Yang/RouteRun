@@ -77,7 +77,7 @@ export default function CourseSubmit({ mode, courseId: _courseId }: CourseSubmit
 
   return (
     <div className={styles.container}>
-      <Header title={pageTitle} showRightIcon={false} />
+      <Header title={pageTitle} showRightIcon={isEdit} rightIconName="pencil" />
 
       {/* 지도 플레이스홀더 */}
       <div className={styles.mapArea} aria-label="지도 영역">

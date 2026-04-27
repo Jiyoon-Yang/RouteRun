@@ -7,7 +7,7 @@ import type {
   TmapLatLngLike,
   TmapMapLike,
   TmapMarkerLike,
-  TmapV2,
+  TmapV3,
 } from '@/commons/types/tmap';
 import { getPedestrianRoute } from '@/repositories/map.repository';
 
@@ -39,6 +39,33 @@ function toCoordinate(latLng: TmapLatLngLike): TmapCoordinate | null {
       : (latLng.lng ?? latLng._lng ?? latLng.lngValue);
   if (typeof lat !== 'number' || typeof lng !== 'number') return null;
   return { lat, lng };
+}
+
+function extractLatLngFromVectorEvent(event: unknown): TmapLatLngLike | null {
+  if (!event || typeof event !== 'object') return null;
+
+  const eventObject = event as Record<string, unknown>;
+  const candidates: unknown[] = [
+    eventObject.lngLat,
+    eventObject.latLng,
+    eventObject._latLng,
+    eventObject.fi,
+    (eventObject.fi as Record<string, unknown> | undefined)?.lngLat,
+    (eventObject.fi as Record<string, unknown> | undefined)?.latLng,
+    (eventObject.fi as Record<string, unknown> | undefined)?._latLng,
+    eventObject.Ai,
+    (eventObject.Ai as Record<string, unknown> | undefined)?.lngLat,
+    (eventObject.Ai as Record<string, unknown> | undefined)?.latLng,
+    (eventObject.Ai as Record<string, unknown> | undefined)?._latLng,
+  ];
+
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== 'object') continue;
+    const coordinate = toCoordinate(candidate as TmapLatLngLike);
+    if (coordinate) return candidate as TmapLatLngLike;
+  }
+
+  return null;
 }
 
 function markerTitleByRole(role: MarkerRole): string {
@@ -75,6 +102,8 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
   const markerRefs = useRef<TmapMarkerLike[]>([]);
   const polylineRef = useRef<{ setMap: (map: TmapMapLike | null) => void } | null>(null);
   const isMapInitializedRef = useRef(false);
+  const isClickListenerBoundRef = useRef(false);
+  const lastClickSignatureRef = useRef<string | null>(null);
 
   const setMapInstance = useCallback((map: TmapMapLike) => {
     mapRef.current = map;
@@ -87,9 +116,9 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
 
   const drawPointMarkers = useCallback(
     (nextPoints: TmapCoordinate[]) => {
-      const Tmapv2 = window.Tmapv2 as TmapV2 | undefined;
+      const Tmapv3 = window.Tmapv3 as TmapV3 | undefined;
       const map = mapRef.current;
-      if (!Tmapv2 || !map) return;
+      if (!Tmapv3 || !map) return;
 
       clearMarkers();
 
@@ -99,12 +128,12 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
         const role: MarkerRole = isStart ? 'start' : isEnd ? 'end' : 'via';
         const label = isStart ? 'S' : isEnd ? 'E' : String(index);
 
-        const marker = new Tmapv2.Marker({
-          position: new Tmapv2.LatLng(point.lat, point.lng),
+        const marker = new Tmapv3.Marker({
+          position: new Tmapv3.LatLng(point.lat, point.lng),
           map,
           title: markerTitleByRole(role),
           icon: markerIcon(role, label),
-          iconSize: new Tmapv2.Size(34, 44),
+          iconSize: new Tmapv3.Size(34, 44),
         });
         markerRefs.current.push(marker);
       });
@@ -120,29 +149,42 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
   const initializeMap = useCallback(
     (mapElementId: string, center: TmapCoordinate) => {
       if (isMapInitializedRef.current) return;
-      const Tmapv2 = window.Tmapv2 as TmapV2 | undefined;
+      const Tmapv3 = window.Tmapv3 as TmapV3 | undefined;
       const mapElement = document.getElementById(mapElementId);
-      if (!Tmapv2 || !mapElement) return;
+      if (!Tmapv3 || !mapElement) return;
 
-      const map = new Tmapv2.Map(mapElementId, {
-        center: new Tmapv2.LatLng(center.lat, center.lng),
+      const map = new Tmapv3.Map(mapElementId, {
+        center: new Tmapv3.LatLng(center.lat, center.lng),
         width: '100%',
         height: '100%',
         zoom: 15,
         scrollwheel: true,
         zoomControl: false,
         minZoom: 8,
-      } as Record<string, unknown>);
+      });
       setMapInstance(map);
       isMapInitializedRef.current = true;
 
-      const clickListener = (event?: { latLng?: TmapLatLngLike; _latLng?: TmapLatLngLike }) => {
-        const latLng = event?.latLng ?? event?._latLng;
-        if (!latLng || typeof latLng.lat !== 'function' || typeof latLng.lng !== 'function') {
-          return;
-        }
+      const clickListener = (event?: {
+        lngLat?: TmapLatLngLike;
+        latLng?: TmapLatLngLike;
+        _latLng?: TmapLatLngLike;
+      }) => {
+        // eslint-disable-next-line no-console -- Tmap v3 click payload shape debugging
+        console.log('Map Click Event:', event);
+        const rawLatLng = extractLatLngFromVectorEvent(event);
+        const nextCoordinate = rawLatLng ? toCoordinate(rawLatLng) : null;
+        if (!nextCoordinate) return;
 
-        const nextCoordinate: TmapCoordinate = { lat: latLng.lat(), lng: latLng.lng() };
+        const clickSignature = `${nextCoordinate.lat.toFixed(7)}:${nextCoordinate.lng.toFixed(7)}`;
+        if (lastClickSignatureRef.current === clickSignature) return;
+        lastClickSignatureRef.current = clickSignature;
+        window.setTimeout(() => {
+          if (lastClickSignatureRef.current === clickSignature) {
+            lastClickSignatureRef.current = null;
+          }
+        }, 0);
+
         setErrorMessage(null);
         setPoints((prev) => {
           if (prev.length >= MAX_POINT_LENGTH) return prev;
@@ -152,20 +194,56 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
         });
       };
 
-      const mapWithListener = map as TmapMapLike & {
-        addListener?: (eventName: string, callback: (event?: unknown) => void) => void;
+      const clickListenerUnknown = clickListener as (event?: unknown) => void;
+
+      const bindClickListener = () => {
+        if (isClickListenerBoundRef.current) return;
+
+        const mapLike = map as TmapMapLike & {
+          on?: (eventName: string, callback: (event?: unknown) => void) => void;
+          addListener?: (eventName: string, callback: (event?: unknown) => void) => void;
+        };
+
+        const tmapv3WithEvent = Tmapv3 as TmapV3 & {
+          Event?: {
+            addListener?: (
+              target: object,
+              eventName: string,
+              callback: (event?: unknown) => void,
+            ) => void;
+          };
+        };
+
+        if (typeof mapLike.on === 'function') {
+          mapLike.on('click', clickListenerUnknown);
+          mapLike.on('Click', clickListenerUnknown);
+          isClickListenerBoundRef.current = true;
+          return;
+        }
+
+        if (typeof mapLike.addListener === 'function') {
+          mapLike.addListener('click', clickListenerUnknown);
+          mapLike.addListener('Click', clickListenerUnknown);
+          isClickListenerBoundRef.current = true;
+          return;
+        }
+
+        if (tmapv3WithEvent.Event?.addListener) {
+          tmapv3WithEvent.Event.addListener(map as object, 'click', clickListenerUnknown);
+          tmapv3WithEvent.Event.addListener(map as object, 'Click', clickListenerUnknown);
+          isClickListenerBoundRef.current = true;
+        }
       };
 
-      if (typeof mapWithListener.addListener === 'function') {
-        mapWithListener.addListener('click', clickListener);
-        return;
+      const mapLikeWithLoad = map as TmapMapLike & {
+        on?: (eventName: string, callback: () => void) => void;
+      };
+
+      if (typeof mapLikeWithLoad.on === 'function') {
+        mapLikeWithLoad.on('load', bindClickListener);
       }
 
-      if (Tmapv2.Event?.addListener) {
-        Tmapv2.Event.addListener(map as object, 'click', clickListener);
-      } else if (Tmapv2.event?.addListener) {
-        Tmapv2.event.addListener(map as object, 'click', clickListener);
-      }
+      bindClickListener();
     },
     [drawPointMarkers, setMapInstance],
   );
@@ -212,9 +290,9 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
       return;
     }
 
-    const Tmapv2 = window.Tmapv2 as TmapV2 | undefined;
+    const Tmapv3 = window.Tmapv3 as TmapV3 | undefined;
     const map = mapRef.current;
-    if (!Tmapv2 || !map) return;
+    if (!Tmapv3 || !map) return;
 
     setIsSaving(true);
     setErrorMessage(null);
@@ -223,8 +301,8 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
       const result = await getPedestrianRoute(points);
       clearPolyline();
 
-      const linePath = result.path.map((point) => new Tmapv2.LatLng(point.lat, point.lng));
-      polylineRef.current = new Tmapv2.Polyline({
+      const linePath = result.path.map((point) => new Tmapv3.LatLng(point.lat, point.lng));
+      polylineRef.current = new Tmapv3.Polyline({
         path: linePath,
         strokeColor: '#2563EB',
         strokeWeight: 5,

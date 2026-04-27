@@ -74,6 +74,7 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
   const mapRef = useRef<TmapMapLike | null>(null);
   const markerRefs = useRef<TmapMarkerLike[]>([]);
   const polylineRef = useRef<{ setMap: (map: TmapMapLike | null) => void } | null>(null);
+  const isMapInitializedRef = useRef(false);
 
   const setMapInstance = useCallback((map: TmapMapLike) => {
     mapRef.current = map;
@@ -115,6 +116,59 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
     polylineRef.current?.setMap(null);
     polylineRef.current = null;
   }, []);
+
+  const initializeMap = useCallback(
+    (mapElementId: string, center: TmapCoordinate) => {
+      if (isMapInitializedRef.current) return;
+      const Tmapv2 = window.Tmapv2 as TmapV2 | undefined;
+      const mapElement = document.getElementById(mapElementId);
+      if (!Tmapv2 || !mapElement) return;
+
+      const map = new Tmapv2.Map(mapElementId, {
+        center: new Tmapv2.LatLng(center.lat, center.lng),
+        width: '100%',
+        height: '100%',
+        zoom: 15,
+        scrollwheel: true,
+        zoomControl: false,
+        minZoom: 8,
+      } as Record<string, unknown>);
+      setMapInstance(map);
+      isMapInitializedRef.current = true;
+
+      const clickListener = (event?: { latLng?: TmapLatLngLike; _latLng?: TmapLatLngLike }) => {
+        const latLng = event?.latLng ?? event?._latLng;
+        if (!latLng || typeof latLng.lat !== 'function' || typeof latLng.lng !== 'function') {
+          return;
+        }
+
+        const nextCoordinate: TmapCoordinate = { lat: latLng.lat(), lng: latLng.lng() };
+        setErrorMessage(null);
+        setPoints((prev) => {
+          if (prev.length >= MAX_POINT_LENGTH) return prev;
+          const nextPoints = [...prev, nextCoordinate];
+          drawPointMarkers(nextPoints);
+          return nextPoints;
+        });
+      };
+
+      const mapWithListener = map as TmapMapLike & {
+        addListener?: (eventName: string, callback: (event?: unknown) => void) => void;
+      };
+
+      if (typeof mapWithListener.addListener === 'function') {
+        mapWithListener.addListener('click', clickListener);
+        return;
+      }
+
+      if (Tmapv2.Event?.addListener) {
+        Tmapv2.Event.addListener(map as object, 'click', clickListener);
+      } else if (Tmapv2.event?.addListener) {
+        Tmapv2.event.addListener(map as object, 'click', clickListener);
+      }
+    },
+    [drawPointMarkers, setMapInstance],
+  );
 
   const addPoint = useCallback(
     (latLng: TmapLatLngLike) => {
@@ -205,6 +259,7 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
     isPointLimitReached,
     waypointCount,
     setMapInstance,
+    initializeMap,
     addPoint,
     undo,
     reset,

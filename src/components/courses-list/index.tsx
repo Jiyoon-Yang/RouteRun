@@ -58,9 +58,14 @@ export function CoursesList({
   const [sheetHeight, setSheetHeight] = useState(0);
   const [dragOffsetY, setDragOffsetY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(() =>
+    typeof window === 'undefined'
+      ? 0
+      : roundUpToEven(window.visualViewport?.height ?? window.innerHeight),
+  );
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const cardListRef = useRef<HTMLDivElement | null>(null);
-  const isSheetInteractionLocked = isLoading;
+  const isSheetInteractionLocked = false;
   const effectiveSheetState: BottomSheetState = isSheetInteractionLocked ? 'peek' : sheetState;
 
   // [이벤트] 핸들 클릭 기반 상태 토글
@@ -79,15 +84,17 @@ export function CoursesList({
     if (isSheetInteractionLocked) return;
     setIsDragging(false);
     setDragOffsetY(0);
-    const DRAG_THRESHOLD = 36;
-    const VELOCITY_THRESHOLD = 360;
+    const DRAG_THRESHOLD = 12;
+    const VELOCITY_THRESHOLD = 140;
+    const DOWN_DRAG_THRESHOLD = 8;
+    const DOWN_VELOCITY_THRESHOLD = 90;
 
     if (info.offset.y <= -DRAG_THRESHOLD || info.velocity.y <= -VELOCITY_THRESHOLD) {
       setSheetState((prev) => getNextState(prev, 'up'));
       return;
     }
 
-    if (info.offset.y >= DRAG_THRESHOLD || info.velocity.y >= VELOCITY_THRESHOLD) {
+    if (info.offset.y >= DOWN_DRAG_THRESHOLD || info.velocity.y >= DOWN_VELOCITY_THRESHOLD) {
       setSheetState((prev) => getNextState(prev, 'down'));
     }
   };
@@ -146,8 +153,21 @@ export function CoursesList({
     };
   }, [recalculateSheetHeights]);
 
+  useEffect(() => {
+    const syncViewportHeight = () => {
+      setViewportHeight(roundUpToEven(window.visualViewport?.height ?? window.innerHeight));
+    };
+
+    syncViewportHeight();
+    window.addEventListener('resize', syncViewportHeight);
+    window.visualViewport?.addEventListener('resize', syncViewportHeight);
+    return () => {
+      window.removeEventListener('resize', syncViewportHeight);
+      window.visualViewport?.removeEventListener('resize', syncViewportHeight);
+    };
+  }, []);
+
   // [초기 렌더 보정] 실제 높이 측정 전에는 뷰포트 높이로 시트 이동값을 계산한다.
-  const viewportHeight = typeof window === 'undefined' ? 0 : roundUpToEven(window.innerHeight);
   const effectiveSheetHeight = sheetHeight > 0 ? sheetHeight : viewportHeight;
   const minTranslateY = 20;
   const maxTranslateY = Math.max(0, effectiveSheetHeight - 24);

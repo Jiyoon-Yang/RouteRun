@@ -192,6 +192,7 @@ export function TmapHome({
 }: TmapHomeProps) {
   // [상태] 지도/마커 인스턴스 참조 관리
   const mapInstance = useRef<TmapMap | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const currentLocationMarkerRef = useRef<TmapMarker | null>(null);
   const currentLocationCoordinateRef = useRef<{ lat: number; lng: number } | null>(null);
   const selectedLabelMarkerRef = useRef<TmapMarker | null>(null);
@@ -200,6 +201,7 @@ export function TmapHome({
   const selectedRouteIdRef = useRef<string | null>(null);
   const viewportReportTimerRef = useRef<number | null>(null);
   const mapListenersRegisteredRef = useRef(false);
+  const wheelZoomThrottleTimerRef = useRef<number | null>(null);
 
   const readCoordinateValue = (
     point: TmapLatLng | undefined,
@@ -599,6 +601,25 @@ export function TmapHome({
     runtimeSetter(nextZoom);
   }, []);
 
+  // [이벤트] 휠 줌을 버튼과 동일한 제한 로직으로 통일
+  const handleMapWheel = useCallback(
+    (event: WheelEvent) => {
+      event.preventDefault();
+      const map = mapInstance.current;
+      if (!map) return;
+      if (wheelZoomThrottleTimerRef.current !== null) return;
+
+      const delta: 1 | -1 = event.deltaY < 0 ? 1 : -1;
+      adjustZoomLevel(delta);
+      scheduleViewportReport(map);
+
+      wheelZoomThrottleTimerRef.current = window.setTimeout(() => {
+        wheelZoomThrottleTimerRef.current = null;
+      }, 100);
+    },
+    [adjustZoomLevel, scheduleViewportReport],
+  );
+
   useEffect(() => {
     routesRef.current = routes;
   }, [routes]);
@@ -619,6 +640,7 @@ export function TmapHome({
         zoom: 15,
         minZoom: MIN_ZOOM_LEVEL,
         zoomControl: false,
+        scrollwheel: false,
       });
 
       createCustomMarker(map, lat, lng);
@@ -670,6 +692,10 @@ export function TmapHome({
       selectedLabelMarkerRef.current = null;
       selectedRouteIdRef.current = null;
       mapListenersRegisteredRef.current = false;
+      if (wheelZoomThrottleTimerRef.current !== null) {
+        window.clearTimeout(wheelZoomThrottleTimerRef.current);
+        wheelZoomThrottleTimerRef.current = null;
+      }
     };
   }, [enforceMinZoomLevel, registerMapListeners, scheduleViewportReport, syncRouteMarkers]);
 
@@ -708,6 +734,20 @@ export function TmapHome({
   }, []);
 
   useEffect(() => {
+    const rootElement = rootRef.current;
+    if (!rootElement) return;
+
+    const wheelListener = (event: WheelEvent) => {
+      handleMapWheel(event);
+    };
+
+    rootElement.addEventListener('wheel', wheelListener, { passive: false });
+    return () => {
+      rootElement.removeEventListener('wheel', wheelListener);
+    };
+  }, [handleMapWheel]);
+
+  useEffect(() => {
     const map = mapInstance.current;
     if (!map) return;
 
@@ -726,7 +766,7 @@ export function TmapHome({
     bottomSheetVisibleHeight <= 24 ? styles.sheetControlsCollapsed : styles.sheetControlsPeek;
 
   return (
-    <div className={styles.root}>
+    <div ref={rootRef} className={styles.root}>
       <div id="map_div" className={styles.map} />
       <button
         type="button"

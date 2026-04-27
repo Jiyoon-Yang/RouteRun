@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Icon } from '@/commons/components/icons';
 import type { Route } from '@/commons/types/runroute';
@@ -51,6 +51,8 @@ type TmapMarker = {
   setPosition: (position: TmapLatLng) => void;
   setIcon?: (icon: string) => void;
   addListener?: (eventName: string, callback: () => void) => void;
+  on?: (eventName: string, callback: () => void) => void;
+  getElement?: () => HTMLElement | null;
 };
 
 type TmapPolyline = {
@@ -68,6 +70,7 @@ type TmapMap = {
   zoomIn?: () => void;
   zoomOut?: () => void;
   addListener?: (eventName: string, callback: () => void) => void;
+  on?: (eventName: string, callback: () => void) => void;
   resize?: () => void;
   getBounds?: () => TmapLatLngBoundsLike | null | undefined;
 };
@@ -256,6 +259,7 @@ export function TmapHome({
   onCourseMarkerClick,
   onViewportChanged,
 }: TmapHomeProps) {
+  const [isMobileOrTabletViewport, setIsMobileOrTabletViewport] = useState(false);
   // [상태] 지도/마커 인스턴스 참조 관리
   const mapInstance = useRef<TmapMap | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -267,8 +271,10 @@ export function TmapHome({
   const routesRef = useRef<Route[]>(routes);
   const selectedRouteIdRef = useRef<string | null>(null);
   const viewportReportTimerRef = useRef<number | null>(null);
+  const viewportSyncIntervalRef = useRef<number | null>(null);
   const mapListenersRegisteredRef = useRef(false);
   const wheelZoomThrottleTimerRef = useRef<number | null>(null);
+  const lastViewportRef = useRef<RouteViewport | null>(null);
   const routeVisualStateHandlerRef = useRef<(courseId: string, state: MarkerVisualState) => void>(
     () => undefined,
   );
@@ -322,6 +328,17 @@ export function TmapHome({
     (map: TmapMap) => {
       const viewport = normalizeViewportFromMap(map);
       if (!viewport) return;
+      const previous = lastViewportRef.current;
+      if (
+        previous &&
+        previous.northEastLat === viewport.northEastLat &&
+        previous.northEastLng === viewport.northEastLng &&
+        previous.southWestLat === viewport.southWestLat &&
+        previous.southWestLng === viewport.southWestLng
+      ) {
+        return;
+      }
+      lastViewportRef.current = viewport;
       onViewportChanged?.(viewport);
     },
     [normalizeViewportFromMap, onViewportChanged],
@@ -420,10 +437,30 @@ export function TmapHome({
 
   const registerMapListeners = useCallback(
     (map: TmapMap) => {
-      if (mapListenersRegisteredRef.current || typeof map.addListener !== 'function') return;
-      mapListenersRegisteredRef.current = true;
+      if (mapListenersRegisteredRef.current) return;
 
-      map.addListener('zoom_changed', () => {
+      const bindMapEvent = (eventNames: string[], callback: () => void): boolean => {
+        let bound = false;
+        eventNames.forEach((eventName) => {
+          if (typeof map.on === 'function') {
+            map.on(eventName, callback);
+            bound = true;
+            return;
+          }
+          if (typeof map.addListener === 'function') {
+            map.addListener(eventName, callback);
+            bound = true;
+          }
+        });
+        return bound;
+      };
+
+      // 일부 Tmap SDK 런타임은 on/addListener 중 하나만 제공하므로 둘 다 대응한다.
+      const hasMapEventBinder =
+        typeof map.on === 'function' || typeof map.addListener === 'function';
+      if (!hasMapEventBinder) return;
+
+      const handleZoomChanged = () => {
         enforceMinZoomLevel(map);
         upsertSelectedLabelMarker(selectedRouteIdRef.current);
         const currentLocation = currentLocationCoordinateRef.current;
@@ -431,52 +468,45 @@ export function TmapHome({
           createCustomMarker(map, currentLocation.lat, currentLocation.lng);
         }
         scheduleViewportReport(map);
-      });
+      };
+
+      const boundZoomEvents = bindMapEvent(
+        ['zoom', 'zoom_end', 'zoom_changed', 'zoomend', 'idle'],
+        handleZoomChanged,
+      );
 
       const reportAfterMove = () => {
         scheduleViewportReport(map);
       };
 
-      map.addListener('moveend', reportAfterMove);
-      map.addListener('dragend', reportAfterMove);
-      map.addListener('bounds_changed', reportAfterMove);
+      const boundMoveEvents = bindMapEvent(
+        ['drag', 'dragend', 'dragEnd', 'moveend', 'bounds_changed', 'center_changed', 'panend'],
+        reportAfterMove,
+      );
+
+      mapListenersRegisteredRef.current = boundZoomEvents || boundMoveEvents;
     },
     [enforceMinZoomLevel, scheduleViewportReport, upsertSelectedLabelMarker],
   );
 
   const addMarkerListener = useCallback(
     (marker: TmapMarker, eventName: 'click' | 'mouseover' | 'mouseout', callback: () => void) => {
-      const Tmapv3 = getTmapv3();
-      if (!Tmapv3) return;
+      if (typeof marker.on === 'function') {
+        try {
+          marker.on(eventName, callback);
+          return;
+        } catch {
+          // marker.on 실패 시 폴백
+        }
+      }
 
       if (typeof marker.addListener === 'function') {
         try {
           marker.addListener(eventName, callback);
-          return;
         } catch {
-          // marker 인스턴스 기반 이벤트 등록 실패 시 전역 API로 폴백
+          // noop
         }
       }
-
-      const tryAddListener = (
-        eventApi:
-          | {
-              addListener?: (target: TmapMarker, name: string, cb: () => void) => void;
-            }
-          | undefined,
-      ) => {
-        if (!eventApi?.addListener) return false;
-        try {
-          // SDK 버전별로 내부 this 바인딩 요구사항이 달라 call로 안전하게 바인딩한다.
-          eventApi.addListener.call(eventApi, marker, eventName, callback);
-          return true;
-        } catch {
-          return false;
-        }
-      };
-
-      if (tryAddListener(Tmapv3.Event)) return;
-      tryAddListener(Tmapv3.event);
     },
     [],
   );
@@ -674,6 +704,7 @@ export function TmapHome({
           visualState: 'default',
         });
 
+        // 신규 생성 시 반드시 클릭 리스너를 바인딩한다.
         attachRouteMarkerListeners(marker, route.id);
       });
     },
@@ -769,6 +800,13 @@ export function TmapHome({
       enforceMinZoomLevel(map);
       registerMapListeners(map);
       scheduleViewportReport(map, 500);
+      if (viewportSyncIntervalRef.current !== null) {
+        window.clearInterval(viewportSyncIntervalRef.current);
+      }
+      // 이벤트 누락 환경에서도 뷰포트 기반 마커/카드 동기화를 보장한다.
+      viewportSyncIntervalRef.current = window.setInterval(() => {
+        reportViewport(map);
+      }, 450);
       syncRouteMarkers(map, routesRef.current);
     };
 
@@ -815,12 +853,23 @@ export function TmapHome({
       selectedRoutePolylineRef.current = null;
       selectedRouteIdRef.current = null;
       mapListenersRegisteredRef.current = false;
+      if (viewportSyncIntervalRef.current !== null) {
+        window.clearInterval(viewportSyncIntervalRef.current);
+        viewportSyncIntervalRef.current = null;
+      }
       if (wheelZoomThrottleTimerRef.current !== null) {
         window.clearTimeout(wheelZoomThrottleTimerRef.current);
         wheelZoomThrottleTimerRef.current = null;
       }
+      lastViewportRef.current = null;
     };
-  }, [enforceMinZoomLevel, registerMapListeners, scheduleViewportReport, syncRouteMarkers]);
+  }, [
+    enforceMinZoomLevel,
+    registerMapListeners,
+    reportViewport,
+    scheduleViewportReport,
+    syncRouteMarkers,
+  ]);
 
   useEffect(() => {
     // [동기화] 코스 데이터 변경 시 마커 반영
@@ -853,6 +902,25 @@ export function TmapHome({
         window.clearTimeout(viewportReportTimerRef.current);
         viewportReportTimerRef.current = null;
       }
+      if (viewportSyncIntervalRef.current !== null) {
+        window.clearInterval(viewportSyncIntervalRef.current);
+        viewportSyncIntervalRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const mediaQuery = window.matchMedia('(max-width: 1024px)');
+    const syncViewportType = () => {
+      setIsMobileOrTabletViewport(mediaQuery.matches);
+    };
+
+    syncViewportType();
+    mediaQuery.addEventListener('change', syncViewportType);
+    return () => {
+      mediaQuery.removeEventListener('change', syncViewportType);
     };
   }, []);
 
@@ -886,19 +954,21 @@ export function TmapHome({
 
   const sheetControlPositionClassName =
     bottomSheetVisibleHeight <= 24 ? styles.sheetControlsCollapsed : styles.sheetControlsPeek;
+  const shouldHideFloatingControls =
+    isBottomSheetExpanded || (isMobileOrTabletViewport && bottomSheetVisibleHeight >= 320);
 
   return (
     <div ref={rootRef} className={styles.root}>
       <div id="map_div" className={styles.map} />
       <button
         type="button"
-        className={`${styles.refreshButton} ${sheetControlPositionClassName} ${isBottomSheetExpanded ? styles.refreshButtonHidden : ''}`}
+        className={`${styles.refreshButton} ${sheetControlPositionClassName} ${shouldHideFloatingControls ? styles.refreshButtonHidden : ''}`}
         onClick={handleRefreshLocation}
       >
         <Icon name="locateFixed" size={24} className={styles.refreshIcon} />
       </button>
       <div
-        className={`${styles.zoomButtonGroup} ${sheetControlPositionClassName} ${isBottomSheetExpanded ? styles.refreshButtonHidden : ''}`}
+        className={`${styles.zoomButtonGroup} ${sheetControlPositionClassName} ${shouldHideFloatingControls ? styles.refreshButtonHidden : ''}`}
       >
         <button type="button" className={styles.zoomButton} onClick={() => adjustZoomLevel(1)}>
           <Icon name="plus" size={20} className={styles.zoomButtonIcon} />

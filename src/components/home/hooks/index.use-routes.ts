@@ -118,12 +118,25 @@ export function useRoutes(viewport: RouteViewport | null): UseRoutesResult {
       return allRoutes;
     }
 
+    const { northEastLat, northEastLng, southWestLat, southWestLng } = viewport;
+    const values = [northEastLat, northEastLng, southWestLat, southWestLng];
+    const hasInvalidViewport = values.some((value) => !Number.isFinite(value));
+    if (hasInvalidViewport) {
+      return allRoutes;
+    }
+
+    // SDK/브라우저 조합에 따라 bounds 축이 역전되어 들어오는 케이스를 보정한다.
+    const minLat = Math.min(northEastLat, southWestLat);
+    const maxLat = Math.max(northEastLat, southWestLat);
+    const minLng = Math.min(northEastLng, southWestLng);
+    const maxLng = Math.max(northEastLng, southWestLng);
+
     return allRoutes.filter((route) => {
       return (
-        route.start_lat >= viewport.southWestLat &&
-        route.start_lat <= viewport.northEastLat &&
-        route.start_lng >= viewport.southWestLng &&
-        route.start_lng <= viewport.northEastLng
+        route.start_lat >= minLat &&
+        route.start_lat <= maxLat &&
+        route.start_lng >= minLng &&
+        route.start_lng <= maxLng
       );
     });
   }, [allRoutes, viewport]);

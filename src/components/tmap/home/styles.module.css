@@ -14,7 +14,6 @@
 .refreshButton {
   /* 바텀시트 핸들 상단에 위치하도록 동적 보정 */
   position: absolute;
-  bottom: calc(260px + 12px);
   left: 20px;
   z-index: 10;
 
@@ -73,7 +72,6 @@
 
 .zoomButtonGroup {
   position: absolute;
-  bottom: calc(260px + 12px);
   right: 20px;
   z-index: 10;
 
@@ -116,4 +114,14 @@
 
 .zoomButtonIcon {
   font-size: 20px;
+}
+
+.refreshButton.sheetControlsCollapsed,
+.zoomButtonGroup.sheetControlsCollapsed {
+  bottom: calc(24px + 12px);
+}
+
+.refreshButton.sheetControlsPeek,
+.zoomButtonGroup.sheetControlsPeek {
+  bottom: calc(260px + 12px);
 }

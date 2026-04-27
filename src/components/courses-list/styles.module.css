@@ -2,7 +2,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: -1px;
   z-index: 1;
   display: flex;
   flex-direction: column;
@@ -14,19 +14,24 @@
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;
   will-change: transform;
+  transform: translateY(var(--sheet-translate-y, calc(100% - 260px)));
   transition: transform 420ms cubic-bezier(0.2, 0.85, 0.25, 1);
 }
 
 .collapsed {
-  transform: translateY(calc(100% - 24px));
+  --sheet-translate-y: calc(100% - 24px);
 }
 
 .peek {
-  transform: translateY(calc(100% - var(--peek-visible-height, 260px)));
+  --sheet-translate-y: calc(100% - var(--peek-visible-height, 260px));
 }
 
 .expanded {
-  transform: translateY(20px);
+  --sheet-translate-y: 20px;
+}
+
+.dragging {
+  transition: none;
 }
 
 .bottomSheetHandleArea {

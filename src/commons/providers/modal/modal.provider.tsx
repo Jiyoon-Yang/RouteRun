@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 import { Modal, type ModalProps } from '@/commons/components/modal';
@@ -12,6 +12,8 @@ import styles from './modal.provider.module.css';
 type ModalOptions = Omit<ModalProps, 'onConfirm' | 'onCancel'> & {
   onConfirm?: () => void;
   onCancel?: () => void;
+  closeOnConfirm?: boolean;
+  renderContent?: (controls: { closeModal: () => void }) => ReactNode;
 };
 
 interface ModalContextValue {
@@ -47,7 +49,9 @@ export function ModalProvider({ children }: ModalProviderProps) {
 
   const handleConfirm = useCallback(() => {
     modalOptions?.onConfirm?.();
-    closeModal();
+    if (modalOptions?.closeOnConfirm !== false) {
+      closeModal();
+    }
   }, [modalOptions, closeModal]);
 
   const handleCancel = useCallback(() => {
@@ -67,10 +71,14 @@ export function ModalProvider({ children }: ModalProviderProps) {
     <ModalContext.Provider value={value}>
       {children}
       {typeof window !== 'undefined' &&
-        resolvedModalProps !== null &&
+        modalOptions !== null &&
         createPortal(
           <div className={styles.backdrop} role="dialog" aria-modal="true">
-            <Modal {...resolvedModalProps} />
+            {modalOptions.renderContent ? (
+              modalOptions.renderContent({ closeModal })
+            ) : (
+              <Modal {...(resolvedModalProps as ModalProps)} />
+            )}
           </div>,
           document.body,
         )}

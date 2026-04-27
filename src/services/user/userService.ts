@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/server';
 import * as userRepository from '@/repositories/user.repository';
 import * as courseService from '@/services/course/courseService';
 
+import { validateNickname } from './userValidation';
+
 export type MypageAuthFallback = {
   fallbackDisplayName: string;
 };
@@ -39,4 +41,30 @@ export async function getMypagePageData(
     myRoutes: routeLists.myRoutes,
     likedRoutes: routeLists.likedRoutes,
   };
+}
+
+export async function checkNicknameAvailable(nickname: string): Promise<boolean> {
+  const validation = validateNickname(nickname);
+
+  if (!validation.isValid) {
+    return false;
+  }
+
+  const isDuplicate = await userRepository.checkNicknameDuplicate(nickname);
+  return !isDuplicate;
+}
+
+export async function changeNickname(userId: string, newNickname: string): Promise<void> {
+  const validation = validateNickname(newNickname);
+
+  if (!validation.isValid) {
+    throw new Error(validation.message ?? '유효하지 않은 닉네임입니다.');
+  }
+
+  const isAvailable = await checkNicknameAvailable(newNickname);
+  if (!isAvailable) {
+    throw new Error('이미 사용 중인 닉네임입니다.');
+  }
+
+  await userRepository.updateNickname(userId, newNickname);
 }

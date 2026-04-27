@@ -21,6 +21,7 @@ import {
   Scan,
   SquarePlus,
   Trash2,
+  Undo2,
   UserRound,
   Footprints,
 } from 'lucide-react';
@@ -52,6 +53,7 @@ const iconRegistry = {
   circleAlert: CircleAlert,
   logOut: LogOut,
   sportShoe: Footprints,
+  'undo-2': Undo2,
 } as const;
 
 export type IconName = keyof typeof iconRegistry;

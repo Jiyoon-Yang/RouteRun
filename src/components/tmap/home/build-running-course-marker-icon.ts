@@ -15,6 +15,8 @@ const MARKER_SIZE_BY_STATE: Record<MarkerVisualState, number> = {
   clicked: 1.22,
 };
 
+const markerIconUrlCache = new Map<string, string>();
+
 function toSvgDataUrl(svgMarkup: string): string {
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgMarkup)}`;
 }
@@ -46,6 +48,12 @@ export function getRunningCourseMarkerIconUrlForCategory(
   category: DistanceCategory,
   state: MarkerVisualState,
 ): string {
+  const cacheKey = `${category}:${state}`;
+  const cachedIconUrl = markerIconUrlCache.get(cacheKey);
+  if (cachedIconUrl) return cachedIconUrl;
+
   const color = MARKER_COLOR_BY_CATEGORY[category];
-  return toSvgDataUrl(buildRunningCourseMarkerSvg(color, state));
+  const iconUrl = toSvgDataUrl(buildRunningCourseMarkerSvg(color, state));
+  markerIconUrlCache.set(cacheKey, iconUrl);
+  return iconUrl;
 }

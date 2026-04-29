@@ -19,10 +19,10 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
-        {/* TMap vectorjs는 내부적으로 document.write()로 서브스크립트를 로드하므로
-            next/script나 동적 주입이 불가능하고 동기 <script> 태그가 필수입니다. */}
+        {/* TMap SDK가 내부적으로 document.write를 사용해 동기 로드가 필요하다. */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script
+          id="tmap-vector-sdk"
           src={`https://apis.openapi.sk.com/tmap/vectorjs?version=1&appKey=${process.env.NEXT_PUBLIC_TMAP_API_KEY}`}
         />
       </head>

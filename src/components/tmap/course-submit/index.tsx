@@ -36,7 +36,7 @@ export default function TmapCourseSubmit({ onSaveRoute }: CourseSubmitMapProps) 
     const initialize = () => {
       if (cancelled) return;
       const mapElementId = mapContainerIdRef.current;
-      if (!window.Tmapv2 || !document.getElementById(mapElementId)) {
+      if (!window.Tmapv3 || !document.getElementById(mapElementId)) {
         window.setTimeout(initialize, 120);
         return;
       }

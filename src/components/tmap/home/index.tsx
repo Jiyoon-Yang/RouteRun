@@ -3,9 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Icon } from '@/commons/components/icons';
-import type { Route } from '@/commons/types/runroute';
+import type { Route, RouteViewport } from '@/commons/types/runroute';
 import { hasValidRouteStartCoordinate, SEOUL_CITY_HALL_COORDINATE } from '@/commons/utils/geo';
-import type { RouteViewport } from '@/components/home/hooks/index.use-routes';
 import { getDistanceCategory, type DistanceCategory } from '@/components/home/utils/course-filter';
 
 import {
@@ -352,41 +351,47 @@ export function TmapHome({
     [normalizeViewportFromMap, onViewportChanged],
   );
 
-  const syncMarkerVisibilityByViewport = useCallback((map: TmapMap) => {
-    const viewport = normalizeViewportFromMap(map);
-    if (!viewport) return;
-    const west = Math.min(viewport.southWestLng, viewport.northEastLng);
-    const east = Math.max(viewport.southWestLng, viewport.northEastLng);
-    const south = Math.min(viewport.southWestLat, viewport.northEastLat);
-    const north = Math.max(viewport.southWestLat, viewport.northEastLat);
-    const lngPadding = (east - west) * VIEWPORT_PADDING_RATIO;
-    const latPadding = (north - south) * VIEWPORT_PADDING_RATIO;
-    const paddedWest = west - lngPadding;
-    const paddedEast = east + lngPadding;
-    const paddedSouth = south - latPadding;
-    const paddedNorth = north + latPadding;
-    const isLngInRange = (lng: number) => lng >= paddedWest && lng <= paddedEast;
+  const syncMarkerVisibilityByViewport = useCallback(
+    (map: TmapMap) => {
+      const viewport = normalizeViewportFromMap(map);
+      if (!viewport) return;
+      const west = Math.min(viewport.southWestLng, viewport.northEastLng);
+      const east = Math.max(viewport.southWestLng, viewport.northEastLng);
+      const south = Math.min(viewport.southWestLat, viewport.northEastLat);
+      const north = Math.max(viewport.southWestLat, viewport.northEastLat);
+      const lngPadding = (east - west) * VIEWPORT_PADDING_RATIO;
+      const latPadding = (north - south) * VIEWPORT_PADDING_RATIO;
+      const paddedWest = west - lngPadding;
+      const paddedEast = east + lngPadding;
+      const paddedSouth = south - latPadding;
+      const paddedNorth = north + latPadding;
+      const isLngInRange = (lng: number) => lng >= paddedWest && lng <= paddedEast;
 
-    routeMarkerMapRef.current.forEach((entry, routeId) => {
-      const isInViewport =
-        entry.lat >= paddedSouth && entry.lat <= paddedNorth && isLngInRange(entry.lng);
-      const isSelected = selectedRouteIdRef.current === routeId;
-      const shouldBeVisible = isSelected || isInViewport;
-      if (shouldBeVisible === entry.isVisible) return;
-      entry.marker.setMap(shouldBeVisible ? map : null);
-      entry.isVisible = shouldBeVisible;
-    });
-  }, [normalizeViewportFromMap]);
+      routeMarkerMapRef.current.forEach((entry, routeId) => {
+        const isInViewport =
+          entry.lat >= paddedSouth && entry.lat <= paddedNorth && isLngInRange(entry.lng);
+        const isSelected = selectedRouteIdRef.current === routeId;
+        const shouldBeVisible = isSelected || isInViewport;
+        if (shouldBeVisible === entry.isVisible) return;
+        entry.marker.setMap(shouldBeVisible ? map : null);
+        entry.isVisible = shouldBeVisible;
+      });
+    },
+    [normalizeViewportFromMap],
+  );
 
-  const scheduleMarkerVisibilitySync = useCallback((map: TmapMap) => {
-    if (markerVisibilityTimerRef.current !== null) {
-      window.clearTimeout(markerVisibilityTimerRef.current);
-    }
-    markerVisibilityTimerRef.current = window.setTimeout(() => {
-      markerVisibilityTimerRef.current = null;
-      syncMarkerVisibilityByViewport(map);
-    }, MARKER_VISIBILITY_DEBOUNCE_MS);
-  }, [syncMarkerVisibilityByViewport]);
+  const scheduleMarkerVisibilitySync = useCallback(
+    (map: TmapMap) => {
+      if (markerVisibilityTimerRef.current !== null) {
+        window.clearTimeout(markerVisibilityTimerRef.current);
+      }
+      markerVisibilityTimerRef.current = window.setTimeout(() => {
+        markerVisibilityTimerRef.current = null;
+        syncMarkerVisibilityByViewport(map);
+      }, MARKER_VISIBILITY_DEBOUNCE_MS);
+    },
+    [syncMarkerVisibilityByViewport],
+  );
 
   const enforceMinZoomLevel = useCallback((map: TmapMap): number | null => {
     const currentZoom = map.getZoom();

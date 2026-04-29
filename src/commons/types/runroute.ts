@@ -37,3 +37,11 @@ export interface CourseCardView {
   distanceText: string;
   isPinnedTop: boolean;
 }
+
+// 홈 페이지(지도)에서 쓰는 뷰포트 경계 타입
+export type RouteViewport = {
+  northEastLat: number;
+  northEastLng: number;
+  southWestLat: number;
+  southWestLng: number;
+};

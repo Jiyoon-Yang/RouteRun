@@ -10,7 +10,7 @@ export interface MypageProfileProps {
 export interface MypageRouteCardData {
   id: string;
   title: string;
-  location: string;
+  start_address_region?: string | null;
   distanceText: string;
   likeCount: number;
 }

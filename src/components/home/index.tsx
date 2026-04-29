@@ -7,10 +7,8 @@ import { TabButton } from '@/commons/components/tab';
 import { ROUTES } from '@/commons/constants/url';
 import { Header } from '@/commons/layout/header';
 import type { ReferenceLocation, RouteViewport } from '@/commons/types/runroute';
-import { hasValidRouteStartCoordinate } from '@/commons/utils/geo';
 import { CoursesList } from '@/components/courses-list';
 import { TmapHome } from '@/components/tmap/home';
-import { reverseGeocodeRegionForHome } from '@/services/map/mapService';
 
 import { useRoutes } from './hooks/index.use-routes';
 import styles from './styles.module.css';
@@ -34,7 +32,6 @@ export function Home() {
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<DistanceCategory>>(new Set());
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
-  const [locationByCourseId, setLocationByCourseId] = useState<Record<string, string | null>>({});
   const [mapViewport, setMapViewport] = useState<RouteViewport | null>(null);
   const [queryViewport, setQueryViewport] = useState<RouteViewport | null>(null);
   const [referenceLocation, setReferenceLocation] =
@@ -78,63 +75,9 @@ export function Home() {
     [routes, selectedCategories],
   );
   const courseCards = useMemo(
-    () =>
-      buildCourseCardViews(filteredRoutes, referenceLocation, selectedCourseId, locationByCourseId),
-    [filteredRoutes, locationByCourseId, referenceLocation, selectedCourseId],
+    () => buildCourseCardViews(filteredRoutes, referenceLocation, selectedCourseId),
+    [filteredRoutes, referenceLocation, selectedCourseId],
   );
-
-  // [조회] 코스 시작 좌표를 시/도 + 구/군 주소로 변환
-  useEffect(() => {
-    const unresolvedRoutes = routes.filter(
-      (route) =>
-        hasValidRouteStartCoordinate(route) && typeof locationByCourseId[route.id] === 'undefined',
-    );
-
-    if (unresolvedRoutes.length === 0) {
-      return;
-    }
-
-    const abortController = new AbortController();
-    let isCancelled = false;
-
-    const loadLocations = async () => {
-      const entries = await Promise.all(
-        unresolvedRoutes.map(async (route) => {
-          const address = await reverseGeocodeRegionForHome({
-            lat: route.start_lat,
-            lng: route.start_lng,
-            signal: abortController.signal,
-          });
-
-          return [route.id, address] as const;
-        }),
-      );
-
-      if (isCancelled) {
-        return;
-      }
-
-      setLocationByCourseId((previous) => {
-        const next = { ...previous };
-        entries.forEach(([courseId, address]) => {
-          next[courseId] = address;
-        });
-        return next;
-      });
-    };
-
-    loadLocations().catch((error) => {
-      if (isCancelled || error instanceof DOMException) {
-        return;
-      }
-      console.error('리버스지오코딩 실패:', error);
-    });
-
-    return () => {
-      isCancelled = true;
-      abortController.abort();
-    };
-  }, [locationByCourseId, routes]);
 
   // [초기화] 사용자 위치 기반 기준 좌표 설정
   useEffect(() => {

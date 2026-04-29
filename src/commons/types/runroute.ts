@@ -15,6 +15,7 @@ export interface Route {
   path_data: Record<string, unknown>; // Tmap 경로 JSON 데이터
   start_lat: number;
   start_lng: number;
+  start_address_region?: string | null;
   image_urls: string[];
   likes_count: number;
   created_at: string;

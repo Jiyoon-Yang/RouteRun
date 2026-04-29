@@ -1,7 +1,8 @@
 import { useCallback, useRef } from 'react';
-import type { RefObject } from 'react';
 
 import type { TmapCoordinate, TmapMapLike, TmapMarkerLike, TmapV3 } from '@/commons/types/tmap';
+
+import type { RefObject } from 'react';
 
 type MarkerRole = 'start' | 'via' | 'end';
 

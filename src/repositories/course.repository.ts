@@ -54,6 +54,39 @@ function normalizeRouteRows(rows: RouteRow[] | null): Route[] {
   return (rows ?? []).map(toRoute).filter((route): route is Route => route !== null);
 }
 
+/** `routes` 테이블 insert 시 사용 (스키마: public.routes) */
+export interface InsertRouteParams {
+  user_id: string;
+  title: string;
+  description: string | null;
+  distance_meters: number;
+  path_data: Record<string, unknown>;
+  start_lat: number;
+  start_lng: number;
+  image_urls: string[];
+}
+
+/**
+ * 새 코스를 `routes`에 저장하고, 생성된 행을 조회 모델(`Route`)로 반환한다.
+ */
+export async function createCourse(
+  supabase: SupabaseClient,
+  params: InsertRouteParams,
+): Promise<{ data: Route | null; error: Error | null }> {
+  const { data, error } = await supabase
+    .from('routes')
+    .insert(params)
+    .select(ROUTE_SELECT)
+    .single()
+    .returns<RouteRow>();
+
+  if (error) {
+    return { data: null, error: new Error(error.message) };
+  }
+
+  return { data: toRoute(data), error: null };
+}
+
 /** 현재 유저가 작성한 코스(`routes.user_id`) 목록 */
 export async function getRoutesByUserId(
   supabase: SupabaseClient,

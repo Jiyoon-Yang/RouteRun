@@ -17,7 +17,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import { Button } from '@/commons/components/button';
 import { Icon } from '@/commons/components/icons';
@@ -26,6 +26,7 @@ import { Label } from '@/commons/components/input/label';
 import { Header } from '@/commons/layout/header';
 import TmapCourseSubmit from '@/components/tmap/course-submit';
 
+import { MAX_COURSE_SUBMIT_IMAGES, useCourseSubmit } from './hooks/useCourseSubmit';
 import styles from './styles.module.css';
 
 // i18n 대비 텍스트 상수 분리
@@ -42,7 +43,6 @@ const TEXTS = {
   MAP_PLACEHOLDER: '[MAP]',
   BUTTON_NEW: '등록하기',
   BUTTON_EDIT: '수정하기',
-  MAX_IMAGES: 5,
 } as const;
 
 interface CourseSubmitProps {
@@ -50,31 +50,33 @@ interface CourseSubmitProps {
   courseId?: string;
 }
 
-export default function CourseSubmit({ mode, courseId: _courseId }: CourseSubmitProps) {
-  const [courseName, setCourseName] = useState('');
-  const [description, setDescription] = useState('');
-  const [images, setImages] = useState<string[]>([]);
+export default function CourseSubmit({ mode, courseId }: CourseSubmitProps) {
+  const {
+    courseName,
+    setCourseName,
+    description,
+    setDescription,
+    images,
+    handleSaveRoute,
+    handleImageInputChange,
+    removeImageAt,
+    handleSubmit,
+    isSubmitEnabled,
+  } = useCourseSubmit({ mode, courseId });
+
+  const imagePreviewUrls = useMemo(() => images.map((file) => URL.createObjectURL(file)), [images]);
+
+  useEffect(() => {
+    return () => {
+      imagePreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [imagePreviewUrls]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEdit = mode === 'edit';
   const pageTitle = isEdit ? TEXTS.TITLE_EDIT : TEXTS.TITLE_NEW;
   const submitLabel = isEdit ? TEXTS.BUTTON_EDIT : TEXTS.BUTTON_NEW;
-  const isSubmitEnabled = courseName.trim().length > 0;
-
-  const handleAddImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    const remaining = TEXTS.MAX_IMAGES - images.length;
-    const newUrls = Array.from(files)
-      .slice(0, remaining)
-      .map((file) => URL.createObjectURL(file));
-    setImages((prev) => [...prev, ...newUrls]);
-    e.target.value = '';
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  };
 
   return (
     <div className={styles.container}>
@@ -82,7 +84,7 @@ export default function CourseSubmit({ mode, courseId: _courseId }: CourseSubmit
 
       {/* 지도 플레이스홀더 */}
       <div className={styles.mapArea} aria-label="지도 영역">
-        <TmapCourseSubmit />
+        <TmapCourseSubmit onSaveRoute={handleSaveRoute} />
       </div>
 
       {/* 폼 섹션 */}
@@ -114,7 +116,7 @@ export default function CourseSubmit({ mode, courseId: _courseId }: CourseSubmit
           <Label type="info">{TEXTS.LABEL_IMAGE_UPLOAD}</Label>
           <div className={styles.imageList}>
             {/* 이미지 추가 버튼 */}
-            {images.length < TEXTS.MAX_IMAGES && (
+            {images.length < MAX_COURSE_SUBMIT_IMAGES && (
               <button
                 type="button"
                 className={styles.addImageButton}
@@ -125,7 +127,7 @@ export default function CourseSubmit({ mode, courseId: _courseId }: CourseSubmit
                   <Icon name="plus" size={12} color="var(--color-white-500)" />
                 </span>
                 <span className={styles.addImageCount}>
-                  {images.length}/{TEXTS.MAX_IMAGES}
+                  {images.length}/{MAX_COURSE_SUBMIT_IMAGES}
                 </span>
               </button>
             )}
@@ -135,12 +137,12 @@ export default function CourseSubmit({ mode, courseId: _courseId }: CourseSubmit
               accept="image/*"
               multiple
               className={styles.fileInput}
-              onChange={handleAddImage}
+              onChange={handleImageInputChange}
               aria-hidden="true"
             />
             {/* 업로드된 이미지 목록 */}
-            {images.map((src, idx) => (
-              <div key={src} className={styles.imageItem}>
+            {imagePreviewUrls.map((src, idx) => (
+              <div key={`${src}-${idx}`} className={styles.imageItem}>
                 <Image
                   src={src}
                   alt={`업로드 이미지 ${idx + 1}`}
@@ -151,7 +153,7 @@ export default function CourseSubmit({ mode, courseId: _courseId }: CourseSubmit
                 <button
                   type="button"
                   className={styles.deleteImageButton}
-                  onClick={() => handleRemoveImage(idx)}
+                  onClick={() => removeImageAt(idx)}
                   aria-label={`이미지 ${idx + 1} 삭제`}
                 >
                   <Icon name="minus" size={12} color="var(--color-white-500)" />
@@ -170,7 +172,7 @@ export default function CourseSubmit({ mode, courseId: _courseId }: CourseSubmit
             color="dark"
             disabled={!isSubmitEnabled}
             className={styles.submitButton}
-            onClick={() => {}}
+            onClick={() => void handleSubmit()}
           >
             {submitLabel}
           </Button>

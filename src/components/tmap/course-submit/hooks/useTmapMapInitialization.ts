@@ -1,9 +1,10 @@
 import { useCallback, useRef } from 'react';
-import type { Dispatch, SetStateAction } from 'react';
 
 import type { TmapCoordinate, TmapLatLngLike, TmapMapLike, TmapV3 } from '@/commons/types/tmap';
 
 import { extractLatLngFromVectorEvent, MAX_POINT_LENGTH, toCoordinate } from './courseMap.utils';
+
+import type { Dispatch, SetStateAction } from 'react';
 
 type UseTmapMapInitializationParams = {
   drawPointMarkers: (nextPoints: TmapCoordinate[]) => void;

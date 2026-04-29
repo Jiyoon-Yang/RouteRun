@@ -27,6 +27,7 @@ type RouteRow = {
   path_data: Record<string, unknown> | null;
   start_lat: number | null;
   start_lng: number | null;
+  start_address_region: string | null;
   image_urls: string[] | null;
   likes_count: number | null;
   created_at: string | null;
@@ -55,6 +56,7 @@ function toRoute(row: RouteRow): Route | null {
     path_data: row.path_data ?? {},
     start_lat: row.start_lat,
     start_lng: row.start_lng,
+    start_address_region: row.start_address_region,
     image_urls: row.image_urls ?? [],
     likes_count: row.likes_count ?? 0,
     created_at: row.created_at,
@@ -79,7 +81,7 @@ export function useRoutes(viewport: RouteViewport | null): UseRoutesResult {
         const { data, error } = await supabase
           .from('routes')
           .select(
-            'id, user_id, title, description, distance_meters, path_data, start_lat, start_lng, image_urls, likes_count, created_at',
+            'id, user_id, title, description, distance_meters, path_data, start_lat, start_lng, start_address_region, image_urls, likes_count, created_at',
           )
           .returns<RouteRow[]>();
 

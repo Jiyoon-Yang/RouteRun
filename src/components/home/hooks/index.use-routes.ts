@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import type { Route } from '@/commons/types/runroute';
 import { createClient } from '@/lib/supabase/client';
@@ -9,6 +9,13 @@ type UseRoutesResult = {
   routes: Route[];
   isLoading: boolean;
   errorMessage: string | null;
+};
+
+export type RouteViewport = {
+  northEastLat: number;
+  northEastLng: number;
+  southWestLat: number;
+  southWestLng: number;
 };
 
 type RouteRow = {
@@ -20,6 +27,7 @@ type RouteRow = {
   path_data: Record<string, unknown> | null;
   start_lat: number | null;
   start_lng: number | null;
+  start_address_region: string | null;
   image_urls: string[] | null;
   likes_count: number | null;
   created_at: string | null;
@@ -48,14 +56,15 @@ function toRoute(row: RouteRow): Route | null {
     path_data: row.path_data ?? {},
     start_lat: row.start_lat,
     start_lng: row.start_lng,
+    start_address_region: row.start_address_region,
     image_urls: row.image_urls ?? [],
     likes_count: row.likes_count ?? 0,
     created_at: row.created_at,
   };
 }
 
-export function useRoutes(): UseRoutesResult {
-  const [routes, setRoutes] = useState<Route[]>([]);
+export function useRoutes(viewport: RouteViewport | null): UseRoutesResult {
+  const [allRoutes, setAllRoutes] = useState<Route[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -72,7 +81,7 @@ export function useRoutes(): UseRoutesResult {
         const { data, error } = await supabase
           .from('routes')
           .select(
-            'id, user_id, title, description, distance_meters, path_data, start_lat, start_lng, image_urls, likes_count, created_at',
+            'id, user_id, title, description, distance_meters, path_data, start_lat, start_lng, start_address_region, image_urls, likes_count, created_at',
           )
           .returns<RouteRow[]>();
 
@@ -85,7 +94,7 @@ export function useRoutes(): UseRoutesResult {
         const normalized = (data ?? [])
           .map(toRoute)
           .filter((route): route is Route => route !== null);
-        setRoutes(normalized);
+        setAllRoutes(normalized);
       } catch (error) {
         // [오류] 조회 실패 메시지 상태 반영
         if (!isMounted) return;
@@ -105,6 +114,34 @@ export function useRoutes(): UseRoutesResult {
       isMounted = false;
     };
   }, []);
+
+  const routes = useMemo(() => {
+    if (!viewport) {
+      return allRoutes;
+    }
+
+    const { northEastLat, northEastLng, southWestLat, southWestLng } = viewport;
+    const values = [northEastLat, northEastLng, southWestLat, southWestLng];
+    const hasInvalidViewport = values.some((value) => !Number.isFinite(value));
+    if (hasInvalidViewport) {
+      return allRoutes;
+    }
+
+    // SDK/브라우저 조합에 따라 bounds 축이 역전되어 들어오는 케이스를 보정한다.
+    const minLat = Math.min(northEastLat, southWestLat);
+    const maxLat = Math.max(northEastLat, southWestLat);
+    const minLng = Math.min(northEastLng, southWestLng);
+    const maxLng = Math.max(northEastLng, southWestLng);
+
+    return allRoutes.filter((route) => {
+      return (
+        route.start_lat >= minLat &&
+        route.start_lat <= maxLat &&
+        route.start_lng >= minLng &&
+        route.start_lng <= maxLng
+      );
+    });
+  }, [allRoutes, viewport]);
 
   return { routes, isLoading, errorMessage };
 }

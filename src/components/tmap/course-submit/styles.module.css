@@ -1,0 +1,98 @@
+.root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+}
+
+.topControls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 14px;
+  z-index: 5;
+}
+
+.controlButton {
+  width: auto !important;
+  height: 36px !important;
+  padding: 9px 17px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 16.8px !important;
+  border-color: #e2e8f0 !important;
+  color: #020618 !important;
+  background: #fafafa !important;
+  opacity: 0.9;
+}
+
+.bottomPanel {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 14px;
+  z-index: 5;
+}
+
+.metaPanel {
+  min-width: 0;
+  flex: 1;
+  border-radius: 12px;
+  padding: 9px 12px;
+  background: rgba(17, 24, 39, 0.72);
+}
+
+.metaText {
+  margin: 0;
+  color: #ffffff;
+  font-size: 13px;
+  line-height: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.warningText,
+.errorText {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.warningText {
+  color: #fde68a;
+}
+
+.errorText {
+  color: #fecaca;
+}
+
+.saveButton {
+  width: auto !important;
+  height: 36px !important;
+  padding: 9px 17px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 16.8px !important;
+  background: #020618 !important;
+  color: #fafafa !important;
+  border-color: #020618 !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+}

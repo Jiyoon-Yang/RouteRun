@@ -5,7 +5,7 @@
  *
  * Rules 자체 점검 체크리스트:
  * - [x] tailwind.config.js 수정 안 함
- * - [x] 색상값 직접 입력 0건 (CSS 변수만 사용, 예외: box-shadow rgba 값 — --shadow 토큰 없음)
+ * - [x] 색상값 직접 입력 0건 (CSS 변수 기반 color-mix 사용)
  * - [x] 인라인 스타일 0건
  * - [x] CSS Module 사용 확인
  * - [x] CSS 변수 사용 확인
@@ -21,7 +21,8 @@
   height: 48px; /* hardcoded: --height 토큰 없음 */
   border-radius: 8px; /* hardcoded: --radius 토큰 없음 */
   border: 1px solid transparent;
-  box-shadow: 0px 4px 12px 0px rgba(0, 0, 0, 0.1); /* hardcoded: --shadow 토큰 없음 */
+  box-shadow: 0px 4px 12px 0px
+    color-mix(in srgb, var(--color-black-500) 10%, transparent);
   display: flex;
   padding: 14px 122px 14px 14px;
   align-items: center;

@@ -1,7 +1,14 @@
 'use client';
 
 import { motion, type PanInfo } from 'framer-motion';
-import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react';
 
 import { Card } from '@/commons/components/card';
 import type { CourseCardView } from '@/commons/types/runroute';
@@ -11,11 +18,18 @@ import styles from './styles.module.css';
 type BottomSheetState = 'collapsed' | 'peek' | 'expanded';
 
 const SHEET_ORDER: BottomSheetState[] = ['collapsed', 'peek', 'expanded'];
+const PEEK_VISIBLE_HEIGHT = 260;
+const SKELETON_CARD_COUNT = 3;
 
 type SheetPositionPayload = {
   state: BottomSheetState;
   visibleHeight: number;
 };
+
+function roundUpToEven(value: number): number {
+  const rounded = Math.ceil(value);
+  return rounded % 2 === 0 ? rounded : rounded + 1;
+}
 
 // [계산] 바텀시트 다음 상태 계산
 function getNextState(current: BottomSheetState, direction: 'up' | 'down'): BottomSheetState {
@@ -41,34 +55,53 @@ export function CoursesList({
 }: CoursesListProps) {
   // [상태] 바텀시트 표시 상태 관리
   const [sheetState, setSheetState] = useState<BottomSheetState>('peek');
-  const [peekVisibleHeight, setPeekVisibleHeight] = useState(260);
   const [sheetHeight, setSheetHeight] = useState(0);
+  const [dragOffsetY, setDragOffsetY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(() =>
+    typeof window === 'undefined'
+      ? 0
+      : roundUpToEven(window.visualViewport?.height ?? window.innerHeight),
+  );
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const cardListRef = useRef<HTMLDivElement | null>(null);
-  const firstCardRef = useRef<HTMLDivElement | null>(null);
+  const isSheetInteractionLocked = false;
+  const effectiveSheetState: BottomSheetState = isSheetInteractionLocked ? 'peek' : sheetState;
 
   // [이벤트] 핸들 클릭 기반 상태 토글
   const handleToggleByClick = () => {
+    if (isSheetInteractionLocked) return;
     setSheetState((prev) => (prev === 'expanded' ? 'peek' : getNextState(prev, 'up')));
   };
 
   // [이벤트] 드래그 제스처 기반 상태 전환
+  const handlePan = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (isSheetInteractionLocked) return;
+    setDragOffsetY(info.offset.y);
+  };
+
   const handlePanEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const DRAG_THRESHOLD = 36;
-    const VELOCITY_THRESHOLD = 360;
+    if (isSheetInteractionLocked) return;
+    setIsDragging(false);
+    setDragOffsetY(0);
+    const DRAG_THRESHOLD = 12;
+    const VELOCITY_THRESHOLD = 140;
+    const DOWN_DRAG_THRESHOLD = 8;
+    const DOWN_VELOCITY_THRESHOLD = 90;
 
     if (info.offset.y <= -DRAG_THRESHOLD || info.velocity.y <= -VELOCITY_THRESHOLD) {
       setSheetState((prev) => getNextState(prev, 'up'));
       return;
     }
 
-    if (info.offset.y >= DRAG_THRESHOLD || info.velocity.y >= VELOCITY_THRESHOLD) {
+    if (info.offset.y >= DOWN_DRAG_THRESHOLD || info.velocity.y >= DOWN_VELOCITY_THRESHOLD) {
       setSheetState((prev) => getNextState(prev, 'down'));
     }
   };
 
   // [접근성] 키보드 입력 기반 상태 전환
   const handleHandleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (isSheetInteractionLocked) return;
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       handleToggleByClick();
@@ -87,75 +120,92 @@ export function CoursesList({
     }
   };
 
+  // 시트 실높이만 측정하고, peek 노출 높이는 고정값으로 유지한다.
+  const recalculateSheetHeights = useCallback(() => {
+    const sheetElement = sheetRef.current;
+    if (!sheetElement) {
+      return;
+    }
+
+    const nextSheetHeight = sheetElement.clientHeight;
+    if (nextSheetHeight <= 0) {
+      return;
+    }
+    setSheetHeight(nextSheetHeight);
+  }, []);
+
+  useLayoutEffect(() => {
+    recalculateSheetHeights();
+  }, [recalculateSheetHeights]);
+
   useEffect(() => {
-    // [레이아웃] 카드 크기 기반 peek 높이 재계산
-    const recalculateSheetHeights = () => {
-      const sheetElement = sheetRef.current;
-      const cardListElement = cardListRef.current;
-      const firstCardElement = firstCardRef.current;
-
-      if (!sheetElement || !cardListElement) {
-        return;
-      }
-
-      const cardHeight = firstCardElement?.getBoundingClientRect().height ?? 144;
-      const rowGap = parseFloat(getComputedStyle(cardListElement).rowGap || '12') || 12;
-      const sheetHeight = sheetElement.clientHeight;
-      setSheetHeight(sheetHeight);
-      const fixedTopHeight = sheetHeight - cardListElement.clientHeight;
-
-      const ratioBasedPeekHeight = sheetHeight * 0.32;
-      const minPeekListVisibleHeight = cardHeight * 1.45 + rowGap;
-      const minPeekHeight = fixedTopHeight + minPeekListVisibleHeight;
-      const maxPeekListVisibleHeight = cardHeight * 2.6 + rowGap * 2;
-      const maxPeekHeight = fixedTopHeight + maxPeekListVisibleHeight;
-      const clampedPeekHeight = Math.min(
-        maxPeekHeight,
-        Math.max(minPeekHeight, ratioBasedPeekHeight),
-      );
-
-      setPeekVisibleHeight(clampedPeekHeight);
-    };
-
     recalculateSheetHeights();
 
     const resizeObserver = new ResizeObserver(() => {
       recalculateSheetHeights();
     });
-
     if (sheetRef.current) {
       resizeObserver.observe(sheetRef.current);
-    }
-    if (cardListRef.current) {
-      resizeObserver.observe(cardListRef.current);
-    }
-    if (firstCardRef.current) {
-      resizeObserver.observe(firstCardRef.current);
     }
 
     return () => {
       resizeObserver.disconnect();
     };
-  }, []);
-
-  const sheetStyle = {
-    '--peek-visible-height': `${peekVisibleHeight}px`,
-  } as CSSProperties;
-
-  const sheetY =
-    sheetState === 'collapsed'
-      ? Math.max(0, sheetHeight - 24)
-      : sheetState === 'peek'
-        ? Math.max(0, sheetHeight - peekVisibleHeight)
-        : 30;
+  }, [recalculateSheetHeights]);
 
   useEffect(() => {
+    const syncViewportHeight = () => {
+      setViewportHeight(roundUpToEven(window.visualViewport?.height ?? window.innerHeight));
+    };
+
+    syncViewportHeight();
+    window.addEventListener('resize', syncViewportHeight);
+    window.visualViewport?.addEventListener('resize', syncViewportHeight);
+    return () => {
+      window.removeEventListener('resize', syncViewportHeight);
+      window.visualViewport?.removeEventListener('resize', syncViewportHeight);
+    };
+  }, []);
+
+  // [초기 렌더 보정] 실제 높이 측정 전에는 뷰포트 높이로 시트 이동값을 계산한다.
+  const effectiveSheetHeight = sheetHeight > 0 ? sheetHeight : viewportHeight;
+  const minTranslateY = 20;
+  const maxTranslateY = Math.max(0, effectiveSheetHeight - 24);
+  const baseTranslateY =
+    effectiveSheetState === 'collapsed'
+      ? Math.max(0, effectiveSheetHeight - 24)
+      : effectiveSheetState === 'peek'
+        ? Math.max(0, effectiveSheetHeight - PEEK_VISIBLE_HEIGHT)
+        : 20;
+  const liveTranslateY = Math.min(
+    maxTranslateY,
+    Math.max(minTranslateY, baseTranslateY + (isDragging ? dragOffsetY : 0)),
+  );
+  const sheetStateClassName =
+    effectiveSheetState === 'collapsed'
+      ? styles.collapsed
+      : effectiveSheetState === 'peek'
+        ? styles.peek
+        : styles.expanded;
+
+  useEffect(() => {
+    const sheetElement = sheetRef.current;
+    if (!sheetElement) return;
+    sheetElement.style.setProperty('--sheet-translate-y', `${Math.round(liveTranslateY)}px`);
+    return () => {
+      sheetElement.style.removeProperty('--sheet-translate-y');
+    };
+  }, [liveTranslateY]);
+
+  useEffect(() => {
+    const visibleHeightByState = Math.max(24, effectiveSheetHeight - liveTranslateY);
+
     // [동기화] 부모 컴포넌트에 시트 위치 전달
     onSheetPositionChange?.({
-      state: sheetState,
-      visibleHeight: Math.max(0, sheetHeight - sheetY),
+      state: effectiveSheetState,
+      visibleHeight: roundUpToEven(visibleHeightByState),
     });
-  }, [onSheetPositionChange, sheetHeight, sheetState, sheetY]);
+  }, [effectiveSheetHeight, effectiveSheetState, liveTranslateY, onSheetPositionChange]);
 
   const handleCardKeyDown = (event: KeyboardEvent<HTMLDivElement>, courseId: string) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -165,13 +215,9 @@ export function CoursesList({
   };
 
   return (
-    <motion.div
+    <div
       ref={sheetRef}
-      className={styles.courseList}
-      style={sheetStyle}
-      animate={{ y: sheetY }}
-      initial={false}
-      transition={{ type: 'spring', stiffness: 220, damping: 24, mass: 1 }}
+      className={`${styles.courseList} ${sheetStateClassName} ${isDragging ? styles.dragging : ''}`}
     >
       <motion.div
         className={styles.bottomSheetHandleArea}
@@ -180,16 +226,34 @@ export function CoursesList({
         aria-label="러닝코스 목록 바텀시트 조절"
         onClick={handleToggleByClick}
         onKeyDown={handleHandleKeyDown}
+        onPanStart={() => {
+          if (isSheetInteractionLocked) return;
+          setIsDragging(true);
+        }}
+        onPan={handlePan}
         onPanEnd={handlePanEnd}
       >
         <div className={styles.bottomSheetHandle} />
       </motion.div>
       <h2 className={styles.courseListTitle}>러닝코스 목록</h2>
       <div ref={cardListRef} className={styles.cardList}>
-        {cards.map((card, index) => (
+        {isLoading && cards.length === 0 ? (
+          <div className={styles.listLoadingBlock} aria-busy>
+            {Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
+              <div key={`skeleton-${index}`} className={styles.loadingCardSkeleton}>
+                <div className={styles.loadingThumbnailSkeleton} />
+                <div className={styles.loadingContentSkeleton}>
+                  <div className={styles.loadingLineLg} />
+                  <div className={styles.loadingLineMd} />
+                  <div className={styles.loadingLineSm} />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {cards.map((card) => (
           <div
             key={card.courseId}
-            ref={index === 0 ? firstCardRef : undefined}
             role="button"
             tabIndex={0}
             aria-label={`${card.title} 코스 선택`}
@@ -212,7 +276,7 @@ export function CoursesList({
           <p className={styles.emptyState}>표시할 코스가 없습니다.</p>
         ) : null}
       </div>
-    </motion.div>
+    </div>
   );
 }
 

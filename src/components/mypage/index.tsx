@@ -24,6 +24,7 @@ import type { MypageProfileProps, MypageRouteCardData } from '@/commons/types/my
 import { useMyPageTabs } from '@/hooks/useMyPageTabs';
 
 import { useLogout } from './hooks/index.logout.hook';
+import { useProfileModal } from './hooks/useProfileModal';
 import { RouteCard } from './RouteCard';
 import styles from './styles.module.css';
 
@@ -47,6 +48,9 @@ export default function Mypage({ profile, myRoutes, likedRoutes }: MypageProps) 
   const { trigger: handleLogout, isPending: isLogoutPending } = useLogout();
 
   const emptyMessage = activeTab === 'my-course' ? TEXTS.EMPTY_MY : TEXTS.EMPTY_LIKED;
+  const { open } = useProfileModal({
+    initialNickname: profile.nickname,
+  });
 
   return (
     <div className={styles.container}>
@@ -65,7 +69,7 @@ export default function Mypage({ profile, myRoutes, likedRoutes }: MypageProps) 
           </div>
           <span className={styles.userName}>{profile.nickname}</span>
         </div>
-        <Button variant="outline" borderRadius="r12" size="small" color="dark" onClick={() => {}}>
+        <Button variant="outline" borderRadius="r12" size="small" color="dark" onClick={open}>
           {TEXTS.EDIT_PROFILE}
         </Button>
       </section>

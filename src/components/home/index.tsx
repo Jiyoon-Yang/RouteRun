@@ -1,15 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { TabButton } from '@/commons/components/tab';
 import { Header } from '@/commons/layout/header';
 import type { ReferenceLocation } from '@/commons/types/runroute';
-import { hasValidRouteStartCoordinate, reverseGeocodeRegion } from '@/commons/utils/geo';
 import { CoursesList } from '@/components/courses-list';
 import { TmapHome } from '@/components/tmap/home';
 
-import { useRoutes } from './hooks/index.use-routes';
+import { useRoutes, type RouteViewport } from './hooks/index.use-routes';
 import styles from './styles.module.css';
 import {
   buildCourseCardViews,
@@ -27,14 +26,45 @@ const TAB_ITEMS = [
 
 export function Home() {
   // [상태] 홈 화면 기본 상태 관리
-  const [sheetVisibleHeight, setSheetVisibleHeight] = useState(24);
+  const [sheetVisibleHeight, setSheetVisibleHeight] = useState(260);
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<DistanceCategory>>(new Set());
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
-  const [locationByCourseId, setLocationByCourseId] = useState<Record<string, string | null>>({});
+  const [mapViewport, setMapViewport] = useState<RouteViewport | null>(null);
+  const [queryViewport, setQueryViewport] = useState<RouteViewport | null>(null);
   const [referenceLocation, setReferenceLocation] =
     useState<ReferenceLocation>(SEOUL_CITY_HALL_REFERENCE);
-  const { routes, isLoading, errorMessage } = useRoutes();
+  const { routes, isLoading, errorMessage } = useRoutes(queryViewport);
+
+  const isSameViewport = useCallback((left: RouteViewport | null, right: RouteViewport | null) => {
+    if (!left || !right) return false;
+    return (
+      left.northEastLat === right.northEastLat &&
+      left.northEastLng === right.northEastLng &&
+      left.southWestLat === right.southWestLat &&
+      left.southWestLng === right.southWestLng
+    );
+  }, []);
+
+  const handleViewportChanged = useCallback(
+    (nextViewport: RouteViewport) => {
+      setMapViewport((previous) =>
+        isSameViewport(previous, nextViewport) ? previous : nextViewport,
+      );
+      setQueryViewport((previous) => previous ?? { ...nextViewport });
+    },
+    [isSameViewport],
+  );
+
+  useEffect(() => {
+    if (!mapViewport) return;
+    const timerId = window.setTimeout(() => {
+      setQueryViewport((previous) =>
+        isSameViewport(previous, mapViewport) ? previous : { ...mapViewport },
+      );
+    }, 400);
+    return () => window.clearTimeout(timerId);
+  }, [isSameViewport, mapViewport]);
 
   // [파생데이터] 필터/정렬 결과 계산
   const filteredRoutes = useMemo(
@@ -42,69 +72,9 @@ export function Home() {
     [routes, selectedCategories],
   );
   const courseCards = useMemo(
-    () =>
-      buildCourseCardViews(filteredRoutes, referenceLocation, selectedCourseId, locationByCourseId),
-    [filteredRoutes, locationByCourseId, referenceLocation, selectedCourseId],
+    () => buildCourseCardViews(filteredRoutes, referenceLocation, selectedCourseId),
+    [filteredRoutes, referenceLocation, selectedCourseId],
   );
-
-  // [조회] 코스 시작 좌표를 시/도 + 구/군 주소로 변환
-  useEffect(() => {
-    const appKey = process.env.NEXT_PUBLIC_TMAP_API_KEY?.trim() ?? '';
-    if (!appKey) {
-      return;
-    }
-
-    const unresolvedRoutes = routes.filter(
-      (route) =>
-        hasValidRouteStartCoordinate(route) && typeof locationByCourseId[route.id] === 'undefined',
-    );
-
-    if (unresolvedRoutes.length === 0) {
-      return;
-    }
-
-    const abortController = new AbortController();
-    let isCancelled = false;
-
-    const loadLocations = async () => {
-      const entries = await Promise.all(
-        unresolvedRoutes.map(async (route) => {
-          const address = await reverseGeocodeRegion({
-            lat: route.start_lat,
-            lng: route.start_lng,
-            appKey,
-            signal: abortController.signal,
-          });
-
-          return [route.id, address] as const;
-        }),
-      );
-
-      if (isCancelled) {
-        return;
-      }
-
-      setLocationByCourseId((previous) => {
-        const next = { ...previous };
-        entries.forEach(([courseId, address]) => {
-          next[courseId] = address;
-        });
-        return next;
-      });
-    };
-
-    loadLocations().catch((error) => {
-      if (isCancelled || error instanceof DOMException) {
-        return;
-      }
-      console.error('리버스지오코딩 실패:', error);
-    });
-
-    return () => {
-      isCancelled = true;
-      abortController.abort();
-    };
-  }, [locationByCourseId, routes]);
 
   // [초기화] 사용자 위치 기반 기준 좌표 설정
   useEffect(() => {
@@ -195,6 +165,7 @@ export function Home() {
             routes={filteredRoutes}
             selectedCourseId={selectedCourseId}
             onCourseMarkerClick={setSelectedCourseId}
+            onViewportChanged={handleViewportChanged}
           />
         </div>
         <CoursesList
@@ -207,12 +178,6 @@ export function Home() {
           }}
         />
       </div>
-      {/* [UI] 조회 중 로딩 메시지 영역 */}
-      {isLoading ? (
-        <p role="status" className={styles.loadingMessage}>
-          코스 정보를 불러오는 중...
-        </p>
-      ) : null}
     </section>
   );
 }

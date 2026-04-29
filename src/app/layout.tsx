@@ -3,6 +3,7 @@ import { AuthProvider } from '@/commons/providers/auth/auth.provider';
 import { ModalProvider } from '@/commons/providers/modal/modal.provider';
 
 import type { Metadata } from 'next';
+import Script from 'next/script';
 
 import './globals.css';
 
@@ -18,15 +19,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <head>
-        {/* TMap SDK가 내부적으로 document.write를 사용해 동기 로드가 필요하다. */}
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-        <script
+      <head />
+      <body className="antialiased">
+        <Script
           id="tmap-vector-sdk"
+          strategy="afterInteractive"
           src={`https://apis.openapi.sk.com/tmap/vectorjs?version=1&appKey=${process.env.NEXT_PUBLIC_TMAP_API_KEY}`}
         />
-      </head>
-      <body className="antialiased">
         <AuthProvider>
           <ModalProvider>
             <Layout>{children}</Layout>

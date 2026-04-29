@@ -198,63 +198,210 @@ function buildMarkerLabelIconUrl(
   return toSvgDataUrl(svg);
 }
 
-function isCoordinateObject(value: unknown): value is { lat?: unknown; lng?: unknown } {
-  return typeof value === 'object' && value !== null && ('lat' in value || 'lng' in value);
+type CoordinateSystem = 'WGS84_LNGLAT' | 'WGS84_LATLNG' | 'EPSG3857';
+type CoordinatePair = [number, number];
+type CoordinateCandidate = { keyPath: string; pairs: CoordinatePair[] };
+
+function normalizeWgs84Coordinate(lat: number, lng: number): { lat: number; lng: number } | null {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+  return { lat, lng };
 }
 
-function normalizeCoordinatePair(value: unknown): { lat: number; lng: number } | null {
+function toWgs84FromEpsg3857(x: number, y: number): { lat: number; lng: number } {
+  const lng = (x / 20037508.34) * 180;
+  const projectedLat = (y / 20037508.34) * 180;
+  const lat =
+    (180 / Math.PI) * (2 * Math.atan(Math.exp((projectedLat * Math.PI) / 180)) - Math.PI / 2);
+  return { lat, lng };
+}
+
+function detectCoordinateSystem(coordinates: CoordinatePair[]): CoordinateSystem {
+  let lngLatCount = 0;
+  let latLngCount = 0;
+
+  coordinates.forEach(([first, second]) => {
+    if (Math.abs(first) <= 180 && Math.abs(second) <= 90) lngLatCount += 1;
+    if (Math.abs(first) <= 90 && Math.abs(second) <= 180) latLngCount += 1;
+  });
+
+  if (lngLatCount === 0 && latLngCount === 0) return 'EPSG3857';
+  return lngLatCount >= latLngCount ? 'WGS84_LNGLAT' : 'WGS84_LATLNG';
+}
+
+function normalizeCoordinatePair(
+  value: CoordinatePair,
+  coordinateSystem: CoordinateSystem,
+): { lat: number; lng: number } | null {
+  const first = Number(value[0]);
+  const second = Number(value[1]);
+  if (!Number.isFinite(first) || !Number.isFinite(second)) return null;
+
+  if (coordinateSystem === 'EPSG3857') {
+    return toWgs84FromEpsg3857(first, second);
+  }
+
+  if (coordinateSystem === 'WGS84_LATLNG') {
+    return normalizeWgs84Coordinate(first, second);
+  }
+
+  return normalizeWgs84Coordinate(second, first);
+}
+
+function parseCoordinatePair(value: unknown): CoordinatePair | null {
   if (Array.isArray(value) && value.length >= 2) {
-    const first = Number(value[0]);
-    const second = Number(value[1]);
-    if (!Number.isFinite(first) || !Number.isFinite(second)) return null;
-    // GeoJSON/Tmap 경로 응답은 일반적으로 [lng, lat] 순서를 사용한다.
-    if (Math.abs(first) > 90 && Math.abs(second) <= 90) {
-      return { lat: second, lng: first };
-    }
-    return { lat: first, lng: second };
+    const x = Number(value[0]);
+    const y = Number(value[1]);
+    if (Number.isFinite(x) && Number.isFinite(y)) return [x, y];
+    return null;
   }
 
-  if (isCoordinateObject(value)) {
-    const lat = Number(value.lat);
-    const lng = Number(value.lng);
-    if (Number.isFinite(lat) && Number.isFinite(lng)) {
-      return { lat, lng };
-    }
+  if (typeof value === 'object' && value !== null) {
+    const record = value as Record<string, unknown>;
+    const lat = Number(record.lat);
+    const lng = Number(record.lng);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) return [lng, lat];
   }
-
   return null;
 }
 
-function collectCoordinatePairs(value: unknown, result: Array<{ lat: number; lng: number }>) {
-  const directCoordinate = normalizeCoordinatePair(value);
-  if (directCoordinate) {
-    result.push(directCoordinate);
-    return;
+function parseCoordinateSequence(value: unknown): CoordinatePair[] {
+  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    const record = value as Record<string, unknown>;
+    if ('coordinates' in record) {
+      return parseCoordinateSequence(record.coordinates);
+    }
+    return [];
   }
+  if (!Array.isArray(value)) return [];
+  const sequence: CoordinatePair[] = [];
+  value.forEach((item) => {
+    const pair = parseCoordinatePair(item);
+    if (pair) {
+      sequence.push(pair);
+      return;
+    }
+
+    // coordinates가 중첩 배열([[x,y], ...]) 또는 다중 라인([[[x,y], ...], ...])일 때 재귀적으로 펼친다.
+    const nested = parseCoordinateSequence(item);
+    if (nested.length > 0) sequence.push(...nested);
+  });
+  return sequence;
+}
+
+function parseJsonIfString(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return value;
+  }
+}
+
+function collectCoordinateCandidates(
+  rawValue: unknown,
+  keyPath = 'root',
+  result: CoordinateCandidate[] = [],
+): CoordinateCandidate[] {
+  const value = parseJsonIfString(rawValue);
 
   if (Array.isArray(value)) {
-    value.forEach((item) => collectCoordinatePairs(item, result));
-    return;
+    const sequence = parseCoordinateSequence(value);
+    if (sequence.length >= 2) {
+      result.push({ keyPath, pairs: sequence });
+    }
+    value.forEach((item, index) => collectCoordinateCandidates(item, `${keyPath}[${index}]`, result));
+    return result;
   }
 
-  if (typeof value !== 'object' || value === null) return;
+  if (typeof value !== 'object' || value === null) return result;
   const record = value as Record<string, unknown>;
-  if (record.type === 'Point') return;
-  if ('coordinates' in record) {
-    collectCoordinatePairs(record.coordinates, result);
-    return;
+
+  const geometry = parseJsonIfString(record.geometry);
+  if (typeof geometry === 'object' && geometry !== null) {
+    const geometryRecord = geometry as Record<string, unknown>;
+    if (String(geometryRecord.type ?? '') === 'LineString') {
+      const sequence = parseCoordinateSequence(parseJsonIfString(geometryRecord.coordinates));
+      if (sequence.length >= 2) {
+        result.push({ keyPath: `${keyPath}.geometry.coordinates`, pairs: sequence });
+      }
+    }
   }
-  if ('geometry' in record) {
-    collectCoordinatePairs(record.geometry, result);
-    return;
+
+  Object.entries(record).forEach(([key, nested]) => {
+    const resolvedNested = parseJsonIfString(nested);
+    const lowerKey = key.toLowerCase();
+    if (lowerKey === 'path' || lowerKey === 'features' || lowerKey === 'coordinates') {
+      const sequence = parseCoordinateSequence(resolvedNested);
+      if (sequence.length >= 2) {
+        result.push({ keyPath: `${keyPath}.${key}`, pairs: sequence });
+      }
+    }
+    collectCoordinateCandidates(resolvedNested, `${keyPath}.${key}`, result);
+  });
+
+  return result;
+}
+
+function normalizePathData(rawPathData: unknown): Record<string, unknown> | null {
+  const data = parseJsonIfString(rawPathData);
+  if (typeof data === 'string') {
+    console.error('[TmapHome] path_data 문자열 JSON.parse 실패');
+    return null;
   }
-  if ('features' in record) {
-    collectCoordinatePairs(record.features, result);
-    return;
+  if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+    return data as Record<string, unknown>;
   }
-  if ('path' in record) {
-    collectCoordinatePairs(record.path, result);
+  if (Array.isArray(data)) {
+    return { path: data };
   }
+  console.error('[TmapHome] path_data 타입이 객체/문자열이 아닙니다.');
+  return null;
+}
+
+function extractDetailedPathCoordinates(
+  rawPathData: unknown,
+  courseId: string | null = null,
+): Array<{ lat: number; lng: number }> {
+  console.log('[DEBUG] 코스 ID:', courseId, '데이터 타입:', typeof rawPathData, '데이터 내용:', rawPathData);
+
+  const pathData = normalizePathData(rawPathData);
+  if (!pathData) return [];
+  if (Object.keys(pathData).length === 0) {
+    console.error(
+      '[TmapHome] path_data가 비어 있습니다. 등록 로직(useCourseMap.ts)에서 path_data 저장값을 점검해 주세요.',
+    );
+    return [];
+  }
+
+  const candidates = collectCoordinateCandidates(pathData)
+    .map((candidate) => {
+      const key = candidate.keyPath.toLowerCase();
+      const isPrimary =
+        key.includes('.path') || key.includes('.features') || key.includes('linestring');
+      return { ...candidate, isPrimary };
+    })
+    .filter((candidate) => candidate.pairs.length >= 2);
+
+  if (candidates.length === 0) {
+    console.error('[TmapHome] 파싱 실패: path/features/fallback 어디에서도 유효한 좌표열을 찾지 못했습니다.');
+    return [];
+  }
+
+  const primaryCandidates = candidates.filter((candidate) => candidate.isPrimary);
+  const pool = primaryCandidates.length > 0 ? primaryCandidates : candidates;
+  const bestCandidate = pool.reduce(
+    (best, current) => (current.pairs.length > best.pairs.length ? current : best),
+    pool[0],
+  );
+  const coordinateSystem = detectCoordinateSystem(bestCandidate.pairs);
+  const normalized = bestCandidate.pairs
+    .map((pair) => normalizeCoordinatePair(pair, coordinateSystem))
+    .filter((item): item is { lat: number; lng: number } => item !== null);
+  if (normalized.length < 2) {
+    console.error('[TmapHome] 파싱 실패: 좌표 정규화 후 좌표 개수가 2개 미만입니다.');
+  }
+  return normalized;
 }
 
 export function TmapHome({
@@ -291,6 +438,7 @@ export function TmapHome({
   );
   const selectedMarkerVisualHandlerRef = useRef<(courseId: string | null) => void>(() => undefined);
   const selectedPolylineHandlerRef = useRef<(courseId: string | null) => void>(() => undefined);
+  const lastCenteredCourseIdRef = useRef<string | null>(null);
 
   const readCoordinateValue = (
     point: TmapLatLng | undefined,
@@ -717,6 +865,10 @@ export function TmapHome({
         category: markerEntry.category,
         title: markerEntry.title,
         visualState: state,
+        lat: markerEntry.lat,
+        lng: markerEntry.lng,
+        isVisible: markerEntry.isVisible,
+        outOfViewportSinceMs: markerEntry.outOfViewportSinceMs,
       });
       attachRouteMarkerListeners(nextMarker, courseId);
     },
@@ -746,8 +898,7 @@ export function TmapHome({
     const route = routesRef.current.find((item) => item.id === courseId);
     if (!route) return;
 
-    const coordinates: Array<{ lat: number; lng: number }> = [];
-    collectCoordinatePairs(route.path_data, coordinates);
+    const coordinates = extractDetailedPathCoordinates(route.path_data, route.id);
     if (coordinates.length < 2) return;
 
     const path = coordinates.map((coordinate) => new Tmapv3.LatLng(coordinate.lat, coordinate.lng));
@@ -1058,7 +1209,11 @@ export function TmapHome({
 
   useEffect(() => {
     // [동기화] 선택된 코스가 바뀌면 해당 시작 좌표로 지도 중심 이동
-    if (!selectedCourseId) return;
+    if (!selectedCourseId) {
+      lastCenteredCourseIdRef.current = null;
+      return;
+    }
+    if (lastCenteredCourseIdRef.current === selectedCourseId) return;
     const map = mapInstance.current;
     const Tmapv3 = getTmapv3();
     if (!map || !Tmapv3) return;
@@ -1067,6 +1222,7 @@ export function TmapHome({
     if (!selectedRoute || !hasValidRouteStartCoordinate(selectedRoute)) return;
 
     map.setCenter(new Tmapv3.LatLng(selectedRoute.start_lat, selectedRoute.start_lng));
+    lastCenteredCourseIdRef.current = selectedCourseId;
   }, [routes, selectedCourseId]);
 
   useEffect(() => {

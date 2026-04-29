@@ -14,13 +14,14 @@ export type RouteCardProps = {
 export function RouteCard({ tab, route }: RouteCardProps) {
   const router = useRouter();
   const isMyCourse = tab === 'my-course';
+  const locationText = route.start_address_region ?? '위치 정보 없음';
 
   return (
     <Card
       type={isMyCourse ? 'my-course' : 'liked-course'}
       isLiked={!isMyCourse}
       title={route.title}
-      location={route.location}
+      location={locationText}
       distanceText={route.distanceText}
       likeCount={route.likeCount}
       onPrimaryActionClick={() => {

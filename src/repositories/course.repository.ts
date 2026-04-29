@@ -14,13 +14,14 @@ type RouteRow = {
   path_data: Record<string, unknown> | null;
   start_lat: number | null;
   start_lng: number | null;
+  start_address_region: string | null;
   image_urls: string[] | null;
   likes_count: number | null;
   created_at: string | null;
 };
 
 const ROUTE_SELECT =
-  'id, user_id, title, description, distance_meters, path_data, start_lat, start_lng, image_urls, likes_count, created_at';
+  'id, user_id, title, description, distance_meters, path_data, start_lat, start_lng, start_address_region, image_urls, likes_count, created_at';
 
 function toRoute(row: RouteRow): Route | null {
   if (
@@ -44,6 +45,7 @@ function toRoute(row: RouteRow): Route | null {
     path_data: row.path_data ?? {},
     start_lat: row.start_lat,
     start_lng: row.start_lng,
+    start_address_region: row.start_address_region,
     image_urls: row.image_urls ?? [],
     likes_count: row.likes_count ?? 0,
     created_at: row.created_at,
@@ -63,13 +65,14 @@ export interface InsertRouteParams {
   path_data: Record<string, unknown>;
   start_lat: number;
   start_lng: number;
+  start_address_region?: string | null;
   image_urls: string[];
 }
 
 /**
  * 새 코스를 `routes`에 저장하고, 생성된 행을 조회 모델(`Route`)로 반환한다.
  */
-export async function createCourse(
+export async function createRoute(
   supabase: SupabaseClient,
   params: InsertRouteParams,
 ): Promise<{ data: Route | null; error: Error | null }> {
@@ -86,6 +89,8 @@ export async function createCourse(
 
   return { data: toRoute(data), error: null };
 }
+
+export const createCourse = createRoute;
 
 /** 현재 유저가 작성한 코스(`routes.user_id`) 목록 */
 export async function getRoutesByUserId(

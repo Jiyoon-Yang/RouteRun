@@ -64,7 +64,7 @@ function routeToMypageCard(route: Route): MypageRouteCardData {
   return {
     id: route.id,
     title: route.title,
-    location: `시작 좌표 ${route.start_lat.toFixed(4)}, ${route.start_lng.toFixed(4)}`,
+    start_address_region: route.start_address_region ?? null,
     distanceText: `${(route.distance_meters / 1000).toFixed(1)}km`,
     likeCount: route.likes_count,
   };

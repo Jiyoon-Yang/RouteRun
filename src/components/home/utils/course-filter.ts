@@ -82,7 +82,6 @@ export function buildCourseCardViews(
   routes: Route[],
   referenceLocation: ReferenceLocation,
   selectedCourseId: string | null,
-  locationByCourseId: Record<string, string | null> = {},
 ): CourseCardView[] {
   const baseCards = dedupeRoutesById(routes)
     .filter(hasValidRouteStartCoordinate)
@@ -91,12 +90,11 @@ export function buildCourseCardViews(
         lat: route.start_lat,
         lng: route.start_lng,
       });
-      const resolvedLocation = locationByCourseId[route.id];
 
       return {
         courseId: route.id,
         title: route.title,
-        location: resolvedLocation ?? toCoordinateLocationText(route),
+        location: route.start_address_region ?? toCoordinateLocationText(route),
         distanceKm: route.distance_meters / 1000,
         distanceFromReference,
         distanceText: toDistanceText(route.distance_meters),

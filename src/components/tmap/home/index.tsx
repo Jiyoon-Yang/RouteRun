@@ -62,7 +62,7 @@ type TmapPolyline = {
 
 type TmapMap = {
   setCenter: (center: TmapLatLng) => void;
-  setZoom: (zoomLevel: number) => void;
+  setZoom: (zoomLevel: number, options?: Record<string, unknown>) => void;
   getZoom: () => number;
   setZoomLimit?: (minZoom: number, maxZoom: number) => void;
   getMinZoom?: () => number;
@@ -94,6 +94,9 @@ type RouteMarkerEntry = {
   category: DistanceCategory;
   title: string;
   visualState: MarkerVisualState;
+  lat: number;
+  lng: number;
+  isVisible: boolean;
 };
 
 const DEFAULT_GEOLOCATION_OPTIONS: PositionOptions = {
@@ -274,6 +277,9 @@ export function TmapHome({
   const viewportSyncIntervalRef = useRef<number | null>(null);
   const mapListenersRegisteredRef = useRef(false);
   const wheelZoomThrottleTimerRef = useRef<number | null>(null);
+  const zoomUpdateRafRef = useRef<number | null>(null);
+  const markerVisibilityRafRef = useRef<number | null>(null);
+  const lastAppliedZoomRef = useRef<number | null>(null);
   const lastViewportRef = useRef<RouteViewport | null>(null);
   const routeVisualStateHandlerRef = useRef<(courseId: string, state: MarkerVisualState) => void>(
     () => undefined,
@@ -343,6 +349,34 @@ export function TmapHome({
     },
     [normalizeViewportFromMap, onViewportChanged],
   );
+
+  const syncMarkerVisibilityByViewport = useCallback((map: TmapMap) => {
+    const viewport = normalizeViewportFromMap(map);
+    if (!viewport) return;
+    const west = viewport.southWestLng;
+    const east = viewport.northEastLng;
+    const south = viewport.southWestLat;
+    const north = viewport.northEastLat;
+    const isCrossingDateLine = west > east;
+    const isLngInRange = (lng: number) =>
+      isCrossingDateLine ? lng >= west || lng <= east : lng >= west && lng <= east;
+
+    routeMarkerMapRef.current.forEach((entry) => {
+      const isInViewport =
+        entry.lat >= south && entry.lat <= north && isLngInRange(entry.lng);
+      if (isInViewport === entry.isVisible) return;
+      entry.marker.setMap(isInViewport ? map : null);
+      entry.isVisible = isInViewport;
+    });
+  }, [normalizeViewportFromMap]);
+
+  const scheduleMarkerVisibilitySync = useCallback((map: TmapMap) => {
+    if (markerVisibilityRafRef.current !== null) return;
+    markerVisibilityRafRef.current = window.requestAnimationFrame(() => {
+      markerVisibilityRafRef.current = null;
+      syncMarkerVisibilityByViewport(map);
+    });
+  }, [syncMarkerVisibilityByViewport]);
 
   const enforceMinZoomLevel = useCallback((map: TmapMap): number | null => {
     const currentZoom = map.getZoom();
@@ -461,13 +495,25 @@ export function TmapHome({
       if (!hasMapEventBinder) return;
 
       const handleZoomChanged = () => {
-        enforceMinZoomLevel(map);
-        upsertSelectedLabelMarker(selectedRouteIdRef.current);
-        const currentLocation = currentLocationCoordinateRef.current;
-        if (currentLocation) {
-          createCustomMarker(map, currentLocation.lat, currentLocation.lng);
+        const currentZoom = enforceMinZoomLevel(map);
+        if (currentZoom === null) return;
+        if (currentZoom === lastAppliedZoomRef.current) {
+          scheduleMarkerVisibilitySync(map);
+          scheduleViewportReport(map);
+          return;
         }
-        scheduleViewportReport(map);
+        lastAppliedZoomRef.current = currentZoom;
+        if (zoomUpdateRafRef.current !== null) return;
+        zoomUpdateRafRef.current = window.requestAnimationFrame(() => {
+          zoomUpdateRafRef.current = null;
+          upsertSelectedLabelMarker(selectedRouteIdRef.current);
+          const currentLocation = currentLocationCoordinateRef.current;
+          if (currentLocation) {
+            createCustomMarker(map, currentLocation.lat, currentLocation.lng);
+          }
+          scheduleMarkerVisibilitySync(map);
+          scheduleViewportReport(map);
+        });
       };
 
       const boundZoomEvents = bindMapEvent(
@@ -476,6 +522,7 @@ export function TmapHome({
       );
 
       const reportAfterMove = () => {
+        scheduleMarkerVisibilitySync(map);
         scheduleViewportReport(map);
       };
 
@@ -486,7 +533,12 @@ export function TmapHome({
 
       mapListenersRegisteredRef.current = boundZoomEvents || boundMoveEvents;
     },
-    [enforceMinZoomLevel, scheduleViewportReport, upsertSelectedLabelMarker],
+    [
+      enforceMinZoomLevel,
+      scheduleMarkerVisibilitySync,
+      scheduleViewportReport,
+      upsertSelectedLabelMarker,
+    ],
   );
 
   const addMarkerListener = useCallback(
@@ -687,6 +739,8 @@ export function TmapHome({
         if (existingMarker) {
           existingMarker.category = category;
           existingMarker.title = route.title;
+          existingMarker.lat = route.start_lat;
+          existingMarker.lng = route.start_lng;
           existingMarker.marker.setPosition(new Tmapv3.LatLng(route.start_lat, route.start_lng));
           const state: MarkerVisualState =
             selectedRouteIdRef.current === route.id ? 'clicked' : 'default';
@@ -702,6 +756,9 @@ export function TmapHome({
           category,
           title: route.title,
           visualState: 'default',
+          lat: route.start_lat,
+          lng: route.start_lng,
+          isVisible: true,
         });
 
         // 신규 생성 시 반드시 클릭 리스너를 바인딩한다.
@@ -749,7 +806,18 @@ export function TmapHome({
         ? Math.max(MIN_ZOOM_LEVEL, runtimeZoom + delta)
         : Math.min(MAX_ZOOM_LEVEL, runtimeZoom + delta);
     if (nextZoom === runtimeZoom) return;
-    map.setZoom(nextZoom);
+    // Tmap이 제공하는 zoomIn/zoomOut을 우선 사용해 부드러운 전환을 유도한다.
+    if (delta > 0 && typeof map.zoomIn === 'function') {
+      map.zoomIn();
+      return;
+    }
+    if (delta < 0 && typeof map.zoomOut === 'function') {
+      map.zoomOut();
+      return;
+    }
+
+    // zoomIn/zoomOut 미지원 런타임에서는 애니메이션 옵션을 포함해 폴백한다.
+    map.setZoom(nextZoom, { animation: true, animate: true, duration: 200 });
   }, []);
 
   // [이벤트] 휠 줌을 버튼과 동일한 제한 로직으로 통일
@@ -795,6 +863,7 @@ export function TmapHome({
       });
 
       map.setZoomLimit?.(MIN_ZOOM_LEVEL, MAX_ZOOM_LEVEL);
+      lastAppliedZoomRef.current = map.getZoom();
       createCustomMarker(map, lat, lng);
       mapInstance.current = map;
       enforceMinZoomLevel(map);
@@ -805,6 +874,7 @@ export function TmapHome({
       }
       // 이벤트 누락 환경에서도 뷰포트 기반 마커/카드 동기화를 보장한다.
       viewportSyncIntervalRef.current = window.setInterval(() => {
+        scheduleMarkerVisibilitySync(map);
         reportViewport(map);
       }, 450);
       syncRouteMarkers(map, routesRef.current);
@@ -861,12 +931,22 @@ export function TmapHome({
         window.clearTimeout(wheelZoomThrottleTimerRef.current);
         wheelZoomThrottleTimerRef.current = null;
       }
+      if (zoomUpdateRafRef.current !== null) {
+        window.cancelAnimationFrame(zoomUpdateRafRef.current);
+        zoomUpdateRafRef.current = null;
+      }
+      if (markerVisibilityRafRef.current !== null) {
+        window.cancelAnimationFrame(markerVisibilityRafRef.current);
+        markerVisibilityRafRef.current = null;
+      }
+      lastAppliedZoomRef.current = null;
       lastViewportRef.current = null;
     };
   }, [
     enforceMinZoomLevel,
     registerMapListeners,
     reportViewport,
+    scheduleMarkerVisibilitySync,
     scheduleViewportReport,
     syncRouteMarkers,
   ]);
@@ -876,7 +956,8 @@ export function TmapHome({
     const map = mapInstance.current;
     if (!map) return;
     syncRouteMarkers(map, routes);
-  }, [routes, syncRouteMarkers]);
+    scheduleMarkerVisibilitySync(map);
+  }, [routes, scheduleMarkerVisibilitySync, syncRouteMarkers]);
 
   useEffect(() => {
     // [동기화] 외부 선택 상태(selectedCourseId)와 마커 clicked 상태 정합성 유지

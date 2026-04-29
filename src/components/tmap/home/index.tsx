@@ -96,6 +96,7 @@ type RouteMarkerEntry = {
   lat: number;
   lng: number;
   isVisible: boolean;
+  outOfViewportSinceMs: number | null;
 };
 
 const DEFAULT_GEOLOCATION_OPTIONS: PositionOptions = {
@@ -114,6 +115,7 @@ const MIN_ZOOM_LEVEL = 11;
 const MAX_ZOOM_LEVEL = 19;
 const VIEWPORT_PADDING_RATIO = 0.1;
 const MARKER_VISIBILITY_DEBOUNCE_MS = 140;
+const MARKER_VISIBILITY_HIDE_GRACE_MS = 260;
 
 function escapeHtml(value: string): string {
   return value
@@ -280,6 +282,8 @@ export function TmapHome({
   const wheelZoomThrottleTimerRef = useRef<number | null>(null);
   const zoomUpdateRafRef = useRef<number | null>(null);
   const markerVisibilityTimerRef = useRef<number | null>(null);
+  const isMapInteractingRef = useRef(false);
+  const interactionWatchdogTimerRef = useRef<number | null>(null);
   const lastAppliedZoomRef = useRef<number | null>(null);
   const lastViewportRef = useRef<RouteViewport | null>(null);
   const routeVisualStateHandlerRef = useRef<(courseId: string, state: MarkerVisualState) => void>(
@@ -355,6 +359,7 @@ export function TmapHome({
     (map: TmapMap) => {
       const viewport = normalizeViewportFromMap(map);
       if (!viewport) return;
+      const nowMs = window.performance.now();
       const west = Math.min(viewport.southWestLng, viewport.northEastLng);
       const east = Math.max(viewport.southWestLng, viewport.northEastLng);
       const south = Math.min(viewport.southWestLat, viewport.northEastLat);
@@ -371,10 +376,34 @@ export function TmapHome({
         const isInViewport =
           entry.lat >= paddedSouth && entry.lat <= paddedNorth && isLngInRange(entry.lng);
         const isSelected = selectedRouteIdRef.current === routeId;
-        const shouldBeVisible = isSelected || isInViewport;
-        if (shouldBeVisible === entry.isVisible) return;
-        entry.marker.setMap(shouldBeVisible ? map : null);
-        entry.isVisible = shouldBeVisible;
+
+        // 뷰포트 경계에서 bounds/좌표가 미세하게 흔들리면 isInViewport가
+        // true/false로 튀면서 마커가 깜빡일 수 있다.
+        // 그래서 "경계 밖"이 일정 시간 이상 유지될 때만 숨긴다.
+        if (isSelected || isInViewport) {
+          entry.outOfViewportSinceMs = null;
+          if (!entry.isVisible) {
+            entry.marker.setMap(map);
+            entry.isVisible = true;
+          }
+          return;
+        }
+
+        if (!entry.isVisible) {
+          if (entry.outOfViewportSinceMs === null) entry.outOfViewportSinceMs = nowMs;
+          return;
+        }
+
+        if (entry.outOfViewportSinceMs === null) {
+          entry.outOfViewportSinceMs = nowMs;
+          return;
+        }
+
+        if (nowMs - entry.outOfViewportSinceMs < MARKER_VISIBILITY_HIDE_GRACE_MS) return;
+
+        entry.marker.setMap(null);
+        entry.isVisible = false;
+        entry.outOfViewportSinceMs = null;
       });
     },
     [normalizeViewportFromMap],
@@ -509,6 +538,30 @@ export function TmapHome({
         typeof map.on === 'function' || typeof map.addListener === 'function';
       if (!hasMapEventBinder) return;
 
+      const handleStartInteraction = () => {
+        isMapInteractingRef.current = true;
+
+        // 종료 이벤트가 누락되는 환경에서도 마커가 영구히 숨겨지지 않도록 워치독으로 강제 해제한다.
+        if (interactionWatchdogTimerRef.current !== null) {
+          window.clearTimeout(interactionWatchdogTimerRef.current);
+        }
+        interactionWatchdogTimerRef.current = window.setTimeout(() => {
+          interactionWatchdogTimerRef.current = null;
+          isMapInteractingRef.current = false;
+          scheduleMarkerVisibilitySync(map);
+          scheduleViewportReport(map);
+        }, 1600);
+      };
+
+      const handleEndInteraction = () => {
+        isMapInteractingRef.current = false;
+
+        if (interactionWatchdogTimerRef.current !== null) {
+          window.clearTimeout(interactionWatchdogTimerRef.current);
+          interactionWatchdogTimerRef.current = null;
+        }
+      };
+
       const handleZoomChanged = () => {
         const currentZoom = enforceMinZoomLevel(map);
         if (currentZoom === null) return;
@@ -531,10 +584,7 @@ export function TmapHome({
         });
       };
 
-      const boundZoomEvents = bindMapEvent(
-        ['zoom', 'zoom_end', 'zoom_changed', 'zoomend', 'idle'],
-        handleZoomChanged,
-      );
+      const boundZoomEvents = bindMapEvent(['zoom_end', 'zoomend', 'idle'], handleZoomChanged);
 
       const reportAfterMove = () => {
         scheduleMarkerVisibilitySync(map);
@@ -542,14 +592,29 @@ export function TmapHome({
       };
 
       const boundMoveEvents = bindMapEvent(
-        ['drag', 'dragend', 'dragEnd', 'moveend', 'bounds_changed', 'center_changed', 'panend'],
+        ['dragend', 'dragEnd', 'moveend', 'panend'],
         reportAfterMove,
       );
 
-      mapListenersRegisteredRef.current = boundZoomEvents || boundMoveEvents;
+      // 상호작용(이동/줌) 중 마커 visibility 토글이 깜빡임을 유발할 수 있어 플래그로 제어한다.
+      const boundStartInteractionEvents = bindMapEvent(
+        ['drag', 'bounds_changed', 'center_changed', 'zoom', 'zoom_changed'],
+        handleStartInteraction,
+      );
+      const boundEndInteractionEvents = bindMapEvent(
+        ['dragend', 'dragEnd', 'moveend', 'panend', 'zoom_end', 'zoomend', 'idle'],
+        handleEndInteraction,
+      );
+
+      mapListenersRegisteredRef.current =
+        boundZoomEvents ||
+        boundMoveEvents ||
+        boundStartInteractionEvents ||
+        boundEndInteractionEvents;
     },
     [
       enforceMinZoomLevel,
+      isMapInteractingRef,
       scheduleMarkerVisibilitySync,
       scheduleViewportReport,
       upsertSelectedLabelMarker,
@@ -756,6 +821,7 @@ export function TmapHome({
           existingMarker.title = route.title;
           existingMarker.lat = route.start_lat;
           existingMarker.lng = route.start_lng;
+          existingMarker.outOfViewportSinceMs = null;
           existingMarker.marker.setPosition(new Tmapv3.LatLng(route.start_lat, route.start_lng));
           const state: MarkerVisualState =
             selectedRouteIdRef.current === route.id ? 'clicked' : 'default';
@@ -774,6 +840,7 @@ export function TmapHome({
           lat: route.start_lat,
           lng: route.start_lng,
           isVisible: true,
+          outOfViewportSinceMs: null,
         });
 
         // 신규 생성 시 반드시 클릭 리스너를 바인딩한다.
@@ -889,7 +956,10 @@ export function TmapHome({
       }
       // 이벤트 누락 환경에서도 뷰포트 기반 마커/카드 동기화를 보장한다.
       viewportSyncIntervalRef.current = window.setInterval(() => {
-        scheduleMarkerVisibilitySync(map);
+        // 이동/줌 상호작용 중에는 마커 setMap(null) 토글로 인한 깜빡임을 줄인다.
+        if (!isMapInteractingRef.current) {
+          scheduleMarkerVisibilitySync(map);
+        }
         reportViewport(map);
       }, 450);
       syncRouteMarkers(map, routesRef.current);
@@ -938,6 +1008,11 @@ export function TmapHome({
       selectedRoutePolylineRef.current = null;
       selectedRouteIdRef.current = null;
       mapListenersRegisteredRef.current = false;
+      isMapInteractingRef.current = false;
+      if (interactionWatchdogTimerRef.current !== null) {
+        window.clearTimeout(interactionWatchdogTimerRef.current);
+        interactionWatchdogTimerRef.current = null;
+      }
       if (viewportSyncIntervalRef.current !== null) {
         window.clearInterval(viewportSyncIntervalRef.current);
         viewportSyncIntervalRef.current = null;
@@ -964,6 +1039,8 @@ export function TmapHome({
     scheduleMarkerVisibilitySync,
     scheduleViewportReport,
     syncRouteMarkers,
+    isMapInteractingRef,
+    interactionWatchdogTimerRef,
   ]);
 
   useEffect(() => {

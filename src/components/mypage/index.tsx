@@ -21,9 +21,9 @@ import { Button } from '@/commons/components/button';
 import { Icon } from '@/commons/components/icons';
 import { Header } from '@/commons/layout/header';
 import type { MypageProfileProps, MypageRouteCardData } from '@/commons/types/mypage';
-import { useMyPageTabs } from '@/hooks/useMyPageTabs';
 
-import { useLogout } from './hooks/index.logout.hook';
+import { useLogout } from './hooks/useLogout';
+import { useMyPageTabs } from './hooks/useMyPageTabs';
 import { useProfileModal } from './hooks/useProfileModal';
 import { RouteCard } from './RouteCard';
 import styles from './styles.module.css';

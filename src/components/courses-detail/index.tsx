@@ -157,7 +157,6 @@ export function Courses({ course, authorNickname, location }: CoursesDetailProps
                   ...
                 </span>
                 <p className={styles.emptyImageTitle}>{COPY.emptyImageTitle}</p>
-                <p className={styles.emptyImageDescription}>{COPY.emptyImageDescription}</p>
               </div>
             )}
           </section>

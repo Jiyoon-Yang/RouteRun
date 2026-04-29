@@ -1,8 +1,10 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { TabButton } from '@/commons/components/tab';
+import { ROUTES } from '@/commons/constants/url';
 import { Header } from '@/commons/layout/header';
 import type { ReferenceLocation, RouteViewport } from '@/commons/types/runroute';
 import { hasValidRouteStartCoordinate } from '@/commons/utils/geo';
@@ -38,6 +40,7 @@ export function Home() {
   const [referenceLocation, setReferenceLocation] =
     useState<ReferenceLocation>(SEOUL_CITY_HALL_REFERENCE);
   const { routes, isLoading, errorMessage } = useRoutes(queryViewport);
+  const router = useRouter();
 
   const isSameViewport = useCallback((left: RouteViewport | null, right: RouteViewport | null) => {
     if (!left || !right) return false;
@@ -228,7 +231,10 @@ export function Home() {
         <CoursesList
           cards={courseCards}
           isLoading={isLoading}
-          onCourseSelect={setSelectedCourseId}
+          onCourseSelect={(courseId) => {
+            setSelectedCourseId(courseId);
+            router.push(ROUTES.COURSES.DETAIL(courseId));
+          }}
           onSheetPositionChange={({ state, visibleHeight }) => {
             setIsSheetExpanded(state === 'expanded');
             setSheetVisibleHeight(visibleHeight);

@@ -4,12 +4,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { TabButton } from '@/commons/components/tab';
 import { Header } from '@/commons/layout/header';
-import type { ReferenceLocation } from '@/commons/types/runroute';
-import { hasValidRouteStartCoordinate, reverseGeocodeRegion } from '@/commons/utils/geo';
+import type { ReferenceLocation, RouteViewport } from '@/commons/types/runroute';
+import { hasValidRouteStartCoordinate } from '@/commons/utils/geo';
 import { CoursesList } from '@/components/courses-list';
 import { TmapHome } from '@/components/tmap/home';
+import { reverseGeocodeRegionForHome } from '@/services/map/mapService';
 
-import { useRoutes, type RouteViewport } from './hooks/index.use-routes';
+import { useRoutes } from './hooks/index.use-routes';
 import styles from './styles.module.css';
 import {
   buildCourseCardViews,
@@ -81,11 +82,6 @@ export function Home() {
 
   // [조회] 코스 시작 좌표를 시/도 + 구/군 주소로 변환
   useEffect(() => {
-    const appKey = process.env.NEXT_PUBLIC_TMAP_API_KEY?.trim() ?? '';
-    if (!appKey) {
-      return;
-    }
-
     const unresolvedRoutes = routes.filter(
       (route) =>
         hasValidRouteStartCoordinate(route) && typeof locationByCourseId[route.id] === 'undefined',
@@ -101,10 +97,9 @@ export function Home() {
     const loadLocations = async () => {
       const entries = await Promise.all(
         unresolvedRoutes.map(async (route) => {
-          const address = await reverseGeocodeRegion({
+          const address = await reverseGeocodeRegionForHome({
             lat: route.start_lat,
             lng: route.start_lng,
-            appKey,
             signal: abortController.signal,
           });
 

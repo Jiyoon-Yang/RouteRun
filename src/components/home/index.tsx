@@ -9,6 +9,7 @@ import { Header } from '@/commons/layout/header';
 import type { ReferenceLocation, RouteViewport } from '@/commons/types/runroute';
 import { CoursesList } from '@/components/courses-list';
 import { TmapHome } from '@/components/tmap/home';
+import { useCourseLikes } from '@/hooks/useCourseLikes';
 
 import { useRoutes } from './hooks/index.use-routes';
 import styles from './styles.module.css';
@@ -78,6 +79,15 @@ export function Home() {
     () => buildCourseCardViews(filteredRoutes, referenceLocation, selectedCourseId),
     [filteredRoutes, referenceLocation, selectedCourseId],
   );
+  const courseLikeCounts = useMemo(
+    () =>
+      routes.reduce<Record<string, number>>((acc, route) => {
+        acc[route.id] = route.likes_count;
+        return acc;
+      }, {}),
+    [routes],
+  );
+  const { isCourseLiked, getCourseLikeCount, toggleCourseLike } = useCourseLikes(courseLikeCounts);
 
   // [초기화] 사용자 위치 기반 기준 좌표 설정
   useEffect(() => {
@@ -108,13 +118,6 @@ export function Home() {
       isCancelled = true;
     };
   }, []);
-
-  // [동기화] 필터 결과와 선택 코스 정합성 유지
-  useEffect(() => {
-    if (!selectedCourseId) return;
-    if (filteredRoutes.some((route) => route.id === selectedCourseId)) return;
-    setSelectedCourseId(null);
-  }, [filteredRoutes, selectedCourseId]);
 
   // [이벤트] 거리 카테고리 선택 토글 처리
   const toggleCategory = (category: DistanceCategory) => {
@@ -174,10 +177,13 @@ export function Home() {
         <CoursesList
           cards={courseCards}
           isLoading={isLoading}
+          isCourseLiked={isCourseLiked}
+          getCourseLikeCount={getCourseLikeCount}
           onCourseSelect={(courseId) => {
             setSelectedCourseId(courseId);
             router.push(ROUTES.COURSES.DETAIL(courseId));
           }}
+          onCourseLikeToggle={toggleCourseLike}
           onSheetPositionChange={({ state, visibleHeight }) => {
             setIsSheetExpanded(state === 'expanded');
             setSheetVisibleHeight(visibleHeight);

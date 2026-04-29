@@ -51,8 +51,24 @@ export function Modal(props: ModalProps) {
     type === 'confirm' || type === 'form' ? (props.cancelText ?? '취소') : undefined;
   const onCancel = type === 'confirm' || type === 'form' ? props.onCancel : undefined;
 
+  const stopEventPropagation = (
+    event:
+      | React.MouseEvent<HTMLElement>
+      | React.TouchEvent<HTMLElement>
+      | React.PointerEvent<HTMLElement>,
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
   return (
-    <section className={rootClass} aria-label={title}>
+    <section
+      className={rootClass}
+      aria-label={title}
+      onPointerDown={stopEventPropagation}
+      onTouchStart={stopEventPropagation}
+      onClick={stopEventPropagation}
+    >
       <h2 className={styles.title}>{title}</h2>
 
       {type === 'form' ? (
@@ -87,7 +103,7 @@ export function Modal(props: ModalProps) {
             size="medium"
             color="dark"
             className={styles.actionButton}
-            onClick={onCancel}
+            onClick={() => onCancel?.()}
           >
             {cancelText}
           </Button>

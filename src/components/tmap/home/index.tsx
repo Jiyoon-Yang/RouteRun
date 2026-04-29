@@ -113,6 +113,8 @@ const PRECISE_GEOLOCATION_OPTIONS: PositionOptions = {
 
 const MIN_ZOOM_LEVEL = 11;
 const MAX_ZOOM_LEVEL = 19;
+const VIEWPORT_PADDING_RATIO = 0.1;
+const MARKER_VISIBILITY_DEBOUNCE_MS = 140;
 
 function escapeHtml(value: string): string {
   return value
@@ -278,7 +280,7 @@ export function TmapHome({
   const mapListenersRegisteredRef = useRef(false);
   const wheelZoomThrottleTimerRef = useRef<number | null>(null);
   const zoomUpdateRafRef = useRef<number | null>(null);
-  const markerVisibilityRafRef = useRef<number | null>(null);
+  const markerVisibilityTimerRef = useRef<number | null>(null);
   const lastAppliedZoomRef = useRef<number | null>(null);
   const lastViewportRef = useRef<RouteViewport | null>(null);
   const routeVisualStateHandlerRef = useRef<(courseId: string, state: MarkerVisualState) => void>(
@@ -353,29 +355,37 @@ export function TmapHome({
   const syncMarkerVisibilityByViewport = useCallback((map: TmapMap) => {
     const viewport = normalizeViewportFromMap(map);
     if (!viewport) return;
-    const west = viewport.southWestLng;
-    const east = viewport.northEastLng;
-    const south = viewport.southWestLat;
-    const north = viewport.northEastLat;
-    const isCrossingDateLine = west > east;
-    const isLngInRange = (lng: number) =>
-      isCrossingDateLine ? lng >= west || lng <= east : lng >= west && lng <= east;
+    const west = Math.min(viewport.southWestLng, viewport.northEastLng);
+    const east = Math.max(viewport.southWestLng, viewport.northEastLng);
+    const south = Math.min(viewport.southWestLat, viewport.northEastLat);
+    const north = Math.max(viewport.southWestLat, viewport.northEastLat);
+    const lngPadding = (east - west) * VIEWPORT_PADDING_RATIO;
+    const latPadding = (north - south) * VIEWPORT_PADDING_RATIO;
+    const paddedWest = west - lngPadding;
+    const paddedEast = east + lngPadding;
+    const paddedSouth = south - latPadding;
+    const paddedNorth = north + latPadding;
+    const isLngInRange = (lng: number) => lng >= paddedWest && lng <= paddedEast;
 
-    routeMarkerMapRef.current.forEach((entry) => {
+    routeMarkerMapRef.current.forEach((entry, routeId) => {
       const isInViewport =
-        entry.lat >= south && entry.lat <= north && isLngInRange(entry.lng);
-      if (isInViewport === entry.isVisible) return;
-      entry.marker.setMap(isInViewport ? map : null);
-      entry.isVisible = isInViewport;
+        entry.lat >= paddedSouth && entry.lat <= paddedNorth && isLngInRange(entry.lng);
+      const isSelected = selectedRouteIdRef.current === routeId;
+      const shouldBeVisible = isSelected || isInViewport;
+      if (shouldBeVisible === entry.isVisible) return;
+      entry.marker.setMap(shouldBeVisible ? map : null);
+      entry.isVisible = shouldBeVisible;
     });
   }, [normalizeViewportFromMap]);
 
   const scheduleMarkerVisibilitySync = useCallback((map: TmapMap) => {
-    if (markerVisibilityRafRef.current !== null) return;
-    markerVisibilityRafRef.current = window.requestAnimationFrame(() => {
-      markerVisibilityRafRef.current = null;
+    if (markerVisibilityTimerRef.current !== null) {
+      window.clearTimeout(markerVisibilityTimerRef.current);
+    }
+    markerVisibilityTimerRef.current = window.setTimeout(() => {
+      markerVisibilityTimerRef.current = null;
       syncMarkerVisibilityByViewport(map);
-    });
+    }, MARKER_VISIBILITY_DEBOUNCE_MS);
   }, [syncMarkerVisibilityByViewport]);
 
   const enforceMinZoomLevel = useCallback((map: TmapMap): number | null => {
@@ -935,9 +945,9 @@ export function TmapHome({
         window.cancelAnimationFrame(zoomUpdateRafRef.current);
         zoomUpdateRafRef.current = null;
       }
-      if (markerVisibilityRafRef.current !== null) {
-        window.cancelAnimationFrame(markerVisibilityRafRef.current);
-        markerVisibilityRafRef.current = null;
+      if (markerVisibilityTimerRef.current !== null) {
+        window.clearTimeout(markerVisibilityTimerRef.current);
+        markerVisibilityTimerRef.current = null;
       }
       lastAppliedZoomRef.current = null;
       lastViewportRef.current = null;

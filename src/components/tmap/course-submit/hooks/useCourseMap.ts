@@ -93,16 +93,29 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
     setErrorMessage(null);
 
     try {
-      const result = await getPedestrianRoute(points);
-      drawRoutePolyline(result.path);
+      const pedestrianRoute = await getPedestrianRoute(points);
+      const detailedPath = pedestrianRoute.path
+        .map((coordinate) => ({
+          lat: Number(coordinate.lat),
+          lng: Number(coordinate.lng),
+        }))
+        .filter((coordinate) => Number.isFinite(coordinate.lat) && Number.isFinite(coordinate.lng));
 
-      const totalDistanceKm = Number((result.totalDistanceMeters / 1000).toFixed(2));
+      if (detailedPath.length < 2) {
+        throw new Error('보행자 경로 상세 좌표를 가져오지 못했습니다.');
+      }
+
+      drawRoutePolyline(detailedPath);
+
+      const totalDistanceKm = Number((pedestrianRoute.totalDistanceMeters / 1000).toFixed(2));
       setDistanceKm(totalDistanceKm);
+
+      console.log('[useCourseMap] 저장 경로 좌표 수:', detailedPath.length);
       onSaveRoute?.({
         totalDistanceKm,
         pathData: {
           points,
-          path: result.path,
+          path: detailedPath,
         },
         startPoint: points[0],
       });

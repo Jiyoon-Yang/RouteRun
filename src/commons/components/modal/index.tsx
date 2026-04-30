@@ -57,7 +57,6 @@ export function Modal(props: ModalProps) {
       | React.TouchEvent<HTMLElement>
       | React.PointerEvent<HTMLElement>,
   ) => {
-    event.preventDefault();
     event.stopPropagation();
   };
 

@@ -10,9 +10,14 @@
  * - [x] 캐러셀/찜 상태 UI 반영
  */
 
+'use client';
+
+import { useMemo } from 'react';
+
 import { Icon } from '@/commons/components/icons';
 import { Header } from '@/commons/layout/header';
 import type { Route } from '@/commons/types/runroute';
+import { useCourseLikes } from '@/hooks/useCourseLikes';
 
 import CourseDetailMapPreview from './CourseDetailMapPreview';
 import styles from './styles.module.css';
@@ -35,7 +40,13 @@ type CoursesDetailProps = {
 
 export function Courses({ course, authorNickname, location }: CoursesDetailProps) {
   const distanceText = `${(course.distance_meters / 1000).toFixed(1)}km`;
-  const likesCount = course.likes_count ?? 0;
+  const courseLikeCounts = useMemo(
+    () => ({ [course.id]: course.likes_count ?? 0 }),
+    [course.id, course.likes_count],
+  );
+  const { isCourseLiked, getCourseLikeCount, toggleCourseLike } = useCourseLikes(courseLikeCounts);
+  const isLiked = isCourseLiked(course.id);
+  const likesCount = getCourseLikeCount(course.id);
   const descriptionText = course.description?.trim() || '설명이 없습니다.';
   const imageUrls = course.image_urls.filter((url) => url.trim().length > 0);
   const hasImages = imageUrls.length > 0;
@@ -81,10 +92,11 @@ export function Courses({ course, authorNickname, location }: CoursesDetailProps
             <button
               type="button"
               className={styles.likeButton}
-              aria-pressed={true}
-              aria-label="찜한 코스"
+              aria-pressed={isLiked}
+              aria-label={isLiked ? '코스 찜 취소' : '코스 찜하기'}
+              onClick={() => toggleCourseLike(course.id)}
             >
-              <Icon name="heartFilled" color="var(--color-red-500)" />
+              <Icon name={isLiked ? 'heartFilled' : 'heart'} color="var(--color-red-500)" />
               <span className={styles.likeCount}>{likesCount}</span>
             </button>
           </section>

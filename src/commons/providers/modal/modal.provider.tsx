@@ -9,7 +9,13 @@ import styles from './modal.provider.module.css';
 
 // ─── 타입 ──────────────────────────────────────────────────────────────────────
 
-type ModalOptions = Omit<ModalProps, 'onConfirm' | 'onCancel'> & {
+type ModalPropsWithoutHandlers = ModalProps extends infer Props
+  ? Props extends ModalProps
+    ? Omit<Props, 'onConfirm' | 'onCancel'>
+    : never
+  : never;
+
+type ModalOptions = ModalPropsWithoutHandlers & {
   onConfirm?: () => void;
   onCancel?: () => void;
   closeOnConfirm?: boolean;

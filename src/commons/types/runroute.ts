@@ -36,6 +36,7 @@ export interface CourseCardView {
   distanceKm: number;
   distanceFromReference: number;
   distanceText: string;
+  likeCount: number;
   isPinnedTop: boolean;
 }
 

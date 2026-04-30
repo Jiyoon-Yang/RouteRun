@@ -17,6 +17,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef } from 'react';
 
 import { Button } from '@/commons/components/button';
@@ -51,6 +52,7 @@ interface CourseSubmitProps {
 }
 
 export default function CourseSubmit({ mode, courseId }: CourseSubmitProps) {
+  const router = useRouter();
   const {
     courseName,
     setCourseName,
@@ -80,7 +82,12 @@ export default function CourseSubmit({ mode, courseId }: CourseSubmitProps) {
 
   return (
     <div className={styles.container}>
-      <Header title={pageTitle} showRightIcon={isEdit} rightIconName="pencil" />
+      <Header
+        title={pageTitle}
+        showRightIcon={isEdit}
+        rightIconName="pencil"
+        onLeftIconClick={() => router.back()}
+      />
 
       {/* 지도 플레이스홀더 */}
       <div className={styles.mapArea} aria-label="지도 영역">

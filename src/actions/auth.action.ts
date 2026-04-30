@@ -1,5 +1,6 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
@@ -51,8 +52,20 @@ export async function signInAnonymously(returnTo: string = '/'): Promise<{ error
 /**
  * 현재 세션을 종료하고 로그인 페이지로 리다이렉트한다.
  */
-export async function signOut(): Promise<void> {
+export async function signOut(): Promise<{ error: string } | void> {
   const supabase = createClient();
-  await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut();
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  // Supabase Auth 쿠키를 한 번 더 정리해 세션 잔존 가능성을 낮춘다.
+  const cookieStore = cookies();
+  cookieStore
+    .getAll()
+    .filter((cookie) => cookie.name.startsWith('sb-'))
+    .forEach((cookie) => cookieStore.delete(cookie.name));
+
   redirect('/login');
 }

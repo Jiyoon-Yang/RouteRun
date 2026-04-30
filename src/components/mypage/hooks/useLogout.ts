@@ -19,7 +19,12 @@ export function useLogout(): UseLogoutResult {
     setIsError(false);
 
     try {
-      await signOut();
+      const result = await signOut();
+      if (result?.error) {
+        setIsError(true);
+        setIsPending(false);
+        return;
+      }
       // 성공 시 redirect('/login')이 발생하여 컴포넌트 언마운트
     } catch {
       setIsError(true);

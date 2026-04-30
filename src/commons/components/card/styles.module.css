@@ -103,9 +103,24 @@
 
 .likeWrap {
   display: flex;
+  align-items: center;
   justify-content: center;
   gap: 0.25rem;
   flex-shrink: 0;
+}
+
+.likeButton {
+  padding: 0;
+  color: var(--color-red-500);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.likeButton:focus-visible {
+  outline: 0.125rem solid var(--color-blue-500);
+  outline-offset: 0.125rem;
+  border-radius: 0.25rem;
 }
 
 .likeIcon {

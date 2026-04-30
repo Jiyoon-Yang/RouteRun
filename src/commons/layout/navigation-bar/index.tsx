@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * NavigationBar — Figma node 148:3498 (Gnb)
  * 버전: 1.0.0 · 생성: 2026-04-05
@@ -6,6 +8,7 @@
  * 피그마 MCP: 375폭·125×3 탭 — 세부 치수·보더는 NavigationItem(148:3911)에 위임
  */
 
+import { useRequireAuthModal } from '@/commons/hooks/useRequireAuthModal';
 import type { IconName } from '@/commons/components/icons';
 
 import { NavigationItem } from './navigation-item';
@@ -42,6 +45,7 @@ export function NavigationBar({
   activeHref,
   items = DEFAULT_ITEMS,
 }: NavigationBarProps) {
+  const { requireAuth, isPrivateRoute } = useRequireAuthModal();
   const rootClass = [styles.root, className].filter(Boolean).join(' ');
 
   return (
@@ -56,6 +60,16 @@ export function NavigationBar({
                 icon={item.icon}
                 label={item.label}
                 selected={selected}
+                onClick={(event) => {
+                  if (!isPrivateRoute(item.href)) {
+                    return;
+                  }
+
+                  const canNavigate = requireAuth({ redirectTo: item.href });
+                  if (!canNavigate) {
+                    event.preventDefault();
+                  }
+                }}
               />
             </li>
           );

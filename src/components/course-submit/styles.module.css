@@ -117,6 +117,26 @@
   width: 100%;
 }
 
+.infoLabelRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+}
+
+.infoButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-grey-600);
+  cursor: pointer;
+}
+
 /* ====================== textarea ====================== */
 
 .textarea {

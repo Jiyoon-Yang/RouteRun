@@ -24,6 +24,7 @@ import { Button } from '@/commons/components/button';
 import { Icon } from '@/commons/components/icons';
 import Input from '@/commons/components/input';
 import { Label } from '@/commons/components/input/label';
+import Tooltip from '@/commons/components/tooltip';
 import { Header } from '@/commons/layout/header';
 import TmapCourseSubmit from '@/components/tmap/course-submit';
 
@@ -39,6 +40,8 @@ const TEXTS = {
   LABEL_COURSE_NAME: '코스명',
   LABEL_DESCRIPTION: '설명',
   LABEL_IMAGE_UPLOAD: '이미지 업로드',
+  TOOLTIP_DESCRIPTION: '코스의 분위기, 난이도, 추천 시간 등을 자유롭게 작성해 주세요.',
+  TOOLTIP_IMAGE_UPLOAD: '출발지·경유지·도착지 이미지를 올려보세요.',
   PLACEHOLDER_COURSE_NAME: '코스명을 입력하세요.',
   PLACEHOLDER_DESCRIPTION: '코스에 대한 설명을 입력하세요',
   MAP_PLACEHOLDER: '[MAP]',
@@ -108,7 +111,14 @@ export default function CourseSubmit({ mode, courseId }: CourseSubmitProps) {
 
         {/* 설명 (선택·정보) */}
         <div className={styles.fieldGroup}>
-          <Label type="info">{TEXTS.LABEL_DESCRIPTION}</Label>
+          <div className={styles.infoLabelRow}>
+            <Label type="optional">{TEXTS.LABEL_DESCRIPTION}</Label>
+            <Tooltip content={TEXTS.TOOLTIP_DESCRIPTION}>
+              <button type="button" className={styles.infoButton} aria-label="설명 도움말">
+                <Icon name="info" size={14} color="var(--color-grey-600)" />
+              </button>
+            </Tooltip>
+          </div>
           <textarea
             className={styles.textarea}
             placeholder={TEXTS.PLACEHOLDER_DESCRIPTION}
@@ -120,7 +130,14 @@ export default function CourseSubmit({ mode, courseId }: CourseSubmitProps) {
 
         {/* 이미지 업로드 (선택·정보) */}
         <div className={styles.fieldGroup}>
-          <Label type="info">{TEXTS.LABEL_IMAGE_UPLOAD}</Label>
+          <div className={styles.infoLabelRow}>
+            <Label type="optional">{TEXTS.LABEL_IMAGE_UPLOAD}</Label>
+            <Tooltip content={TEXTS.TOOLTIP_IMAGE_UPLOAD}>
+              <button type="button" className={styles.infoButton} aria-label="이미지 업로드 도움말">
+                <Icon name="info" size={14} color="var(--color-grey-600)" />
+              </button>
+            </Tooltip>
+          </div>
           <div className={styles.imageList}>
             {/* 이미지 추가 버튼 */}
             {images.length < MAX_COURSE_SUBMIT_IMAGES && (

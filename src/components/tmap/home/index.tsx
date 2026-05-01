@@ -247,6 +247,20 @@ export function TmapHome({
   );
   const selectedMarkerVisualHandlerRef = useRef<(courseId: string | null) => void>(() => undefined);
   const selectedPolylineHandlerRef = useRef<(courseId: string | null) => void>(() => undefined);
+  const markerHoverCountRef = useRef(0);
+
+  const setMarkerHoverCursor = useCallback((isHover: boolean) => {
+    const rootElement = rootRef.current;
+    if (!rootElement) return;
+
+    if (isHover) {
+      markerHoverCountRef.current += 1;
+    } else {
+      markerHoverCountRef.current = Math.max(0, markerHoverCountRef.current - 1);
+    }
+
+    rootElement.classList.toggle(styles.mapMarkerHover, markerHoverCountRef.current > 0);
+  }, []);
 
   const readCoordinateValue = (
     point: TmapLatLng | undefined,
@@ -621,6 +635,26 @@ export function TmapHome({
     [],
   );
 
+  const bindMarkerDomHoverFallback = useCallback(
+    (marker: TmapMarker, routeId: string) => {
+      const rootElement = marker.getElement?.();
+      if (!(rootElement instanceof HTMLElement)) return;
+
+      // SDK hover 이벤트가 누락되는 런타임 대비: DOM mouseenter/leave로 커서 상태를 보강한다.
+      rootElement.addEventListener('mouseenter', () => {
+        setMarkerHoverCursor(true);
+        if (selectedRouteIdRef.current === routeId) return;
+        routeVisualStateHandlerRef.current(routeId, 'hover');
+      });
+      rootElement.addEventListener('mouseleave', () => {
+        setMarkerHoverCursor(false);
+        if (selectedRouteIdRef.current === routeId) return;
+        routeVisualStateHandlerRef.current(routeId, 'default');
+      });
+    },
+    [setMarkerHoverCursor],
+  );
+
   const createRouteMarker = useCallback(
     (
       map: TmapMap,
@@ -639,6 +673,7 @@ export function TmapHome({
       };
 
       const routeMarker = new Tmapv3.Marker(markerOptions) as TmapMarker;
+      applyPointerCursorToTmapMarker(routeMarker);
       if (isMarkerCoordDebugEnabled()) {
         const sdkAfterCreate = tryReadSdkLatLngFromMarker(routeMarker);
         /* eslint-disable-next-line no-console -- 마커 생성 직후 좌표 스냅샷 */
@@ -658,11 +693,13 @@ export function TmapHome({
   const attachRouteMarkerListeners = useCallback(
     (marker: TmapMarker, routeId: string) => {
       addMarkerListener(marker, 'mouseover', () => {
+        setMarkerHoverCursor(true);
         if (selectedRouteIdRef.current === routeId) return;
         routeVisualStateHandlerRef.current(routeId, 'hover');
       });
 
       addMarkerListener(marker, 'mouseout', () => {
+        setMarkerHoverCursor(false);
         if (selectedRouteIdRef.current === routeId) return;
         routeVisualStateHandlerRef.current(routeId, 'default');
       });
@@ -672,8 +709,10 @@ export function TmapHome({
         selectedPolylineHandlerRef.current(routeId);
         onCourseMarkerClick?.(routeId);
       });
+
+      bindMarkerDomHoverFallback(marker, routeId);
     },
-    [addMarkerListener, onCourseMarkerClick],
+    [addMarkerListener, bindMarkerDomHoverFallback, onCourseMarkerClick, setMarkerHoverCursor],
   );
 
   const setRouteMarkerVisualState = useCallback(
@@ -967,6 +1006,7 @@ export function TmapHome({
       selectedLabelMarkerRef.current = null;
       selectedRoutePolylineRef.current = null;
       selectedRouteIdRef.current = null;
+      markerHoverCountRef.current = 0;
       mapListenersRegisteredRef.current = false;
       isMapInteractingRef.current = false;
       if (interactionWatchdogTimerRef.current !== null) {

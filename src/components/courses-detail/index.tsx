@@ -12,6 +12,7 @@
 
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 
 import { Icon } from '@/commons/components/icons';
@@ -39,6 +40,7 @@ type CoursesDetailProps = {
 };
 
 export function Courses({ course, authorNickname, location }: CoursesDetailProps) {
+  const router = useRouter();
   const distanceText = `${(course.distance_meters / 1000).toFixed(1)}km`;
   const courseLikeCounts = useMemo(
     () => ({ [course.id]: course.likes_count ?? 0 }),
@@ -56,7 +58,15 @@ export function Courses({ course, authorNickname, location }: CoursesDetailProps
 
   return (
     <main className={styles.container}>
-      <Header title="코스 상세" showRightIcon={false} />
+      <Header
+        title="코스 상세"
+        showRightIcon={false}
+        onLeftIconClick={() => {
+          // history.length는 브라우저별 추정치라 신뢰하면 안 됨(오탐 시 홈으로만 이동하는 버그).
+          // 마이페이지·홈 등 이전 페이지는 브라우저 세션 스택의 router.back()으로 복귀한다.
+          router.back();
+        }}
+      />
       <div className={styles.scrollArea}>
         <section className={styles.mapPreview} aria-label={COPY.mapPreview}>
           <CourseDetailMapPreview key={course.id} course={course} mapLabel={COPY.mapPreview} />

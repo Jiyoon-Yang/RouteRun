@@ -21,8 +21,8 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 import { Button } from '@/commons/components/button';
-import { Modal } from '@/commons/components/modal';
 import { Icon } from '@/commons/components/icons';
+import { Modal } from '@/commons/components/modal';
 import { Header } from '@/commons/layout/header';
 import { useAuth } from '@/commons/providers/auth/auth.provider';
 import modalBackdropStyles from '@/commons/providers/modal/modal.provider.module.css';

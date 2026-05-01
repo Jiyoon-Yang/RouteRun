@@ -8,8 +8,8 @@
  * 피그마 MCP: 375폭·125×3 탭 — 세부 치수·보더는 NavigationItem(148:3911)에 위임
  */
 
-import { useRequireAuthModal } from '@/commons/hooks/useRequireAuthModal';
 import type { IconName } from '@/commons/components/icons';
+import { useRequireAuthModal } from '@/commons/hooks/useRequireAuthModal';
 
 import { NavigationItem } from './navigation-item';
 import styles from './styles.module.css';

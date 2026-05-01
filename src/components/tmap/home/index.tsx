@@ -10,9 +10,7 @@ import { getDistanceCategory, type DistanceCategory } from '@/components/home/ut
 import { applyPointerCursorToTmapMarker } from '@/components/tmap/shared/apply-pointer-cursor-to-tmap-marker';
 
 import {
-  getRouteMarkerAnchorForDisplay,
   getRunningCourseMarkerIconUrlForCategory,
-  ROUTE_MARKER_ICON_DISPLAY_SIZE,
   type MarkerVisualState,
 } from './build-running-course-marker-icon';
 import styles from './styles.module.css';
@@ -638,15 +636,7 @@ export function TmapHome({
         position: new Tmapv3.LatLng(routeStart.lat, routeStart.lng),
         icon: getRunningCourseMarkerIconUrlForCategory(category, visualState),
         map,
-        iconSize: new Tmapv3.Size(
-          ROUTE_MARKER_ICON_DISPLAY_SIZE.width,
-          ROUTE_MARKER_ICON_DISPLAY_SIZE.height,
-        ),
       };
-      if (Tmapv3.Point) {
-        const anchor = getRouteMarkerAnchorForDisplay();
-        markerOptions.iconAnchor = new Tmapv3.Point(anchor.x, anchor.y);
-      }
 
       const routeMarker = new Tmapv3.Marker(markerOptions) as TmapMarker;
       if (isMarkerCoordDebugEnabled()) {

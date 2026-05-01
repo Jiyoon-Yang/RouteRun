@@ -39,7 +39,10 @@ export function useTmapOverlays(mapRef: RefObject<TmapMapLike | null>) {
           map,
           title: getWaypointMarkerTitle(role),
           icon: buildWaypointMarkerIconUrl(role, label),
-          iconSize: new Tmapv3.Size(WAYPOINT_MARKER_ICON_SIZE.width, WAYPOINT_MARKER_ICON_SIZE.height),
+          iconSize: new Tmapv3.Size(
+            WAYPOINT_MARKER_ICON_SIZE.width,
+            WAYPOINT_MARKER_ICON_SIZE.height,
+          ),
         });
         markerRefs.current.push(marker);
       });

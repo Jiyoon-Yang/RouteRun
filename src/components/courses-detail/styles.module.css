@@ -41,6 +41,10 @@
   height: 100%;
 }
 
+.mapCanvas canvas {
+  cursor: default !important;
+}
+
 .mapLabel {
   color: var(--color-blue-900);
   opacity: 1;

@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Route } from '@/commons/types/runroute';
 import type { TmapV3 } from '@/commons/types/tmap';
 import { getPedestrianRoute } from '@/repositories/map.repository';
+import { applyPointerCursorToTmapMarker } from '@/components/tmap/shared/apply-pointer-cursor-to-tmap-marker';
 import {
   buildWaypointMarkerIconUrl,
   getWaypointMarkerTitle,
@@ -577,6 +578,7 @@ export default function CourseDetailMapPreview({ course, mapLabel }: CourseDetai
         }
 
         const marker = new Tmapv3.Marker(markerOptions) as unknown as MapDetachableOverlay;
+        applyPointerCursorToTmapMarker(marker as { getElement?: () => HTMLElement | null });
         waypointMarkersRef.current.push(marker);
       });
     };

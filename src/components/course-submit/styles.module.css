@@ -154,7 +154,9 @@
   letter-spacing: var(--typography-body-lg-ko-desktop-letter-spacing);
   color: var(--color-black-500);
   outline: none;
-  transition: border-color 120ms ease, background-color 120ms ease;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
 }
 
 /* Input.Field와 동일 — hover 시 보더·배경 (placeholder/styles.module.css 66–73) */

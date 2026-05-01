@@ -1,34 +1,15 @@
 import { useCallback, useRef } from 'react';
 
 import type { TmapCoordinate, TmapMapLike, TmapMarkerLike, TmapV3 } from '@/commons/types/tmap';
+import {
+  buildWaypointMarkerIconUrl,
+  getWaypointMarkerTitle,
+  WAYPOINT_MARKER_ICON_SIZE,
+} from '@/components/tmap/shared/build-waypoint-marker-icon';
 
 import type { RefObject } from 'react';
 
 type MarkerRole = 'start' | 'via' | 'end';
-
-function markerTitleByRole(role: MarkerRole): string {
-  if (role === 'start') return '출발지';
-  if (role === 'end') return '도착지';
-  return '경유지';
-}
-
-function markerColorByRole(role: MarkerRole): string {
-  if (role === 'start') return '#16A34A';
-  if (role === 'end') return '#DC2626';
-  return '#2563EB';
-}
-
-function markerIcon(role: MarkerRole, label: string): string {
-  const color = markerColorByRole(role);
-  const textColor = '#FFFFFF';
-  const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="34" height="44" viewBox="0 0 34 44">
-  <path d="M17 0C7.611 0 0 7.611 0 17c0 12.75 17 27 17 27s17-14.25 17-27C34 7.611 26.389 0 17 0z" fill="${color}"/>
-  <text x="17" y="21" text-anchor="middle" font-size="12" font-weight="700" fill="${textColor}" font-family="Arial, sans-serif">${label}</text>
-</svg>
-  `.trim();
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-}
 
 export function useTmapOverlays(mapRef: RefObject<TmapMapLike | null>) {
   const markerRefs = useRef<TmapMarkerLike[]>([]);
@@ -56,9 +37,9 @@ export function useTmapOverlays(mapRef: RefObject<TmapMapLike | null>) {
         const marker = new Tmapv3.Marker({
           position: new Tmapv3.LatLng(point.lat, point.lng),
           map,
-          title: markerTitleByRole(role),
-          icon: markerIcon(role, label),
-          iconSize: new Tmapv3.Size(34, 44),
+          title: getWaypointMarkerTitle(role),
+          icon: buildWaypointMarkerIconUrl(role, label),
+          iconSize: new Tmapv3.Size(WAYPOINT_MARKER_ICON_SIZE.width, WAYPOINT_MARKER_ICON_SIZE.height),
         });
         markerRefs.current.push(marker);
       });

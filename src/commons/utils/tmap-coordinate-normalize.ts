@@ -16,11 +16,9 @@ export function webMercatorMetersToWgs84(x: number, y: number): { lat: number; l
 
 function looksLikeWebMercatorMeters(a: number, b: number): boolean {
   if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
-  const insideExtent =
-    Math.abs(a) <= WEB_MERCATOR_HALF && Math.abs(b) <= WEB_MERCATOR_HALF;
+  const insideExtent = Math.abs(a) <= WEB_MERCATOR_HALF && Math.abs(b) <= WEB_MERCATOR_HALF;
   /* 도 단위 위경도와 구분: 미터값은 한반도 부근에서 보통 둘 다 5e5 초과 */
-  const magnitudeLikeProjected =
-    Math.abs(a) > 500_000 && Math.abs(b) > 500_000;
+  const magnitudeLikeProjected = Math.abs(a) > 500_000 && Math.abs(b) > 500_000;
   return insideExtent && magnitudeLikeProjected;
 }
 

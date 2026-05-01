@@ -10,6 +10,11 @@
   height: 100%;
 }
 
+/* SDK 기본 grab을 막아 빈 지도에서는 default, 마커(layer 위)에서는 pointer가 보이게 한다 */
+.map canvas {
+  cursor: default !important;
+}
+
 /** * [추가] 현재 위치 재검색 버튼 스타일 */
 .refreshButton {
   /* 바텀시트 핸들 상단에 위치하도록 동적 보정 */

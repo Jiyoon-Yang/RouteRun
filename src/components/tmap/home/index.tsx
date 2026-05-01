@@ -7,8 +7,12 @@ import type { Route, RouteViewport } from '@/commons/types/runroute';
 import { hasValidRouteStartCoordinate, SEOUL_CITY_HALL_COORDINATE } from '@/commons/utils/geo';
 import { getDistanceCategory, type DistanceCategory } from '@/components/home/utils/course-filter';
 
+import { applyPointerCursorToTmapMarker } from '@/components/tmap/shared/apply-pointer-cursor-to-tmap-marker';
+
 import {
   getRunningCourseMarkerIconUrlForCategory,
+  ROUTE_MARKER_ICON_ANCHOR,
+  ROUTE_MARKER_ICON_PIXEL_SIZE,
   type MarkerVisualState,
 } from './build-running-course-marker-icon';
 import styles from './styles.module.css';
@@ -417,7 +421,9 @@ export function TmapHome({
 
     // 줌 레벨에 따라 아이콘 크기가 달라지므로 현재 위치 마커는 갱신 시 재생성한다.
     currentLocationMarkerRef.current?.setMap(null);
-    currentLocationMarkerRef.current = new Tmapv3.Marker(markerOptions);
+    const locationMarker = new Tmapv3.Marker(markerOptions);
+    applyPointerCursorToTmapMarker(locationMarker);
+    currentLocationMarkerRef.current = locationMarker;
   };
 
   const upsertSelectedLabelMarker = useCallback((courseId: string | null) => {
@@ -452,7 +458,9 @@ export function TmapHome({
 
     // SDK 내부 상태(null screenSize) 충돌을 피하기 위해 라벨 마커는 갱신 시 재생성한다.
     selectedLabelMarkerRef.current?.setMap(null);
-    selectedLabelMarkerRef.current = new Tmapv3.Marker(options);
+    const labelMarker = new Tmapv3.Marker(options);
+    applyPointerCursorToTmapMarker(labelMarker);
+    selectedLabelMarkerRef.current = labelMarker;
   }, []);
 
   const registerMapListeners = useCallback(
@@ -601,14 +609,25 @@ export function TmapHome({
         title: '',
         label: '',
         icon: getRunningCourseMarkerIconUrlForCategory(category, visualState),
-        iconSize: new Tmapv3.Size(30, 38),
+        iconSize: new Tmapv3.Size(
+          ROUTE_MARKER_ICON_PIXEL_SIZE.width,
+          ROUTE_MARKER_ICON_PIXEL_SIZE.height,
+        ),
       };
       if (Tmapv3.Point) {
-        markerOptions.iconAnchor = new Tmapv3.Point(16, 36);
-        markerOptions.offset = new Tmapv3.Point(16, 36);
+        markerOptions.iconAnchor = new Tmapv3.Point(
+          ROUTE_MARKER_ICON_ANCHOR.x,
+          ROUTE_MARKER_ICON_ANCHOR.y,
+        );
+        markerOptions.offset = new Tmapv3.Point(
+          ROUTE_MARKER_ICON_ANCHOR.x,
+          ROUTE_MARKER_ICON_ANCHOR.y,
+        );
       }
 
-      return new Tmapv3.Marker(markerOptions);
+      const routeMarker = new Tmapv3.Marker(markerOptions);
+      applyPointerCursorToTmapMarker(routeMarker);
+      return routeMarker;
     },
     [],
   );
@@ -643,6 +662,7 @@ export function TmapHome({
       const icon = getRunningCourseMarkerIconUrlForCategory(markerEntry.category, state);
       if (typeof markerEntry.marker.setIcon === 'function') {
         markerEntry.marker.setIcon(icon);
+        applyPointerCursorToTmapMarker(markerEntry.marker);
         return;
       }
 

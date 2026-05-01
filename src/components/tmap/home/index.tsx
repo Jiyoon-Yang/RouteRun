@@ -194,7 +194,7 @@ function buildMarkerLabelIconUrl(
   const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${totalHeight}" viewBox="0 0 ${width} ${totalHeight}">
   <rect x="0" y="0" width="${width}" height="${height}" rx="${radius}" fill="#2F3146"/>
-  <text x="${textX}" y="${y}" text-anchor="middle" dominant-baseline="middle" fill="#FFFFFF" font-size="${fontSize}" font-weight="700">${safeTitle}</text>
+  <text x="${textX}" y="${y}" text-anchor="middle" dominant-baseline="middle" fill="#fafafa" font-size="${fontSize}" font-weight="700">${safeTitle}</text>
 </svg>
 `.trim();
 

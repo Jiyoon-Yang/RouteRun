@@ -101,7 +101,14 @@ function parseLineStringCoordinates(feature: TmapPedestrianRouteFeature): TmapCo
     .filter((coordinate) => Number.isFinite(coordinate.lat) && Number.isFinite(coordinate.lng));
 }
 
-export async function getPedestrianRoute(points: TmapCoordinate[]): Promise<PedestrianRouteResult> {
+/**
+ * Tmap OpenAPI 보행자 경로 탐색 (`/tmap/routes/pedestrian`).
+ * 등록 화면·코스 상세 미리보기에서 동일 스펙으로 도보 기반 라인을 맞춘다.
+ */
+export async function getPedestrianRoute(
+  points: TmapCoordinate[],
+  signal?: AbortSignal,
+): Promise<PedestrianRouteResult> {
   if (points.length < 2) {
     throw new Error('보행자 경로 탐색은 최소 2개 좌표가 필요합니다.');
   }
@@ -132,6 +139,7 @@ export async function getPedestrianRoute(points: TmapCoordinate[]): Promise<Pede
       endName: '도착지',
     }),
     cache: 'no-store',
+    signal,
   });
 
   if (!response.ok) {

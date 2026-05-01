@@ -43,15 +43,21 @@ function getNextState(current: BottomSheetState, direction: 'up' | 'down'): Bott
 type CoursesListProps = {
   cards?: CourseCardView[];
   isLoading?: boolean;
+  isCourseLiked?: (courseId: string) => boolean;
+  getCourseLikeCount?: (courseId: string) => number;
   onSheetPositionChange?: (payload: SheetPositionPayload) => void;
   onCourseSelect?: (courseId: string) => void;
+  onCourseLikeToggle?: (courseId: string) => void;
 };
 
 export function CoursesList({
   cards = [],
   isLoading = false,
+  isCourseLiked,
+  getCourseLikeCount,
   onSheetPositionChange,
   onCourseSelect,
+  onCourseLikeToggle,
 }: CoursesListProps) {
   // [상태] 바텀시트 표시 상태 관리
   const [sheetState, setSheetState] = useState<BottomSheetState>('peek');
@@ -208,6 +214,7 @@ export function CoursesList({
   }, [effectiveSheetHeight, effectiveSheetState, liveTranslateY, onSheetPositionChange]);
 
   const handleCardKeyDown = (event: KeyboardEvent<HTMLDivElement>, courseId: string) => {
+    if (event.target !== event.currentTarget) return;
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       onCourseSelect?.(courseId);
@@ -263,12 +270,13 @@ export function CoursesList({
             <Card
               className={styles.cardWidth}
               type="default"
-              isLiked
+              isLiked={isCourseLiked?.(card.courseId) ?? false}
               isSelected={card.isPinnedTop}
               title={card.title}
               location={card.location}
               distanceText={card.distanceText}
-              likeCount={10}
+              likeCount={getCourseLikeCount?.(card.courseId) ?? card.likeCount}
+              onLikeClick={() => onCourseLikeToggle?.(card.courseId)}
             />
           </div>
         ))}

@@ -16,9 +16,12 @@ export type UseCourseSubmitParams = {
 export type RouteData = SaveRoutePayload;
 
 function toPathDataRecord(data: RouteData): Record<string, unknown> {
+  const detailedPath = data.pathData.path.map(({ lat, lng }) => ({ lat, lng }));
   return {
-    points: data.pathData.points.map(({ lat, lng }) => ({ lat, lng })),
-    path: data.pathData.path.map(({ lat, lng }) => ({ lat, lng })),
+    // DB에는 도보 경로의 상세 좌표를 우선 저장한다.
+    path: detailedPath,
+    waypoint_points: data.pathData.points.map(({ lat, lng }) => ({ lat, lng })),
+    path_source: 'pedestrianRoute.path',
   };
 }
 

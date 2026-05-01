@@ -47,17 +47,22 @@ type AlertModalProps = ModalBaseProps & {
 export type ModalProps = ConfirmModalProps | FormModalProps | AlertModalProps;
 
 export function Modal(props: ModalProps) {
-  const { className, type, title, content, confirmText, onConfirm, confirmDisabled = false } =
-    props;
+  const {
+    className,
+    type,
+    title,
+    content,
+    confirmText,
+    onConfirm,
+    confirmDisabled = false,
+  } = props;
   const rootClass = [styles.root, className].filter(Boolean).join(' ');
   const resolvedConfirmText = confirmText ?? (type === 'form' ? '저장' : '확인');
 
   const cancelText =
     type === 'confirm' || type === 'form' ? (props.cancelText ?? '취소') : undefined;
   const onCancel =
-    type === 'confirm' || type === 'form'
-      ? (props.onCancel ?? props.onClose)
-      : undefined;
+    type === 'confirm' || type === 'form' ? (props.onCancel ?? props.onClose) : undefined;
 
   const stopEventPropagation = (
     event:

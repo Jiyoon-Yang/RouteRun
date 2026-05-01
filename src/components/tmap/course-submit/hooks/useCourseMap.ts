@@ -110,7 +110,6 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
       const totalDistanceKm = Number((pedestrianRoute.totalDistanceMeters / 1000).toFixed(2));
       setDistanceKm(totalDistanceKm);
 
-      console.log('[useCourseMap] 저장 경로 좌표 수:', detailedPath.length);
       onSaveRoute?.({
         totalDistanceKm,
         pathData: {

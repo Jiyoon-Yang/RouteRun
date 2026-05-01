@@ -6,7 +6,6 @@ import { Icon } from '@/commons/components/icons';
 import type { Route, RouteViewport } from '@/commons/types/runroute';
 import { hasValidRouteStartCoordinate, SEOUL_CITY_HALL_COORDINATE } from '@/commons/utils/geo';
 import { getDistanceCategory, type DistanceCategory } from '@/components/home/utils/course-filter';
-
 import { applyPointerCursorToTmapMarker } from '@/components/tmap/shared/apply-pointer-cursor-to-tmap-marker';
 
 import {

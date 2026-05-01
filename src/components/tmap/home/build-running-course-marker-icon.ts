@@ -11,9 +11,22 @@ const MARKER_COLOR_BY_CATEGORY: Record<DistanceCategory, string> = {
 
 const MARKER_SIZE_BY_STATE: Record<MarkerVisualState, number> = {
   default: 1,
-  hover: 1.08,
-  clicked: 1.22,
+  hover: 1.18,
+  clicked: 1.4,
 };
+
+/** SVG 뷰박스·외곽 크기 — hover/clicked scale·그림자 상·좌우 클립 방지용 여백 */
+const ROUTE_MARKER_SVG_VIEW_BOX = '-14 -32 72 100';
+const ROUTE_MARKER_SVG_WIDTH = 72;
+const ROUTE_MARKER_SVG_HEIGHT = 100;
+
+/**
+ * 위 SVG와 동기화한 Tmap `iconSize`·`iconAnchor`(지도 좌표는 핀 끝 기준).
+ */
+export const ROUTE_MARKER_ICON_PIXEL_SIZE = { width: 52, height: 74 } as const;
+export const ROUTE_MARKER_ICON_ANCHOR = { x: 26, y: 70 } as const;
+
+const ICON_GEOMETRY_REVISION = 4;
 
 const markerIconUrlCache = new Map<string, string>();
 
@@ -29,9 +42,9 @@ function buildRunningCourseMarkerSvg(color: string, state: MarkerVisualState): s
 
   /* 코스 마커 아이콘 SVG 마크업 */
   return `
-<svg xmlns="http://www.w3.org/2000/svg" width="40" height="52" viewBox="0 0 40 52">
+<svg xmlns="http://www.w3.org/2000/svg" width="${ROUTE_MARKER_SVG_WIDTH}" height="${ROUTE_MARKER_SVG_HEIGHT}" viewBox="${ROUTE_MARKER_SVG_VIEW_BOX}">
   <defs>
-    <filter id="markerShadow" x="-40%" y="-35%" width="180%" height="210%">
+    <filter id="markerShadow" x="-55%" y="-45%" width="210%" height="230%">
       <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.22"/>
     </filter>
   </defs>
@@ -48,7 +61,7 @@ export function getRunningCourseMarkerIconUrlForCategory(
   category: DistanceCategory,
   state: MarkerVisualState,
 ): string {
-  const cacheKey = `${category}:${state}`;
+  const cacheKey = `${category}:${state}:geom${ICON_GEOMETRY_REVISION}`;
   const cachedIconUrl = markerIconUrlCache.get(cacheKey);
   if (cachedIconUrl) return cachedIconUrl;
 

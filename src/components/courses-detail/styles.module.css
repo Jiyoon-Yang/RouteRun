@@ -31,6 +31,20 @@
   border-bottom: 1px solid var(--color-grey-100);
 }
 
+.mapPreviewInner {
+  width: 100%;
+  height: 100%;
+}
+
+.mapCanvas {
+  width: 100%;
+  height: 100%;
+}
+
+.mapCanvas canvas {
+  cursor: default !important;
+}
+
 .mapLabel {
   color: var(--color-blue-900);
   opacity: 1;
@@ -269,6 +283,7 @@
 }
 
 .carouselItem {
+  position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
@@ -278,6 +293,7 @@
   padding: 16px;
   border: 1px solid var(--color-grey-100);
   border-radius: 16px;
+  overflow: hidden;
 }
 
 .carouselItemPrimary {
@@ -294,6 +310,8 @@
 }
 
 .carouselCaption {
+  position: relative;
+  z-index: 1;
   color: var(--color-white-500);
   font-family: var(--typography-body-2-ko-desktop-semibold-font-family);
   font-size: var(--typography-body-2-ko-desktop-semibold-font-size);
@@ -301,6 +319,74 @@
   font-weight: var(--typography-body-2-ko-desktop-semibold-font-weight);
   line-height: var(--typography-body-2-ko-desktop-semibold-line-height);
   letter-spacing: var(--typography-body-2-ko-desktop-semibold-letter-spacing);
+}
+
+.carouselImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.emptyImageCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 200px;
+  padding: 20px 16px;
+  border: 1px solid var(--color-grey-100);
+  border-radius: 16px;
+  background: linear-gradient(
+    135deg,
+    var(--color-white_grey-100) 0%,
+    var(--color-white_grey-200) 100%
+  );
+}
+
+.emptyImageIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-grey-200);
+  border-radius: 9999px;
+  background: var(--color-white-500);
+  color: var(--color-grey-500);
+  font-family: var(--typography-heading-3-ko-desktop-semibold-font-family);
+  font-size: 18px;
+  font-style: normal;
+  font-weight: var(--typography-heading-3-ko-desktop-semibold-font-weight);
+  line-height: 18px;
+  letter-spacing: 0;
+}
+
+.emptyImageTitle {
+  margin: 0;
+  color: var(--color-black-900);
+  font-family: var(--typography-body-2-ko-desktop-semibold-font-family);
+  font-size: var(--typography-body-2-ko-desktop-semibold-font-size);
+  font-style: var(--typography-body-2-ko-desktop-semibold-font-style);
+  font-weight: var(--typography-body-2-ko-desktop-semibold-font-weight);
+  line-height: var(--typography-body-2-ko-desktop-semibold-line-height);
+  letter-spacing: var(--typography-body-2-ko-desktop-semibold-letter-spacing);
+}
+
+.emptyImageDescription {
+  margin: 0;
+  max-width: 280px;
+  color: var(--color-grey-600);
+  text-align: center;
+  font-family: var(--typography-body-2-ko-desktop-regular-font-family);
+  font-size: var(--typography-body-2-ko-desktop-regular-font-size);
+  font-style: var(--typography-body-2-ko-desktop-regular-font-style);
+  font-weight: var(--typography-body-2-ko-desktop-regular-font-weight);
+  line-height: var(--typography-body-2-ko-desktop-regular-line-height);
+  letter-spacing: var(--typography-body-2-ko-desktop-regular-letter-spacing);
 }
 
 .carouselControls {

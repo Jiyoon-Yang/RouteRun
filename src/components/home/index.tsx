@@ -1,14 +1,17 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { TabButton } from '@/commons/components/tab';
+import { ROUTES } from '@/commons/constants/url';
 import { Header } from '@/commons/layout/header';
-import type { ReferenceLocation } from '@/commons/types/runroute';
+import type { ReferenceLocation, RouteViewport } from '@/commons/types/runroute';
 import { CoursesList } from '@/components/courses-list';
 import { TmapHome } from '@/components/tmap/home';
+import { useCourseLikes } from '@/hooks/useCourseLikes';
 
-import { useRoutes, type RouteViewport } from './hooks/index.use-routes';
+import { useRoutes } from './hooks/index.use-routes';
 import styles from './styles.module.css';
 import {
   buildCourseCardViews,
@@ -35,6 +38,7 @@ export function Home() {
   const [referenceLocation, setReferenceLocation] =
     useState<ReferenceLocation>(SEOUL_CITY_HALL_REFERENCE);
   const { routes, isLoading, errorMessage } = useRoutes(queryViewport);
+  const router = useRouter();
 
   const isSameViewport = useCallback((left: RouteViewport | null, right: RouteViewport | null) => {
     if (!left || !right) return false;
@@ -75,6 +79,15 @@ export function Home() {
     () => buildCourseCardViews(filteredRoutes, referenceLocation, selectedCourseId),
     [filteredRoutes, referenceLocation, selectedCourseId],
   );
+  const courseLikeCounts = useMemo(
+    () =>
+      routes.reduce<Record<string, number>>((acc, route) => {
+        acc[route.id] = route.likes_count;
+        return acc;
+      }, {}),
+    [routes],
+  );
+  const { isCourseLiked, getCourseLikeCount, toggleCourseLike } = useCourseLikes(courseLikeCounts);
 
   // [초기화] 사용자 위치 기반 기준 좌표 설정
   useEffect(() => {
@@ -105,13 +118,6 @@ export function Home() {
       isCancelled = true;
     };
   }, []);
-
-  // [동기화] 필터 결과와 선택 코스 정합성 유지
-  useEffect(() => {
-    if (!selectedCourseId) return;
-    if (filteredRoutes.some((route) => route.id === selectedCourseId)) return;
-    setSelectedCourseId(null);
-  }, [filteredRoutes, selectedCourseId]);
 
   // [이벤트] 거리 카테고리 선택 토글 처리
   const toggleCategory = (category: DistanceCategory) => {
@@ -171,7 +177,13 @@ export function Home() {
         <CoursesList
           cards={courseCards}
           isLoading={isLoading}
-          onCourseSelect={setSelectedCourseId}
+          isCourseLiked={isCourseLiked}
+          getCourseLikeCount={getCourseLikeCount}
+          onCourseSelect={(courseId) => {
+            setSelectedCourseId(courseId);
+            router.push(ROUTES.COURSES.DETAIL(courseId));
+          }}
+          onCourseLikeToggle={toggleCourseLike}
           onSheetPositionChange={({ state, visibleHeight }) => {
             setIsSheetExpanded(state === 'expanded');
             setSheetVisibleHeight(visibleHeight);

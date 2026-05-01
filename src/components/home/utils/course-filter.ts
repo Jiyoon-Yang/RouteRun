@@ -98,6 +98,7 @@ export function buildCourseCardViews(
         distanceKm: route.distance_meters / 1000,
         distanceFromReference,
         distanceText: toDistanceText(route.distance_meters),
+        likeCount: route.likes_count,
         isPinnedTop: false,
       };
     })

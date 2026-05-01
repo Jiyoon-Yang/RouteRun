@@ -3,8 +3,78 @@ import type {
   TmapPedestrianRouteFeature,
   TmapPedestrianRouteResponse,
 } from '@/commons/types/tmap';
+import { isValidCoordinate } from '@/commons/utils/geo';
 
 const TMAP_PEDESTRIAN_ROUTE_URL = 'https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1';
+
+type ReverseGeocodingAddressInfo = {
+  city_do?: string;
+  gu_gun?: string;
+};
+
+type ReverseGeocodingResponse = {
+  addressInfo?: ReverseGeocodingAddressInfo;
+};
+
+export type ReverseGeocodeRegionParams = {
+  lat: number;
+  lng: number;
+  signal?: AbortSignal;
+};
+
+function formatRegionAddress(addressInfo?: ReverseGeocodingAddressInfo): string | null {
+  if (!addressInfo) {
+    return null;
+  }
+
+  const city = addressInfo.city_do?.trim() ?? '';
+  const district = addressInfo.gu_gun?.trim() ?? '';
+  const formatted = [city, district].filter(Boolean).join(' ');
+  return formatted || null;
+}
+
+/**
+ * 리버스 지오코딩(Tmap Geo Reverse Geocoding)으로 시/도 + 구/군 주소를 반환한다.
+ * NOTE: 외부 통신은 repositories에서만 수행한다.
+ */
+export async function reverseGeocodeRegion({
+  lat,
+  lng,
+  signal,
+}: ReverseGeocodeRegionParams): Promise<string | null> {
+  const appKey = process.env.NEXT_PUBLIC_TMAP_API_KEY;
+
+  if (!isValidCoordinate(lat, lng) || !appKey?.trim()) {
+    return null;
+  }
+
+  const searchParams = new URLSearchParams({
+    version: '1',
+    format: 'json',
+    coordType: 'WGS84GEO',
+    addressType: 'A10',
+    lon: String(lng),
+    lat: String(lat),
+  });
+
+  const response = await fetch(
+    `https://apis.openapi.sk.com/tmap/geo/reversegeocoding?${searchParams.toString()}`,
+    {
+      method: 'GET',
+      headers: {
+        appKey,
+      },
+      signal,
+    },
+  );
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = (await response.json()) as ReverseGeocodingResponse;
+  return formatRegionAddress(data.addressInfo);
+}
 
 export type PedestrianRouteResult = {
   totalDistanceMeters: number;
@@ -31,7 +101,14 @@ function parseLineStringCoordinates(feature: TmapPedestrianRouteFeature): TmapCo
     .filter((coordinate) => Number.isFinite(coordinate.lat) && Number.isFinite(coordinate.lng));
 }
 
-export async function getPedestrianRoute(points: TmapCoordinate[]): Promise<PedestrianRouteResult> {
+/**
+ * Tmap OpenAPI 보행자 경로 탐색 (`/tmap/routes/pedestrian`).
+ * 등록 화면·코스 상세 미리보기에서 동일 스펙으로 도보 기반 라인을 맞춘다.
+ */
+export async function getPedestrianRoute(
+  points: TmapCoordinate[],
+  signal?: AbortSignal,
+): Promise<PedestrianRouteResult> {
   if (points.length < 2) {
     throw new Error('보행자 경로 탐색은 최소 2개 좌표가 필요합니다.');
   }
@@ -62,6 +139,7 @@ export async function getPedestrianRoute(points: TmapCoordinate[]): Promise<Pede
       endName: '도착지',
     }),
     cache: 'no-store',
+    signal,
   });
 
   if (!response.ok) {

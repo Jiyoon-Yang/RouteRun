@@ -12,6 +12,10 @@
   height: 100%;
 }
 
+.map canvas {
+  cursor: default !important;
+}
+
 .topControls {
   position: absolute;
   top: 12px;

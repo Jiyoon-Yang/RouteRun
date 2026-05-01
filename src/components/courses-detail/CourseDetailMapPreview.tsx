@@ -7,7 +7,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type { Route } from '@/commons/types/runroute';
 import type { TmapV3 } from '@/commons/types/tmap';
-import { getPedestrianRoute } from '@/repositories/map.repository';
 import { applyPointerCursorToTmapMarker } from '@/components/tmap/shared/apply-pointer-cursor-to-tmap-marker';
 import {
   buildWaypointMarkerIconUrl,
@@ -15,6 +14,7 @@ import {
   WAYPOINT_MARKER_ICON_SIZE,
   type WaypointMarkerRole,
 } from '@/components/tmap/shared/build-waypoint-marker-icon';
+import { getPedestrianRoute } from '@/repositories/map.repository';
 
 import styles from './styles.module.css';
 
@@ -626,13 +626,7 @@ export default function CourseDetailMapPreview({ course, mapLabel }: CourseDetai
       polylineRef.current = null;
       clearWaypointMarkers();
     };
-  }, [
-    mapReady,
-    course.start_lat,
-    course.start_lng,
-    lineCoordinates,
-    waypointMarkerModels,
-  ]);
+  }, [mapReady, course.start_lat, course.start_lng, lineCoordinates, waypointMarkerModels]);
 
   return (
     <div className={styles.mapPreviewInner}>

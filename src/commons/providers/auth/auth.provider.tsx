@@ -42,6 +42,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     isLoggedIn: false,
+    isAuthenticated: false,
     isAnonymous: false,
     isLoading: true,
   });

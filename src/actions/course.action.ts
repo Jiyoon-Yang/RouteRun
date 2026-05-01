@@ -6,9 +6,9 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-import { reverseGeocodeRegion } from '@/commons/utils/geo';
 import { createClient } from '@/lib/supabase/server';
 import * as courseRepository from '@/repositories/course.repository';
+import { reverseGeocodeRegion } from '@/repositories/map.repository';
 import * as courseService from '@/services/course/courseService';
 import type { SubmitCourseInput } from '@/services/course/courseService';
 
@@ -66,7 +66,6 @@ export async function createCourseAction(
     start_address_region = await reverseGeocodeRegion({
       lat: start_lat,
       lng: start_lng,
-      appKey: process.env.NEXT_PUBLIC_TMAP_API_KEY!,
     });
   } catch (error) {
     console.error('[createCourseAction] 역지오코딩 실패:', error);

@@ -13,8 +13,10 @@ type CardBaseProps = {
   location?: string;
   distanceText?: string;
   likeCount?: number;
+  onLikeClick?: () => void;
   onPrimaryActionClick?: () => void;
   onSecondaryActionClick?: () => void;
+  secondaryActionDisabled?: boolean;
 };
 
 type DefaultCardProps = CardBaseProps & {
@@ -38,8 +40,10 @@ export function Card({
   location = '여의도 한강공원',
   distanceText = '5km',
   likeCount = 234,
+  onLikeClick,
   onPrimaryActionClick,
   onSecondaryActionClick,
+  secondaryActionDisabled = false,
 }: CardProps) {
   const showActions = type === 'my-course' || type === 'liked-course';
 
@@ -51,6 +55,18 @@ export function Card({
   ]
     .filter(Boolean)
     .join(' ');
+  const likeLabel = isLiked ? '코스 찜 취소' : '코스 찜하기';
+  const likeContent = (
+    <>
+      <Icon
+        name={isLiked ? 'heartFilled' : 'heart'}
+        size={1}
+        color="var(--color-red-500)"
+        className={styles.likeIcon}
+      />
+      <span className={styles.likeCount}>{likeCount}</span>
+    </>
+  );
 
   return (
     <article className={rootClass}>
@@ -63,15 +79,27 @@ export function Card({
           <div className={styles.contentInfo}>
             <div className={styles.contentTop}>
               <h3 className={styles.title}>{title}</h3>
-              <div className={styles.likeWrap}>
-                <Icon
-                  name={isLiked ? 'heartFilled' : 'heart'}
-                  size={1}
-                  color={isLiked ? 'var(--color-red-500)' : 'var(--color-red-500)'}
-                  className={styles.likeIcon}
-                />
-                <span className={styles.likeCount}>{likeCount}</span>
-              </div>
+              {onLikeClick ? (
+                <button
+                  type="button"
+                  className={`${styles.likeWrap} ${styles.likeButton}`}
+                  aria-label={likeLabel}
+                  aria-pressed={isLiked}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onLikeClick();
+                  }}
+                  onKeyDown={(event) => {
+                    event.stopPropagation();
+                  }}
+                >
+                  {likeContent}
+                </button>
+              ) : (
+                <div className={styles.likeWrap} aria-label={likeLabel}>
+                  {likeContent}
+                </div>
+              )}
             </div>
 
             <div className={styles.locationWrap}>
@@ -121,6 +149,7 @@ export function Card({
               )
             }
             onClick={onSecondaryActionClick}
+            disabled={secondaryActionDisabled}
           >
             {type === 'my-course' ? '삭제' : '좋아요 취소'}
           </Button>

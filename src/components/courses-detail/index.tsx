@@ -10,36 +10,66 @@
  * - [x] 캐러셀/찜 상태 UI 반영
  */
 
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useMemo } from 'react';
+
 import { Icon } from '@/commons/components/icons';
 import { Header } from '@/commons/layout/header';
+import type { Route } from '@/commons/types/runroute';
+import { useCourseLikes } from '@/hooks/useCourseLikes';
 
+import CourseDetailMapPreview from './CourseDetailMapPreview';
 import styles from './styles.module.css';
 
 const COPY = {
   mapPreview: '[MAP PREVIEW]',
-  userName: '러너123',
-  courseTitle: '한강 러닝 코스',
-  distance: '5.2km',
-  location: '서울 영등포구',
-  likes: '234',
   descriptionTitle: '코스 설명',
-  description:
-    '한강을 따라 달리는 아름다운 코스입니다. 평탄한 길로 초보자도 쉽게 달릴 수 있으며, 강변의 경치를 즐기며 러닝할 수 있습니다.',
   imageTitle: '코스 이미지',
   imageAltPrefix: '코스 이미지',
+  emptyImageTitle: '등록된 코스 이미지가 없어요',
   previousImage: '이전 이미지',
   nextImage: '다음 이미지',
 } as const;
 
-const COURSE_IMAGES = ['도심 출발 구간', '강변 러닝 구간', '피니시 지점'] as const;
+type CoursesDetailProps = {
+  course: Route;
+  authorNickname: string;
+  location: string;
+};
 
-export function Courses() {
+export function Courses({ course, authorNickname, location }: CoursesDetailProps) {
+  const router = useRouter();
+  const distanceText = `${(course.distance_meters / 1000).toFixed(1)}km`;
+  const courseLikeCounts = useMemo(
+    () => ({ [course.id]: course.likes_count ?? 0 }),
+    [course.id, course.likes_count],
+  );
+  const { isCourseLiked, getCourseLikeCount, toggleCourseLike } = useCourseLikes(courseLikeCounts);
+  const isLiked = isCourseLiked(course.id);
+  const likesCount = getCourseLikeCount(course.id);
+  const descriptionText = course.description?.trim() || '설명이 없습니다.';
+  const imageUrls = course.image_urls.filter((url) => url.trim().length > 0);
+  const hasImages = imageUrls.length > 0;
+  const carouselLabels = hasImages
+    ? imageUrls.map((_, idx) => `코스 이미지 ${idx + 1}`)
+    : Array.from({ length: 3 }, (_, idx) => `코스 이미지 ${idx + 1}`);
+
   return (
     <main className={styles.container}>
-      <Header title="코스 상세" showRightIcon={false} />
+      <Header
+        title="코스 상세"
+        showRightIcon={false}
+        onLeftIconClick={() => {
+          // history.length는 브라우저별 추정치라 신뢰하면 안 됨(오탐 시 홈으로만 이동하는 버그).
+          // 마이페이지·홈 등 이전 페이지는 브라우저 세션 스택의 router.back()으로 복귀한다.
+          router.back();
+        }}
+      />
       <div className={styles.scrollArea}>
         <section className={styles.mapPreview} aria-label={COPY.mapPreview}>
-          <span className={styles.mapLabel}>{COPY.mapPreview}</span>
+          <CourseDetailMapPreview key={course.id} course={course} mapLabel={COPY.mapPreview} />
         </section>
 
         <article className={styles.content}>
@@ -48,15 +78,15 @@ export function Courses() {
               <div className={styles.avatarWrap} aria-hidden>
                 <Icon name="userRound" color="var(--color-white-500)" />
               </div>
-              <p className={styles.userName}>{COPY.userName}</p>
+              <p className={styles.userName}>{authorNickname}</p>
             </div>
           </section>
 
           <section className={styles.summarySection} aria-label="코스 요약 정보">
             <div className={styles.titleBlock}>
-              <h2 className={styles.courseTitle}>{COPY.courseTitle}</h2>
+              <h2 className={styles.courseTitle}>{course.title}</h2>
               <div className={styles.metaRow}>
-                <span className={styles.distance}>{COPY.distance}</span>
+                <span className={styles.distance}>{distanceText}</span>
                 <span className={styles.separator} aria-hidden>
                   |
                 </span>
@@ -64,7 +94,7 @@ export function Courses() {
                   <span className={styles.locationIcon} aria-hidden>
                     <Icon name="mapPin" size={16} color="var(--color-grey-500)" />
                   </span>
-                  <span className={styles.location}>{COPY.location}</span>
+                  <span className={styles.location}>{location}</span>
                 </span>
               </div>
             </div>
@@ -72,69 +102,85 @@ export function Courses() {
             <button
               type="button"
               className={styles.likeButton}
-              aria-pressed={true}
-              aria-label="찜한 코스"
+              aria-pressed={isLiked}
+              aria-label={isLiked ? '코스 찜 취소' : '코스 찜하기'}
+              onClick={() => toggleCourseLike(course.id)}
             >
-              <Icon name="heartFilled" color="var(--color-red-500)" />
-              <span className={styles.likeCount}>{COPY.likes}</span>
+              <Icon name={isLiked ? 'heartFilled' : 'heart'} color="var(--color-red-500)" />
+              <span className={styles.likeCount}>{likesCount}</span>
             </button>
           </section>
 
           <section className={styles.descriptionSection} aria-label={COPY.descriptionTitle}>
             <h3 className={styles.sectionTitle}>{COPY.descriptionTitle}</h3>
-            <p className={styles.description}>{COPY.description}</p>
+            <p className={styles.description}>{descriptionText}</p>
           </section>
 
           <section className={styles.imageSection} aria-label={COPY.imageTitle}>
             <h3 className={styles.sectionTitle}>{COPY.imageTitle}</h3>
+            {hasImages ? (
+              <div className={styles.carousel}>
+                <div className={styles.carouselViewport}>
+                  <div className={styles.carouselTrack} aria-label="코스 이미지 캐러셀">
+                    {carouselLabels.map((imageLabel, index) => {
+                      const imageClassName = [
+                        styles.carouselItem,
+                        index === 0 ? styles.carouselItemPrimary : styles.carouselItemSecondary,
+                      ]
+                        .filter(Boolean)
+                        .join(' ');
 
-            <div className={styles.carousel}>
-              <div className={styles.carouselViewport}>
-                <div className={styles.carouselTrack} aria-label="코스 이미지 캐러셀">
-                  {COURSE_IMAGES.map((imageLabel, index) => {
-                    const imageClassName = [
-                      styles.carouselItem,
-                      index === 0 ? styles.carouselItemPrimary : styles.carouselItemSecondary,
-                    ]
-                      .filter(Boolean)
-                      .join(' ');
+                      return (
+                        <figure
+                          key={imageLabel}
+                          className={imageClassName}
+                          aria-label={`${COPY.imageAltPrefix} ${index + 1}`}
+                        >
+                          {/* 상세 코스 이미지는 외부 URL을 그대로 표시한다. */}
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={imageUrls[index]}
+                            alt={`${COPY.imageAltPrefix} ${index + 1}`}
+                            className={styles.carouselImage}
+                          />
+                          <span className={styles.carouselCaption}>{imageLabel}</span>
+                        </figure>
+                      );
+                    })}
+                  </div>
 
-                    return (
-                      <figure
-                        key={imageLabel}
-                        className={imageClassName}
-                        aria-label={`${COPY.imageAltPrefix} ${index + 1}`}
-                      >
-                        <span className={styles.carouselCaption}>{imageLabel}</span>
-                      </figure>
-                    );
-                  })}
-                </div>
+                  <div className={styles.carouselControls}>
+                    <button
+                      type="button"
+                      className={styles.carouselButton}
+                      aria-label={COPY.previousImage}
+                    >
+                      <Icon name="chevronLeft" size={16} color="var(--color-black-900)" />
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.carouselButton}
+                      aria-label={COPY.nextImage}
+                    >
+                      <Icon name="chevronRight" size={16} color="var(--color-black-900)" />
+                    </button>
+                  </div>
 
-                <div className={styles.carouselControls}>
-                  <button
-                    type="button"
-                    className={styles.carouselButton}
-                    aria-label={COPY.previousImage}
-                  >
-                    <Icon name="chevronLeft" size={16} color="var(--color-black-900)" />
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.carouselButton}
-                    aria-label={COPY.nextImage}
-                  >
-                    <Icon name="chevronRight" size={16} color="var(--color-black-900)" />
-                  </button>
-                </div>
-
-                <div className={styles.carouselIndicators} aria-label="이미지 위치 표시">
-                  <span className={styles.indicatorActive} aria-hidden />
-                  <span className={styles.indicator} aria-hidden />
-                  <span className={styles.indicator} aria-hidden />
+                  <div className={styles.carouselIndicators} aria-label="이미지 위치 표시">
+                    <span className={styles.indicatorActive} aria-hidden />
+                    <span className={styles.indicator} aria-hidden />
+                    <span className={styles.indicator} aria-hidden />
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className={styles.emptyImageCard} role="status" aria-live="polite">
+                <span className={styles.emptyImageIcon} aria-hidden>
+                  ...
+                </span>
+                <p className={styles.emptyImageTitle}>{COPY.emptyImageTitle}</p>
+              </div>
+            )}
           </section>
         </article>
       </div>

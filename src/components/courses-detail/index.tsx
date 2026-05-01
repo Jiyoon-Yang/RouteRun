@@ -59,7 +59,7 @@ export function Courses({ course, authorNickname, location }: CoursesDetailProps
       <Header title="코스 상세" showRightIcon={false} />
       <div className={styles.scrollArea}>
         <section className={styles.mapPreview} aria-label={COPY.mapPreview}>
-          <CourseDetailMapPreview course={course} mapLabel={COPY.mapPreview} />
+          <CourseDetailMapPreview key={course.id} course={course} mapLabel={COPY.mapPreview} />
         </section>
 
         <article className={styles.content}>

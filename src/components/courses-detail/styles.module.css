@@ -141,6 +141,7 @@
 
 .courseTitle {
   margin: 0;
+  min-width: 0;
   color: var(--color-black-900);
   font-family: var(--typography-heading-3-ko-desktop-semibold-font-family);
   font-size: var(--typography-heading-3-ko-desktop-semibold-font-size);
@@ -148,6 +149,12 @@
   font-weight: var(--typography-heading-3-ko-desktop-semibold-font-weight);
   line-height: var(--typography-heading-3-ko-desktop-semibold-line-height);
   letter-spacing: var(--typography-heading-3-ko-desktop-semibold-letter-spacing);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 .metaRow {
@@ -213,6 +220,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
+  flex-shrink: 0;
   gap: 2px;
   min-width: 44px;
   min-height: 44px;
@@ -235,6 +243,7 @@
 
 .descriptionSection {
   gap: 8px;
+  min-width: 0;
 }
 
 .sectionTitle {
@@ -250,6 +259,8 @@
 
 .description {
   margin: 0;
+  max-width: 100%;
+  min-width: 0;
   color: var(--color-grey-700);
   font-family: var(--typography-body-2-ko-desktop-regular-font-family);
   font-size: var(--typography-body-2-ko-desktop-regular-font-size);
@@ -257,6 +268,10 @@
   font-weight: var(--typography-body-2-ko-desktop-regular-font-weight);
   line-height: var(--typography-body-2-ko-desktop-regular-line-height);
   letter-spacing: var(--typography-body-2-ko-desktop-regular-letter-spacing);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  overflow-x: hidden;
 }
 
 .imageSection {

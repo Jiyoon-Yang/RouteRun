@@ -24,6 +24,9 @@ type CourseDetailMapPreviewProps = {
 const MIN_ZOOM_LEVEL = 11;
 const MAX_ZOOM_LEVEL = 19;
 
+/** fitBounds 경계 여백(px). 값이 클수록 더 넓게(줌 아웃) 보임 */
+const FIT_BOUNDS_PADDING_PX = 72;
+
 type CoordinateSystem = 'WGS84_LNGLAT' | 'WGS84_LATLNG' | 'EPSG3857';
 type LatLng = { lat: number; lng: number };
 type CoordinatePair = [number, number];
@@ -594,7 +597,7 @@ export default function CourseDetailMapPreview({ course, mapLabel }: CourseDetai
 
         if (typeof Tmapv3.LatLngBounds === 'function') {
           const bounds = new Tmapv3.LatLngBounds(southWest, northEast);
-          mapInstance.fitBounds(bounds, 24);
+          mapInstance.fitBounds(bounds, FIT_BOUNDS_PADDING_PX);
         } else {
           mapInstance.fitBounds(southWest, northEast);
         }

@@ -7,7 +7,7 @@ import type { Route, RouteViewport } from '@/commons/types/runroute';
 import { SEOUL_CITY_HALL_COORDINATE } from '@/commons/utils/geo';
 import { resolveRouteStartForMapMarker } from '@/commons/utils/route-marker-position';
 import { getDistanceCategory, type DistanceCategory } from '@/components/home/utils/course-filter';
-import { applyPointerCursorToTmapMarker } from '@/components/tmap/shared/apply-pointer-cursor-to-tmap-marker';
+import { applyPointerCursorToTmapMarker } from '@/components/tmap/utils/apply-pointer-cursor-to-tmap-marker';
 
 import {
   getRunningCourseMarkerIconUrlForCategory,

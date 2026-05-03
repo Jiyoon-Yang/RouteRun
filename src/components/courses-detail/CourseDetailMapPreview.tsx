@@ -10,7 +10,7 @@ import type { TmapV3 } from '@/commons/types/tmap';
 import {
   getWaypointMarkerIconUrl,
   type WaypointMarkerRole,
-} from '@/components/tmap/shared/build-waypoint-marker-icon';
+} from '@/components/tmap/utils/build-waypoint-marker-icon';
 import { getPedestrianRoute } from '@/repositories/map.repository';
 
 import styles from './styles.module.css';

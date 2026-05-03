@@ -18,7 +18,7 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef } from 'react';
+import { useRef } from 'react';
 
 import { Button } from '@/commons/components/button';
 import { Icon } from '@/commons/components/icons';
@@ -75,6 +75,7 @@ export default function CourseSubmit({ mode, courseId, initialData }: CourseSubm
     setDescription,
     existingImageUrls,
     images,
+    imagePreviewUrls,
     handleSaveRoute,
     handleImageInputChange,
     handleRemoveExistingImage,
@@ -84,14 +85,6 @@ export default function CourseSubmit({ mode, courseId, initialData }: CourseSubm
   } = useCourseSubmit({ mode, courseId, initialData });
 
   const totalImageCount = existingImageUrls.length + images.length;
-
-  const imagePreviewUrls = useMemo(() => images.map((file) => URL.createObjectURL(file)), [images]);
-
-  useEffect(() => {
-    return () => {
-      imagePreviewUrls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [imagePreviewUrls]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -162,7 +155,7 @@ export default function CourseSubmit({ mode, courseId, initialData }: CourseSubm
         </div>
 
         {/* 이미지 업로드 (선택·정보) */}
-        <div className={styles.fieldGroup}>
+        <div className={`${styles.fieldGroup} ${styles.fieldGroupNoGap}`}>
           <div className={styles.infoLabelRow}>
             <Label type="optional">{TEXTS.LABEL_IMAGE_UPLOAD}</Label>
             <Tooltip content={TEXTS.TOOLTIP_IMAGE_UPLOAD}>
@@ -172,11 +165,11 @@ export default function CourseSubmit({ mode, courseId, initialData }: CourseSubm
             </Tooltip>
           </div>
           <div className={styles.imageList}>
-            {/* 이미지 추가 버튼 */}
-            {totalImageCount < MAX_COURSE_SUBMIT_IMAGES && (
+            <div className={styles.imageAddColumn}>
               <button
                 type="button"
                 className={styles.addImageButton}
+                disabled={totalImageCount >= MAX_COURSE_SUBMIT_IMAGES}
                 onClick={() => fileInputRef.current?.click()}
                 aria-label="이미지 추가"
               >
@@ -187,58 +180,60 @@ export default function CourseSubmit({ mode, courseId, initialData }: CourseSubm
                   {totalImageCount}/{MAX_COURSE_SUBMIT_IMAGES}
                 </span>
               </button>
-            )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className={styles.fileInput}
-              onChange={handleImageInputChange}
-              aria-hidden="true"
-            />
-            {/* 서버에 저장된 기존 이미지 (수정 모드) */}
-            {existingImageUrls.map((url, idx) => (
-              <div key={`existing-${url}-${idx}`} className={styles.imageItem}>
-                {/* 외부 스토리지 URL — Next/Image 도메인 설정 없이 표시 */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={url}
-                  alt={`등록된 이미지 ${idx + 1}`}
-                  className={styles.imageThumb}
-                  width={80}
-                  height={80}
-                />
-                <button
-                  type="button"
-                  className={styles.deleteImageButton}
-                  onClick={() => handleRemoveExistingImage(idx)}
-                  aria-label={`등록된 이미지 ${idx + 1} 삭제`}
-                >
-                  <Icon name="minus" size={12} color="var(--color-white-500)" />
-                </button>
-              </div>
-            ))}
-            {/* 새로 선택한 이미지 목록 */}
-            {imagePreviewUrls.map((src, idx) => (
-              <div key={`${src}-${idx}`} className={styles.imageItem}>
-                <Image
-                  src={src}
-                  alt={`업로드 이미지 ${idx + 1}`}
-                  className={styles.imageThumb}
-                  width={80}
-                  height={80}
-                />
-                <button
-                  type="button"
-                  className={styles.deleteImageButton}
-                  onClick={() => removeImageAt(idx)}
-                  aria-label={`이미지 ${idx + 1} 삭제`}
-                >
-                  <Icon name="minus" size={12} color="var(--color-white-500)" />
-                </button>
-              </div>
-            ))}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className={styles.fileInput}
+                onChange={handleImageInputChange}
+                aria-hidden="true"
+              />
+            </div>
+            <div className={styles.imageListScroll}>
+              {/* 서버에 저장된 기존 이미지 (수정 모드) */}
+              {existingImageUrls.map((url, idx) => (
+                <div key={`existing-${url}-${idx}`} className={styles.imageItem}>
+                  {/* 외부 스토리지 URL — Next/Image 도메인 설정 없이 표시 */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt={`등록된 이미지 ${idx + 1}`}
+                    className={styles.imageThumb}
+                    width={80}
+                    height={80}
+                  />
+                  <button
+                    type="button"
+                    className={styles.deleteImageButton}
+                    onClick={() => handleRemoveExistingImage(idx)}
+                    aria-label={`등록된 이미지 ${idx + 1} 삭제`}
+                  >
+                    <Icon name="minus" size={12} color="var(--color-white-500)" />
+                  </button>
+                </div>
+              ))}
+              {/* 새로 선택한 이미지 목록 */}
+              {imagePreviewUrls.map((src, idx) => (
+                <div key={`${src}-${idx}`} className={styles.imageItem}>
+                  <Image
+                    src={src}
+                    alt={`업로드 이미지 ${idx + 1}`}
+                    className={styles.imageThumb}
+                    width={80}
+                    height={80}
+                  />
+                  <button
+                    type="button"
+                    className={styles.deleteImageButton}
+                    onClick={() => removeImageAt(idx)}
+                    aria-label={`이미지 ${idx + 1} 삭제`}
+                  >
+                    <Icon name="minus" size={12} color="var(--color-white-500)" />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

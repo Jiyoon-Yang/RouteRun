@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import type { ChangeEvent } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { createCourseAction, updateCourseAction } from '@/actions/course.action';
@@ -60,6 +61,8 @@ export function useCourseSubmit({ mode, courseId, initialData }: UseCourseSubmit
   /** 편집 시 서버에 이미 저장된 이미지 URL (신규 업로드와 합쳐 수정 요청에 사용) */
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [images, setImages] = useState<File[]>([]);
+  /** `images`와 동기화된 blob 미리보기 URL — 언마운트·의존성 변경 시 revoke */
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [routeData, setRouteData] = useState<RouteData | null>(null);
 
   useEffect(() => {
@@ -71,6 +74,15 @@ export function useCourseSubmit({ mode, courseId, initialData }: UseCourseSubmit
     setDescription(typeof desc === 'string' ? desc : '');
     setExistingImageUrls(Array.isArray(image_urls) ? [...image_urls] : []);
   }, [initialData]);
+
+  useEffect(() => {
+    const nextUrls = images.map((file) => URL.createObjectURL(file));
+    setImagePreviewUrls(nextUrls);
+
+    return () => {
+      nextUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [images]);
 
   const handleSaveRoute = useCallback((data: SaveRoutePayload) => {
     const normalized: RouteData = {
@@ -94,20 +106,25 @@ export function useCourseSubmit({ mode, courseId, initialData }: UseCourseSubmit
   }, []);
 
   const handleImageInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
       if (!files?.length) return;
 
-      setImages((prev) => {
-        const currentTotal = existingImageUrls.length + prev.length;
+      const selectedFiles = Array.from(files);
+
+      setImages((prevImages) => {
+        const currentTotal = existingImageUrls.length + prevImages.length;
         const remaining = MAX_COURSE_SUBMIT_IMAGES - currentTotal;
-        if (remaining <= 0) return prev;
-        const nextFiles = Array.from(files).slice(0, remaining);
-        return [...prev, ...nextFiles];
+        if (remaining <= 0) {
+          return prevImages;
+        }
+        const allowedFiles = selectedFiles.slice(0, remaining);
+        return [...prevImages, ...allowedFiles];
       });
+
       e.target.value = '';
     },
-    [existingImageUrls.length],
+    [existingImageUrls],
   );
 
   const handleRemoveExistingImage = useCallback((index: number) => {
@@ -188,6 +205,7 @@ export function useCourseSubmit({ mode, courseId, initialData }: UseCourseSubmit
     setDescription,
     existingImageUrls,
     images,
+    imagePreviewUrls,
     routeData,
     handleSaveRoute,
     handleImageInputChange,

@@ -15,6 +15,7 @@ import { useRoutes } from './hooks/index.use-routes';
 import styles from './styles.module.css';
 import {
   buildCourseCardViews,
+  dedupeRoutesById,
   filterRoutesByCategories,
   SEOUL_CITY_HALL_REFERENCE,
   type DistanceCategory,
@@ -30,6 +31,8 @@ const TAB_ITEMS = [
 export function Home() {
   // [상태] 홈 화면 기본 상태 관리
   const [sheetVisibleHeight, setSheetVisibleHeight] = useState(260);
+  const [openPeekFromCollapsedSignal, setOpenPeekFromCollapsedSignal] = useState(0);
+  const [markerClickRecenterToken, setMarkerClickRecenterToken] = useState(0);
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<DistanceCategory>>(new Set());
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
@@ -37,7 +40,7 @@ export function Home() {
   const [queryViewport, setQueryViewport] = useState<RouteViewport | null>(null);
   const [referenceLocation, setReferenceLocation] =
     useState<ReferenceLocation>(SEOUL_CITY_HALL_REFERENCE);
-  const { routes, isLoading, errorMessage } = useRoutes(queryViewport);
+  const { routes, allRoutes, isLoading, errorMessage } = useRoutes(queryViewport);
   const router = useRouter();
 
   const isSameViewport = useCallback((left: RouteViewport | null, right: RouteViewport | null) => {
@@ -60,32 +63,40 @@ export function Home() {
     [isSameViewport],
   );
 
+  // 클라이언트 뷰포트 필터만 사용하므로 mapViewport와 즉시 동기화 (바텀시트·지도 이동 반응 지연 최소화)
   useEffect(() => {
     if (!mapViewport) return;
-    const timerId = window.setTimeout(() => {
-      setQueryViewport((previous) =>
-        isSameViewport(previous, mapViewport) ? previous : { ...mapViewport },
-      );
-    }, 400);
-    return () => window.clearTimeout(timerId);
+    setQueryViewport((previous) =>
+      isSameViewport(previous, mapViewport) ? previous : { ...mapViewport },
+    );
   }, [isSameViewport, mapViewport]);
 
-  // [파생데이터] 필터/정렬 결과 계산
-  const filteredRoutes = useMemo(
-    () => filterRoutesByCategories(routes, selectedCategories),
-    [routes, selectedCategories],
-  );
+  // [파생데이터] 필터/정렬 결과 계산 (선택된 코스는 뷰포트 밖이어도 목록·지도에 유지)
+  const filteredRoutes = useMemo(() => {
+    const base = filterRoutesByCategories(routes, selectedCategories);
+    if (!selectedCourseId) {
+      return base;
+    }
+    if (base.some((route) => route.id === selectedCourseId)) {
+      return base;
+    }
+    const selected = allRoutes.find((route) => route.id === selectedCourseId);
+    if (!selected) {
+      return base;
+    }
+    return dedupeRoutesById([selected, ...base]);
+  }, [routes, selectedCategories, selectedCourseId, allRoutes]);
   const courseCards = useMemo(
     () => buildCourseCardViews(filteredRoutes, referenceLocation, selectedCourseId),
     [filteredRoutes, referenceLocation, selectedCourseId],
   );
   const courseLikeCounts = useMemo(
     () =>
-      routes.reduce<Record<string, number>>((acc, route) => {
+      allRoutes.reduce<Record<string, number>>((acc, route) => {
         acc[route.id] = route.likes_count;
         return acc;
       }, {}),
-    [routes],
+    [allRoutes],
   );
   const { isCourseLiked, getCourseLikeCount, toggleCourseLike } = useCourseLikes(courseLikeCounts);
 
@@ -132,6 +143,17 @@ export function Home() {
     });
   };
 
+  const handleCourseMarkerClick = useCallback(
+    (courseId: string) => {
+      setSelectedCourseId(courseId);
+      setMarkerClickRecenterToken((previous) => previous + 1);
+      if (sheetVisibleHeight <= 24) {
+        setOpenPeekFromCollapsedSignal((previous) => previous + 1);
+      }
+    },
+    [sheetVisibleHeight],
+  );
+
   return (
     <section className={styles.container}>
       {/* [UI] 상단 헤더 영역 */}
@@ -170,7 +192,8 @@ export function Home() {
             isBottomSheetExpanded={isSheetExpanded}
             routes={filteredRoutes}
             selectedCourseId={selectedCourseId}
-            onCourseMarkerClick={setSelectedCourseId}
+            markerClickRecenterToken={markerClickRecenterToken}
+            onCourseMarkerClick={handleCourseMarkerClick}
             onViewportChanged={handleViewportChanged}
           />
         </div>
@@ -179,6 +202,7 @@ export function Home() {
           isLoading={isLoading}
           isCourseLiked={isCourseLiked}
           getCourseLikeCount={getCourseLikeCount}
+          openPeekFromCollapsedSignal={openPeekFromCollapsedSignal}
           onCourseSelect={(courseId) => {
             setSelectedCourseId(courseId);
             router.push(ROUTES.COURSES.DETAIL(courseId));

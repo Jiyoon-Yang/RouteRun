@@ -14,6 +14,7 @@ import {
   type MarkerVisualState,
 } from './build-running-course-marker-icon';
 import styles from './styles.module.css';
+import { computeVisibleRouteViewportFromMapCanvas } from './visible-map-viewport';
 
 /** 줌 시 마커 위경도 디버그 로그. 끄기: `localStorage.DEBUG_TMAP_MARKERS=0` · 항상 켜기: `=1` */
 function isMarkerCoordDebugEnabled(): boolean {
@@ -109,6 +110,8 @@ type TmapHomeProps = {
   isBottomSheetExpanded?: boolean;
   routes?: Route[];
   selectedCourseId?: string | null;
+  /** 마커 클릭 시마다 증가 — 보이는 지도 영역 기준 1회 중앙 정렬에만 사용 */
+  markerClickRecenterToken?: number;
   onCourseMarkerClick?: (courseId: string) => void;
   onViewportChanged?: (viewport: RouteViewport) => void;
 };
@@ -229,6 +232,7 @@ export function TmapHome({
   isBottomSheetExpanded = false,
   routes = [],
   selectedCourseId = null,
+  markerClickRecenterToken = 0,
   onCourseMarkerClick,
   onViewportChanged,
 }: TmapHomeProps) {
@@ -260,6 +264,13 @@ export function TmapHome({
   const selectedMarkerVisualHandlerRef = useRef<(courseId: string | null) => void>(() => undefined);
   const selectedPolylineHandlerRef = useRef<(courseId: string | null) => void>(() => undefined);
   const markerHoverCountRef = useRef(0);
+  const bottomSheetVisibleHeightRef = useRef(bottomSheetVisibleHeight);
+  bottomSheetVisibleHeightRef.current = bottomSheetVisibleHeight;
+  const lastMarkerRecenterSignatureRef = useRef<string>('');
+  const lastMapContainerSizeRef = useRef<{ width: number; height: number }>({
+    width: 0,
+    height: 0,
+  });
 
   const setMarkerHoverCursor = useCallback((isHover: boolean) => {
     const rootElement = rootRef.current;
@@ -274,34 +285,37 @@ export function TmapHome({
     rootElement.classList.toggle(styles.mapMarkerHover, markerHoverCountRef.current > 0);
   }, []);
 
-  const readCoordinateValue = (
-    point: TmapLatLng | undefined,
-    axis: 'lat' | 'lng',
-  ): number | null => {
-    if (!point) return null;
-    const rawValue = axis === 'lat' ? point.lat : point.lng;
-    if (typeof rawValue === 'function') {
-      const methodValue = rawValue();
-      if (typeof methodValue === 'number') return methodValue;
-    }
-    if (typeof rawValue === 'number') return rawValue;
-    const fallback =
-      axis === 'lat' ? (point._lat ?? point.latValue) : (point._lng ?? point.lngValue);
-    return typeof fallback === 'number' ? fallback : null;
-  };
+  const readCoordinateValue = useCallback(
+    (point: TmapLatLng | undefined, axis: 'lat' | 'lng'): number | null => {
+      if (!point) return null;
+      const rawValue = axis === 'lat' ? point.lat : point.lng;
+      if (typeof rawValue === 'function') {
+        const methodValue = rawValue();
+        if (typeof methodValue === 'number') return methodValue;
+      }
+      if (typeof rawValue === 'number') return rawValue;
+      const fallback =
+        axis === 'lat' ? (point._lat ?? point.latValue) : (point._lng ?? point.lngValue);
+      return typeof fallback === 'number' ? fallback : null;
+    },
+    [],
+  );
 
-  const tryReadSdkLatLngFromMarker = useCallback((marker: TmapMarker) => {
-    if (typeof marker.getPosition !== 'function') return null;
-    try {
-      const point = marker.getPosition();
-      const lat = readCoordinateValue(point, 'lat');
-      const lng = readCoordinateValue(point, 'lng');
-      if (lat !== null && lng !== null) return { lat, lng };
-    } catch {
-      /* SDK 버전별 미구현 */
-    }
-    return null;
-  }, []);
+  const tryReadSdkLatLngFromMarker = useCallback(
+    (marker: TmapMarker) => {
+      if (typeof marker.getPosition !== 'function') return null;
+      try {
+        const point = marker.getPosition();
+        const lat = readCoordinateValue(point, 'lat');
+        const lng = readCoordinateValue(point, 'lng');
+        if (lat !== null && lng !== null) return { lat, lng };
+      } catch {
+        /* SDK 버전별 미구현 */
+      }
+      return null;
+    },
+    [readCoordinateValue],
+  );
 
   const logMarkerCoordinateAudit = useCallback(
     (map: TmapMap, phase: string) => {
@@ -351,36 +365,52 @@ export function TmapHome({
     [tryReadSdkLatLngFromMarker],
   );
 
-  const normalizeViewportFromMap = useCallback((map: TmapMap): RouteViewport | null => {
-    const bounds = map.getBounds?.();
-    if (!bounds) return null;
-    const northEast = bounds.getNorthEast?.();
-    const southWest = bounds.getSouthWest?.();
-    if (!northEast || !southWest) return null;
-    const northEastLat = readCoordinateValue(northEast, 'lat');
-    const northEastLng = readCoordinateValue(northEast, 'lng');
-    const southWestLat = readCoordinateValue(southWest, 'lat');
-    const southWestLng = readCoordinateValue(southWest, 'lng');
-    if (
-      northEastLat === null ||
-      northEastLng === null ||
-      southWestLat === null ||
-      southWestLng === null
-    ) {
-      return null;
-    }
+  /** 전체 getBounds가 아닌, 바텀시트가 가리는 높이를 뺀 보이는 영역 기준 뷰포트 */
+  const computeVisibleViewportFromMap = useCallback(
+    (map: TmapMap): RouteViewport | null => {
+      const bounds = map.getBounds?.();
+      if (!bounds) return null;
+      const northEast = bounds.getNorthEast?.();
+      const southWest = bounds.getSouthWest?.();
+      if (!northEast || !southWest) return null;
+      const northEastLat = readCoordinateValue(northEast, 'lat');
+      const northEastLng = readCoordinateValue(northEast, 'lng');
+      const southWestLat = readCoordinateValue(southWest, 'lat');
+      const southWestLng = readCoordinateValue(southWest, 'lng');
+      if (
+        northEastLat === null ||
+        northEastLng === null ||
+        southWestLat === null ||
+        southWestLng === null
+      ) {
+        return null;
+      }
 
-    return {
-      northEastLat,
-      northEastLng,
-      southWestLat,
-      southWestLng,
-    };
-  }, []);
+      const mapElement = document.getElementById('map_div');
+      const mapWidthPx = mapElement?.clientWidth ?? 0;
+      const mapHeightPx = mapElement?.clientHeight ?? 0;
+      if (mapWidthPx <= 0 || mapHeightPx <= 0) {
+        return null;
+      }
+
+      const overlayPx = Math.min(Math.max(0, bottomSheetVisibleHeightRef.current), mapHeightPx);
+
+      return computeVisibleRouteViewportFromMapCanvas({
+        northEastLat,
+        northEastLng,
+        southWestLat,
+        southWestLng,
+        mapWidthPx,
+        mapHeightPx,
+        bottomOverlayPx: overlayPx,
+      });
+    },
+    [readCoordinateValue],
+  );
 
   const reportViewport = useCallback(
     (map: TmapMap) => {
-      const viewport = normalizeViewportFromMap(map);
+      const viewport = computeVisibleViewportFromMap(map);
       if (!viewport) return;
       const previous = lastViewportRef.current;
       if (
@@ -395,7 +425,7 @@ export function TmapHome({
       lastViewportRef.current = viewport;
       onViewportChanged?.(viewport);
     },
-    [normalizeViewportFromMap, onViewportChanged],
+    [computeVisibleViewportFromMap, onViewportChanged],
   );
 
   const syncMarkerVisibilityByViewport = useCallback((map: TmapMap) => {
@@ -868,11 +898,6 @@ export function TmapHome({
         );
       clearRouteMarkers();
 
-      const nextRouteIds = new Set(normalizedRoutes.map(({ route }) => route.id));
-      if (selectedRouteIdRef.current && !nextRouteIds.has(selectedRouteIdRef.current)) {
-        selectedRouteIdRef.current = null;
-      }
-
       normalizedRoutes.forEach(({ route, start }) => {
         const category = getRouteDistanceCategory(route);
         const state: MarkerVisualState =
@@ -1110,6 +1135,85 @@ export function TmapHome({
     syncSelectedMarkerVisual(selectedCourseId);
   }, [selectedCourseId, syncSelectedMarkerVisual]);
 
+  // [마커 클릭] 바텀시트 높이가 반영된 뒤, 보이는 지도 영역의 시각적 중앙에 마커가 오도록 1회만 패닝
+  useEffect(() => {
+    if (!markerClickRecenterToken || !selectedCourseId) {
+      return;
+    }
+
+    const sheetPx = bottomSheetVisibleHeightRef.current;
+    if (sheetPx <= 24) {
+      return;
+    }
+
+    const completionKey = `${markerClickRecenterToken}|${selectedCourseId}`;
+    if (lastMarkerRecenterSignatureRef.current === completionKey) {
+      return;
+    }
+    lastMarkerRecenterSignatureRef.current = completionKey;
+
+    const map = mapInstance.current;
+    const Tmapv3 = getTmapv3();
+    if (!map || !Tmapv3) {
+      return;
+    }
+
+    const route = routesRef.current.find((item) => item.id === selectedCourseId);
+    const entry = routeMarkerMapRef.current.get(selectedCourseId);
+    const routeStart = route ? resolveRouteStartForMapMarker(route) : null;
+    const start = routeStart ?? (entry ? { lat: entry.lat, lng: entry.lng } : null);
+    if (!start) {
+      return;
+    }
+
+    map.setCenter(new Tmapv3.LatLng(start.lat, start.lng));
+
+    requestAnimationFrame(() => {
+      const liveMap = mapInstance.current;
+      const liveTmap = getTmapv3();
+      if (!liveMap || !liveTmap) {
+        return;
+      }
+
+      const liveSheetPx = Math.max(24, bottomSheetVisibleHeightRef.current);
+      const mapElement = document.getElementById('map_div');
+      const mapHeightPx = mapElement?.clientHeight ?? 0;
+      if (mapHeightPx <= 0) {
+        return;
+      }
+
+      const bounds = liveMap.getBounds?.();
+      const northEast = bounds?.getNorthEast?.();
+      const southWest = bounds?.getSouthWest?.();
+      if (!bounds || !northEast || !southWest) {
+        return;
+      }
+
+      const northEastLat = readCoordinateValue(northEast, 'lat');
+      const southWestLat = readCoordinateValue(southWest, 'lat');
+      if (northEastLat === null || southWestLat === null) {
+        return;
+      }
+
+      const latSpan = northEastLat - southWestLat;
+      const pixelOffsetY = -(liveSheetPx / 2);
+      const adjustedLat = start.lat + (pixelOffsetY / mapHeightPx) * latSpan;
+
+      liveMap.setCenter(new liveTmap.LatLng(adjustedLat, start.lng));
+    });
+  }, [markerClickRecenterToken, selectedCourseId, bottomSheetVisibleHeight, readCoordinateValue]);
+
+  // 바텀시트 스냅/높이 변경 시 보이는 영역(bounds) 기준 뷰포트 재계산
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!map) return undefined;
+
+    const frameId = requestAnimationFrame(() => {
+      reportViewport(map);
+    });
+    return () => cancelAnimationFrame(frameId);
+  }, [bottomSheetVisibleHeight, reportViewport]);
+
   useEffect(() => {
     return () => {
       if (viewportReportTimerRef.current) {
@@ -1152,19 +1256,32 @@ export function TmapHome({
     };
   }, [handleMapWheel]);
 
+  // 지도 div 크기는 바텀시트(오버레이)와 무관하게 mapStage 전체를 쓴다.
+  // 바텀시트 높이 변화마다 resize()를 호출하면(드래그 중 매 프레임 포함) 티맵 마커/클러스터 레이어가 사라지는 현상이 난다.
+  // 실제 컨테이너 가로·세로가 바뀐 경우에만 resize + 보이는 뷰포트 재보고
   useEffect(() => {
-    const map = mapInstance.current;
-    if (!map) return;
-
-    const resizeMap = () => {
+    const handleViewportResize = () => {
+      const mapEl = document.getElementById('map_div');
+      const map = mapInstance.current;
+      if (!mapEl || !map) return;
+      const width = mapEl.clientWidth;
+      const height = mapEl.clientHeight;
+      const prev = lastMapContainerSizeRef.current;
+      if (prev.width === width && prev.height === height) {
+        return;
+      }
+      lastMapContainerSizeRef.current = { width, height };
       map.resize?.();
-      window.dispatchEvent(new Event('resize'));
+      reportViewport(map);
     };
 
-    resizeMap();
-    const timerId = window.setTimeout(resizeMap, 180);
-    return () => window.clearTimeout(timerId);
-  }, [bottomSheetVisibleHeight, isBottomSheetExpanded]);
+    window.addEventListener('resize', handleViewportResize);
+    window.visualViewport?.addEventListener('resize', handleViewportResize);
+    return () => {
+      window.removeEventListener('resize', handleViewportResize);
+      window.visualViewport?.removeEventListener('resize', handleViewportResize);
+    };
+  }, [reportViewport]);
 
   const sheetControlPositionClassName =
     bottomSheetVisibleHeight <= 24 ? styles.sheetControlsCollapsed : styles.sheetControlsPeek;

@@ -90,6 +90,24 @@ export function Home() {
     () => buildCourseCardViews(filteredRoutes, referenceLocation, selectedCourseId),
     [filteredRoutes, referenceLocation, selectedCourseId],
   );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (
+      process.env.NODE_ENV !== 'development' &&
+      window.localStorage?.getItem('DEBUG_HOME_VIEWPORT') !== '1'
+    ) {
+      return;
+    }
+    /* eslint-disable no-console -- DEBUG_HOME_VIEWPORT / 홈 지도-목록-마커 파이프라인 */
+    console.log('[Home] queryViewport & 마커용 routes', {
+      queryViewport,
+      viewportFilteredRoutesCount: routes.length,
+      filteredRoutesCount: filteredRoutes.length,
+      markersOnMapCount: filteredRoutes.length,
+    });
+    /* eslint-enable no-console */
+  }, [queryViewport, routes.length, filteredRoutes.length]);
   const courseLikeCounts = useMemo(
     () =>
       allRoutes.reduce<Record<string, number>>((acc, route) => {

@@ -32,6 +32,8 @@ function roundCoordForLog(n: number): number {
 /** 티맵 공식 예제: `new Tmapv3.extension.MarkerCluster({ markers, map })` */
 type TmapMarkerCluster = {
   setMap?: (map: TmapMap | null) => void;
+  /** 일부 SDK에서 클러스터가 가진 마커 참조를 먼저 비울 때 사용 */
+  clearMarkers?: () => void;
 };
 
 type TmapV3API = {
@@ -58,6 +60,11 @@ function getTmapv3(): TmapV3API | undefined {
     Tmapv3?: TmapV3API;
   };
   return globalWindow.Tmapv3;
+}
+
+/** MarkerCluster 확장이 있으면 코스 마커는 map 옵션 없이 생성하고 클러스터러만 부착한다(이중 렌더·유령 클러스터 방지). */
+function isTmapRouteMarkerClusterLoaded(): boolean {
+  return typeof getTmapv3()?.extension?.MarkerCluster === 'function';
 }
 
 type TmapLatLng = {
@@ -141,6 +148,13 @@ const PRECISE_GEOLOCATION_OPTIONS: PositionOptions = {
 
 const MIN_ZOOM_LEVEL = 11;
 const MAX_ZOOM_LEVEL = 19;
+
+/**
+ * 코스 마커: 클러스터 모드(줌 이하·멀리) ↔ 개별 마커 모드(줌 이상·가까이).
+ * 두 상수는 연속된 정수여야 함(예: 14 이하 클러스터, 15 이상 개별).
+ */
+const ROUTE_MARKER_CLUSTER_ZOOM_AT_OR_BELOW = 14;
+const ROUTE_MARKER_INDIVIDUAL_ZOOM_AT_OR_ABOVE = ROUTE_MARKER_CLUSTER_ZOOM_AT_OR_BELOW + 1;
 
 /** 홈 지도 최초 표시 줌. 값이 작을수록 현재 위치 주변이 더 넓게(줌 아웃) 보임 */
 const INITIAL_MAP_ZOOM_LEVEL = 14;
@@ -246,6 +260,12 @@ export function TmapHome({
   const selectedRoutePolylineRef = useRef<TmapPolyline | null>(null);
   const routeMarkerMapRef = useRef<Map<string, RouteMarkerEntry>>(new Map());
   const routeMarkerClusterRef = useRef<TmapMarkerCluster | null>(null);
+  /** 확장 로더 유무와 무관하게, 마지막으로 적용한 코스 마커 표시 방식 */
+  const routeMarkerRouteDisplayModeRef = useRef<'cluster' | 'individual'>('individual');
+  /** 코스 마커 인스턴스 집합이 바뀔 때마다 증가 → 클러스터 재부착 필요 */
+  const routeMarkerClusterGenerationRef = useRef(0);
+  /** 마지막으로 MarkerCluster에 붙인 generation */
+  const routeMarkerClusterAttachGenerationRef = useRef(-1);
   const routesRef = useRef<Route[]>(routes);
   const selectedRouteIdRef = useRef<string | null>(null);
   const viewportReportTimerRef = useRef<number | null>(null);
@@ -428,40 +448,109 @@ export function TmapHome({
     [computeVisibleViewportFromMap, onViewportChanged],
   );
 
-  const syncMarkerVisibilityByViewport = useCallback((map: TmapMap) => {
-    // MarkerCluster가 활성화되면 표시 제어는 클러스터러에 위임한다.
-    if (routeMarkerClusterRef.current) {
-      return;
-    }
-    routeMarkerMapRef.current.forEach((entry) => {
-      entry.marker.setMap(map);
-      entry.isVisible = true;
-      entry.outOfViewportSinceMs = null;
-    });
-  }, []);
-
   const tearDownRouteMarkerCluster = useCallback(() => {
     const cluster = routeMarkerClusterRef.current;
     if (!cluster) return;
+    if (typeof cluster.clearMarkers === 'function') {
+      try {
+        cluster.clearMarkers();
+      } catch {
+        /* SDK 버전별 */
+      }
+    }
     cluster.setMap?.(null);
     routeMarkerClusterRef.current = null;
   }, []);
 
-  /** 티맵 벡터 SDK `Tmapv3.extension.MarkerCluster` 등록 (확장 미로드 시 noop) */
-  const attachRouteMarkersCluster = useCallback(
+  /**
+   * 줌에 따라 클러스터 모드 / 개별 마커 모드를 전환한다.
+   * - 클러스터: 모든 코스 마커는 `setMap(null)`, MarkerCluster만 map에 연결
+   * - 개별: cluster 제거(clearMarkers·setMap null) 후 각 마커 `setMap(map)`
+   */
+  const syncRouteMarkersDisplayForZoom = useCallback(
     (map: TmapMap) => {
-      const Tmapv3 = getTmapv3();
-      const MarkerCluster = Tmapv3?.extension?.MarkerCluster;
-      if (!MarkerCluster) return;
+      const markerCount = routeMarkerMapRef.current.size;
 
+      if (!isTmapRouteMarkerClusterLoaded()) {
+        tearDownRouteMarkerCluster();
+        routeMarkerRouteDisplayModeRef.current = 'individual';
+        routeMarkerClusterAttachGenerationRef.current = -1;
+        routeMarkerMapRef.current.forEach((entry) => {
+          entry.marker.setMap(map);
+          entry.isVisible = true;
+          entry.outOfViewportSinceMs = null;
+        });
+        return;
+      }
+
+      const rawZoom = map.getZoom();
+      if (typeof rawZoom !== 'number' || Number.isNaN(rawZoom)) return;
+
+      if (markerCount === 0) {
+        tearDownRouteMarkerCluster();
+        routeMarkerRouteDisplayModeRef.current = 'individual';
+        routeMarkerClusterAttachGenerationRef.current = -1;
+        return;
+      }
+
+      const wantClusterMode = rawZoom <= ROUTE_MARKER_CLUSTER_ZOOM_AT_OR_BELOW;
+      const wantIndividualMode = rawZoom >= ROUTE_MARKER_INDIVIDUAL_ZOOM_AT_OR_ABOVE;
+
+      if (wantIndividualMode) {
+        tearDownRouteMarkerCluster();
+        routeMarkerRouteDisplayModeRef.current = 'individual';
+        routeMarkerClusterAttachGenerationRef.current = -1;
+        routeMarkerMapRef.current.forEach((entry) => {
+          entry.marker.setMap(map);
+          entry.isVisible = true;
+          entry.outOfViewportSinceMs = null;
+        });
+        return;
+      }
+
+      if (wantClusterMode) {
+        const gen = routeMarkerClusterGenerationRef.current;
+        const prevMode = routeMarkerRouteDisplayModeRef.current;
+        const needsRebuild =
+          prevMode !== 'cluster' ||
+          !routeMarkerClusterRef.current ||
+          gen !== routeMarkerClusterAttachGenerationRef.current;
+
+        if (needsRebuild) {
+          tearDownRouteMarkerCluster();
+          routeMarkerMapRef.current.forEach((entry) => {
+            entry.marker.setMap(null);
+          });
+          const MarkerCluster = getTmapv3()?.extension?.MarkerCluster;
+          if (!MarkerCluster) return;
+          const markers = Array.from(routeMarkerMapRef.current.values(), (entry) => entry.marker);
+          if (markers.length === 0) return;
+          routeMarkerClusterRef.current = new MarkerCluster({ markers, map });
+          routeMarkerClusterAttachGenerationRef.current = gen;
+        }
+
+        routeMarkerRouteDisplayModeRef.current = 'cluster';
+        return;
+      }
+
+      // 상수 불일치 등으로 어중간한 줌대역만 있는 경우 → 개별 표시가 더 안전
       tearDownRouteMarkerCluster();
-
-      const markers = Array.from(routeMarkerMapRef.current.values(), (entry) => entry.marker);
-      if (markers.length === 0) return;
-
-      routeMarkerClusterRef.current = new MarkerCluster({ markers, map });
+      routeMarkerRouteDisplayModeRef.current = 'individual';
+      routeMarkerClusterAttachGenerationRef.current = -1;
+      routeMarkerMapRef.current.forEach((entry) => {
+        entry.marker.setMap(map);
+        entry.isVisible = true;
+        entry.outOfViewportSinceMs = null;
+      });
     },
     [tearDownRouteMarkerCluster],
+  );
+
+  const syncMarkerVisibilityByViewport = useCallback(
+    (map: TmapMap) => {
+      syncRouteMarkersDisplayForZoom(map);
+    },
+    [syncRouteMarkersDisplayForZoom],
   );
 
   const scheduleMarkerVisibilitySync = useCallback(
@@ -606,6 +695,7 @@ export function TmapHome({
         interactionWatchdogTimerRef.current = window.setTimeout(() => {
           interactionWatchdogTimerRef.current = null;
           isMapInteractingRef.current = false;
+          syncRouteMarkersDisplayForZoom(map);
           scheduleMarkerVisibilitySync(map);
           scheduleViewportReport(map);
         }, 1600);
@@ -624,6 +714,7 @@ export function TmapHome({
         const currentZoom = enforceMinZoomLevel(map);
         if (currentZoom === null) return;
         if (currentZoom === lastAppliedZoomRef.current) {
+          syncRouteMarkersDisplayForZoom(map);
           scheduleMarkerVisibilitySync(map);
           scheduleViewportReport(map);
           logMarkerCoordinateAudit(map, 'zoomEnd_sameZoomLevel');
@@ -638,6 +729,7 @@ export function TmapHome({
           if (currentLocation) {
             createCustomMarker(map, currentLocation.lat, currentLocation.lng);
           }
+          syncRouteMarkersDisplayForZoom(map);
           scheduleMarkerVisibilitySync(map);
           scheduleViewportReport(map);
           logMarkerCoordinateAudit(map, 'zoomEnd_afterRaf');
@@ -647,6 +739,7 @@ export function TmapHome({
       const boundZoomEvents = bindMapEvent(['zoom_end', 'zoomend', 'idle'], handleZoomChanged);
 
       const reportAfterMove = () => {
+        syncRouteMarkersDisplayForZoom(map);
         scheduleMarkerVisibilitySync(map);
         scheduleViewportReport(map);
       };
@@ -678,6 +771,7 @@ export function TmapHome({
       logMarkerCoordinateAudit,
       scheduleMarkerVisibilitySync,
       scheduleViewportReport,
+      syncRouteMarkersDisplayForZoom,
       upsertSelectedLabelMarker,
     ],
   );
@@ -726,7 +820,8 @@ export function TmapHome({
 
   const createRouteMarker = useCallback(
     (
-      map: TmapMap,
+      /** null이면 Marker 생성만 하고 지도 미부착(클러스터가 담당). */
+      map: TmapMap | null,
       route: Route,
       category: DistanceCategory,
       visualState: MarkerVisualState,
@@ -738,8 +833,10 @@ export function TmapHome({
       const markerOptions: Record<string, unknown> = {
         position: new Tmapv3.LatLng(routeStart.lat, routeStart.lng),
         icon: getRunningCourseMarkerIconUrlForCategory(category, visualState),
-        map,
       };
+      if (map !== null) {
+        markerOptions.map = map;
+      }
 
       const routeMarker = new Tmapv3.Marker(markerOptions) as TmapMarker;
       applyPointerCursorToTmapMarker(routeMarker);
@@ -801,7 +898,12 @@ export function TmapHome({
       const routeStart = route ? resolveRouteStartForMapMarker(route) : null;
       if (!map || !route || !routeStart) return;
 
-      const nextMarker = createRouteMarker(map, route, markerEntry.category, state);
+      const nextMarker = createRouteMarker(
+        isTmapRouteMarkerClusterLoaded() ? null : map,
+        route,
+        markerEntry.category,
+        state,
+      );
       if (!nextMarker) return;
 
       markerEntry.marker.setMap(null);
@@ -817,11 +919,10 @@ export function TmapHome({
       });
       attachRouteMarkerListeners(nextMarker, courseId);
 
-      if (getTmapv3()?.extension?.MarkerCluster) {
-        attachRouteMarkersCluster(map);
-      }
+      routeMarkerClusterGenerationRef.current += 1;
+      syncRouteMarkersDisplayForZoom(map);
     },
-    [attachRouteMarkerListeners, attachRouteMarkersCluster, createRouteMarker],
+    [attachRouteMarkerListeners, createRouteMarker, syncRouteMarkersDisplayForZoom],
   );
   routeVisualStateHandlerRef.current = setRouteMarkerVisualState;
 
@@ -855,6 +956,8 @@ export function TmapHome({
       entry.marker.setMap(null);
     });
     routeMarkerMapRef.current.clear();
+    routeMarkerRouteDisplayModeRef.current = 'individual';
+    routeMarkerClusterAttachGenerationRef.current = -1;
   }, [tearDownRouteMarkerCluster]);
 
   const syncSelectedMarkerVisual = useCallback(
@@ -902,7 +1005,12 @@ export function TmapHome({
         const category = getRouteDistanceCategory(route);
         const state: MarkerVisualState =
           selectedRouteIdRef.current === route.id ? 'clicked' : 'default';
-        const marker = createRouteMarker(map, route, category, state);
+        const marker = createRouteMarker(
+          isTmapRouteMarkerClusterLoaded() ? null : map,
+          route,
+          category,
+          state,
+        );
         if (!marker) return;
 
         routeMarkerMapRef.current.set(route.id, {
@@ -920,14 +1028,15 @@ export function TmapHome({
         setRouteMarkerLabelVisible(route.id, selectedRouteIdRef.current === route.id);
       });
 
-      attachRouteMarkersCluster(map);
+      routeMarkerClusterGenerationRef.current += 1;
+      syncRouteMarkersDisplayForZoom(map);
     },
     [
       attachRouteMarkerListeners,
-      attachRouteMarkersCluster,
       clearRouteMarkers,
       createRouteMarker,
       setRouteMarkerLabelVisible,
+      syncRouteMarkersDisplayForZoom,
     ],
   );
 
@@ -1071,7 +1180,15 @@ export function TmapHome({
 
     return () => {
       cancelled = true;
-      routeMarkerClusterRef.current?.setMap?.(null);
+      const clusterOnUnmount = routeMarkerClusterRef.current;
+      if (clusterOnUnmount && typeof clusterOnUnmount.clearMarkers === 'function') {
+        try {
+          clusterOnUnmount.clearMarkers();
+        } catch {
+          /* noop */
+        }
+      }
+      clusterOnUnmount?.setMap?.(null);
       routeMarkerClusterRef.current = null;
       routeMarkerMap.forEach((entry) => {
         entry.marker.setMap(null);

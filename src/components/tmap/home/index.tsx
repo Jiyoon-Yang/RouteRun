@@ -12,7 +12,7 @@ import {
   extractPathCoordinates,
   extractSavedRoutePoints,
 } from '@/components/tmap/course-detail/path-data';
-import { applyPointerCursorToTmapMarker } from '@/components/tmap/shared/apply-pointer-cursor-to-tmap-marker';
+import { applyPointerCursorToTmapMarker } from '@/components/tmap/utils/apply-pointer-cursor-to-tmap-marker';
 import { getPedestrianRoute } from '@/repositories/map.repository';
 
 import {

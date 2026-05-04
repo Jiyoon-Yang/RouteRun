@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TabButton } from '@/commons/components/tab';
 import { ROUTES } from '@/commons/constants/url';
@@ -17,6 +17,7 @@ import {
   buildCourseCardViews,
   dedupeRoutesById,
   filterRoutesByCategories,
+  filterRoutesByRouteViewport,
   SEOUL_CITY_HALL_REFERENCE,
   type DistanceCategory,
 } from './utils/course-filter';
@@ -31,13 +32,18 @@ const TAB_ITEMS = [
 export function Home() {
   // [상태] 홈 화면 기본 상태 관리
   const [sheetVisibleHeight, setSheetVisibleHeight] = useState(260);
+  const sheetVisibleHeightRef = useRef(sheetVisibleHeight);
+  sheetVisibleHeightRef.current = sheetVisibleHeight;
   const [openPeekFromCollapsedSignal, setOpenPeekFromCollapsedSignal] = useState(0);
   const [markerClickRecenterToken, setMarkerClickRecenterToken] = useState(0);
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<DistanceCategory>>(new Set());
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [mapViewport, setMapViewport] = useState<RouteViewport | null>(null);
+  /** 데이터 필터용 — 전체 지도 getBounds 기준만 반영 (바텀시트 오버레이 제외) */
   const [queryViewport, setQueryViewport] = useState<RouteViewport | null>(null);
+  /** 목록 노출용 — 바텀시트로 가려지지 않은 영역 */
+  const [visibleRouteViewport, setVisibleRouteViewport] = useState<RouteViewport | null>(null);
   const [referenceLocation, setReferenceLocation] =
     useState<ReferenceLocation>(SEOUL_CITY_HALL_REFERENCE);
   const { routes, allRoutes, isLoading, errorMessage } = useRoutes(queryViewport);
@@ -63,7 +69,17 @@ export function Home() {
     [isSameViewport],
   );
 
-  // 클라이언트 뷰포트 필터만 사용하므로 mapViewport와 즉시 동기화 (바텀시트·지도 이동 반응 지연 최소화)
+  const handleVisibleRouteViewportChanged = useCallback(
+    (nextViewport: RouteViewport | null) => {
+      if (!nextViewport) return;
+      setVisibleRouteViewport((previous) =>
+        isSameViewport(previous, nextViewport) ? previous : { ...nextViewport },
+      );
+    },
+    [isSameViewport],
+  );
+
+  // 지도 이동·줌으로 바뀐 전체 bounds만 데이터 필터에 반영 (바텀시트 높이는 제외)
   useEffect(() => {
     if (!mapViewport) return;
     setQueryViewport((previous) =>
@@ -86,28 +102,27 @@ export function Home() {
     }
     return dedupeRoutesById([selected, ...base]);
   }, [routes, selectedCategories, selectedCourseId, allRoutes]);
+
+  const routesForCourseList = useMemo(() => {
+    const base = filterRoutesByRouteViewport(filteredRoutes, visibleRouteViewport);
+    if (!selectedCourseId) {
+      return base;
+    }
+    if (base.some((route) => route.id === selectedCourseId)) {
+      return base;
+    }
+    const selected = allRoutes.find((route) => route.id === selectedCourseId);
+    if (!selected) {
+      return base;
+    }
+    return dedupeRoutesById([selected, ...base]);
+  }, [filteredRoutes, visibleRouteViewport, selectedCourseId, allRoutes]);
+
   const courseCards = useMemo(
-    () => buildCourseCardViews(filteredRoutes, referenceLocation, selectedCourseId),
-    [filteredRoutes, referenceLocation, selectedCourseId],
+    () => buildCourseCardViews(routesForCourseList, referenceLocation, selectedCourseId),
+    [routesForCourseList, referenceLocation, selectedCourseId],
   );
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (
-      process.env.NODE_ENV !== 'development' &&
-      window.localStorage?.getItem('DEBUG_HOME_VIEWPORT') !== '1'
-    ) {
-      return;
-    }
-    /* eslint-disable no-console -- DEBUG_HOME_VIEWPORT / 홈 지도-목록-마커 파이프라인 */
-    console.log('[Home] queryViewport & 마커용 routes', {
-      queryViewport,
-      viewportFilteredRoutesCount: routes.length,
-      filteredRoutesCount: filteredRoutes.length,
-      markersOnMapCount: filteredRoutes.length,
-    });
-    /* eslint-enable no-console */
-  }, [queryViewport, routes.length, filteredRoutes.length]);
   const courseLikeCounts = useMemo(
     () =>
       allRoutes.reduce<Record<string, number>>((acc, route) => {
@@ -161,16 +176,13 @@ export function Home() {
     });
   };
 
-  const handleCourseMarkerClick = useCallback(
-    (courseId: string) => {
-      setSelectedCourseId(courseId);
-      setMarkerClickRecenterToken((previous) => previous + 1);
-      if (sheetVisibleHeight <= 24) {
-        setOpenPeekFromCollapsedSignal((previous) => previous + 1);
-      }
-    },
-    [sheetVisibleHeight],
-  );
+  const handleCourseMarkerClick = useCallback((courseId: string) => {
+    setSelectedCourseId(courseId);
+    setMarkerClickRecenterToken((previous) => previous + 1);
+    if (sheetVisibleHeightRef.current <= 24) {
+      setOpenPeekFromCollapsedSignal((previous) => previous + 1);
+    }
+  }, []);
 
   return (
     <section className={styles.container}>
@@ -213,6 +225,7 @@ export function Home() {
             markerClickRecenterToken={markerClickRecenterToken}
             onCourseMarkerClick={handleCourseMarkerClick}
             onViewportChanged={handleViewportChanged}
+            onVisibleViewportChanged={handleVisibleRouteViewportChanged}
           />
         </div>
         <CoursesList

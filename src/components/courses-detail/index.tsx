@@ -201,9 +201,6 @@ export function Courses({ course, authorNickname, location, canEdit = false }: C
               </div>
             ) : (
               <div className={styles.emptyImageCard} role="status" aria-live="polite">
-                <span className={styles.emptyImageIcon} aria-hidden>
-                  ...
-                </span>
                 <p className={styles.emptyImageTitle}>{COPY.emptyImageTitle}</p>
               </div>
             )}

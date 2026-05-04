@@ -36,8 +36,7 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
     mapRef.current = map;
   }, []);
 
-  const { clearPolyline, drawPointMarkers, drawRoutePolyline } =
-    useTmapOverlays(mapRef);
+  const { clearPolyline, drawPointMarkers, drawRoutePolyline } = useTmapOverlays(mapRef);
 
   const { initializeMap } = useTmapMapInitialization({
     drawPointMarkers,

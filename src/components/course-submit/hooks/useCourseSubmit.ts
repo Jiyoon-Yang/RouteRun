@@ -1,13 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import type { ChangeEvent } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { createCourseAction, updateCourseAction } from '@/actions/course.action';
 import { uploadCourseImages } from '@/commons/utils/storage.util';
 import type { SaveRoutePayload } from '@/components/tmap/course-submit/hooks/useCourseMap';
 import type { CourseDetailPayload } from '@/services/course/courseDetailService';
+
+import type { ChangeEvent } from 'react';
 
 export const MAX_COURSE_SUBMIT_IMAGES = 5;
 

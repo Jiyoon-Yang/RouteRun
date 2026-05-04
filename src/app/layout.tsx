@@ -9,7 +9,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'RouteRun',
+  title: '루트런 | 내 주변 러닝 코스',
   description: '전국의 러닝 코스를 찾고, 나만의 경로를 기록하여 러너들과 공유해보세요.',
 };
 

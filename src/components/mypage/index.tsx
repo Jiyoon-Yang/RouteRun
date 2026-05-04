@@ -23,6 +23,7 @@ import { createPortal } from 'react-dom';
 import { Button } from '@/commons/components/button';
 import { Icon } from '@/commons/components/icons';
 import { Modal } from '@/commons/components/modal';
+import { useGuestGuard } from '@/commons/hooks/useGuestGuard';
 import { Header } from '@/commons/layout/header';
 import { useAuth } from '@/commons/providers/auth/auth.provider';
 import modalBackdropStyles from '@/commons/providers/modal/modal.provider.module.css';
@@ -104,6 +105,7 @@ export default function Mypage({ profile, myRoutes, likedRoutes }: MypageProps) 
   const { open } = useProfileModal({
     initialNickname: profile.nickname,
   });
+  const { requireFullAccountForProfile } = useGuestGuard();
 
   return (
     <div className={styles.container}>
@@ -122,7 +124,13 @@ export default function Mypage({ profile, myRoutes, likedRoutes }: MypageProps) 
           </div>
           <span className={styles.userName}>{profile.nickname}</span>
         </div>
-        <Button variant="outline" borderRadius="r12" size="small" color="dark" onClick={open}>
+        <Button
+          variant="outline"
+          borderRadius="r12"
+          size="small"
+          color="dark"
+          onClick={() => requireFullAccountForProfile(open)}
+        >
           {TEXTS.EDIT_PROFILE}
         </Button>
       </section>

@@ -7,7 +7,13 @@ import type { Route, RouteViewport } from '@/commons/types/runroute';
 import { SEOUL_CITY_HALL_COORDINATE } from '@/commons/utils/geo';
 import { resolveRouteStartForMapMarker } from '@/commons/utils/route-marker-position';
 import { getDistanceCategory, type DistanceCategory } from '@/components/home/utils/course-filter';
+import {
+  dedupeConsecutiveCoordinates,
+  extractPathCoordinates,
+  extractSavedRoutePoints,
+} from '@/components/tmap/course-detail/path-data';
 import { applyPointerCursorToTmapMarker } from '@/components/tmap/shared/apply-pointer-cursor-to-tmap-marker';
+import { getPedestrianRoute } from '@/repositories/map.repository';
 
 import {
   getRunningCourseMarkerIconUrlForCategory,
@@ -25,8 +31,50 @@ function isMarkerCoordDebugEnabled(): boolean {
   return process.env.NODE_ENV === 'development';
 }
 
+/** 마커/클러스터 생명주기·부착 상태 로그. 켜기: `localStorage.DEBUG_TMAP_MARKER_LIFECYCLE=1` · 끄기: `=0` */
+function isMarkerLifecycleDebugEnabled(): boolean {
+  if (typeof window === 'undefined') return false;
+  const flag = window.localStorage?.getItem('DEBUG_TMAP_MARKER_LIFECYCLE');
+  if (flag === '0') return false;
+  return flag === '1';
+}
+
+/** SDK 마커가 현재 어떤 map 인스턴스에 붙었는지(가능할 때만) */
+function tryReadMarkerAttachedMap(marker: unknown): unknown {
+  if (!marker || typeof marker !== 'object') return undefined;
+  const candidate = marker as { getMap?: () => unknown; map?: unknown };
+  if (typeof candidate.getMap === 'function') {
+    try {
+      return candidate.getMap();
+    } catch {
+      return undefined;
+    }
+  }
+  return candidate.map;
+}
+
+/** routes props 동일 여부 판별용 (참조가 바뀌어도 내용 같으면 syncRouteMarkers 스킵) */
+function buildRoutesSyncSignature(routes: Route[]): string {
+  return routes
+    .map(
+      (r) => `${r.id}:${String(r.start_lat)}:${String(r.start_lng)}:${String(r.distance_meters)}`,
+    )
+    .sort()
+    .join('|');
+}
+
 function roundCoordForLog(n: number): number {
   return Math.round(n * 1e8) / 1e8;
+}
+
+function isSameRouteViewport(left: RouteViewport | null, right: RouteViewport | null): boolean {
+  if (!left || !right) return false;
+  return (
+    left.northEastLat === right.northEastLat &&
+    left.northEastLng === right.northEastLng &&
+    left.southWestLat === right.southWestLat &&
+    left.southWestLng === right.southWestLng
+  );
 }
 
 /** 티맵 공식 예제: `new Tmapv3.extension.MarkerCluster({ markers, map })` */
@@ -79,6 +127,8 @@ type TmapLatLng = {
 type TmapMarker = {
   setMap: (map: TmapMap | null) => void;
   setPosition: (position: TmapLatLng) => void;
+  getMap?: () => TmapMap | null;
+  map?: TmapMap | null;
   setIcon?: (icon: string) => void;
   addListener?: (eventName: string, callback: () => void) => void;
   on?: (eventName: string, callback: () => void) => void;
@@ -105,6 +155,8 @@ type TmapMap = {
   on?: (eventName: string, callback: () => void) => void;
   resize?: () => void;
   getBounds?: () => TmapLatLngBoundsLike | null | undefined;
+  /** 코스 경로 맞춤 — `LatLngBounds`+패딩 또는 `southWest`·`northEast` 쌍(상세 지도와 동일) */
+  fitBounds?: (...args: unknown[]) => void;
 };
 
 type TmapLatLngBoundsLike = {
@@ -120,13 +172,15 @@ type TmapHomeProps = {
   /** 마커 클릭 시마다 증가 — 보이는 지도 영역 기준 1회 중앙 정렬에만 사용 */
   markerClickRecenterToken?: number;
   onCourseMarkerClick?: (courseId: string) => void;
+  /** 데이터 필터용 — 전체 지도 bounds(getBounds), 바텀시트 오버레이 미반영 */
   onViewportChanged?: (viewport: RouteViewport) => void;
+  /** UI용 — 바텀시트가 가리지 않는 영역 근사 bounds */
+  onVisibleViewportChanged?: (viewport: RouteViewport | null) => void;
 };
 
 type RouteMarkerEntry = {
   marker: TmapMarker;
   category: DistanceCategory;
-  title: string;
   visualState: MarkerVisualState;
   lat: number;
   lng: number;
@@ -160,13 +214,54 @@ const ROUTE_MARKER_INDIVIDUAL_ZOOM_AT_OR_ABOVE = ROUTE_MARKER_CLUSTER_ZOOM_AT_OR
 const INITIAL_MAP_ZOOM_LEVEL = 14;
 const MARKER_VISIBILITY_DEBOUNCE_MS = 140;
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+/** 홈 선택 코스 fitBounds — 상세(72px)보다 크게 두어 동네 맥락이 보이게 함 */
+const ROUTE_POLYLINE_FIT_BOUNDS_PADDING_PX = 196;
+
+/** 경로 bbox를 중심 기준으로 키움. 짧은 코스가 화면을 가득 채우며 과확대되는 것을 줄임 */
+const ROUTE_BOUNDS_INFLATE_RATIO = 1.42;
+
+/** 아주 짧은 경로에도 적용할 최소 바운딩 크기(도) — 대략 수백 m~1km대 컨텍스트 */
+const ROUTE_BOUNDS_MIN_SPAN_LAT = 0.0088;
+const ROUTE_BOUNDS_MIN_SPAN_LNG = 0.0112;
+
+/** fitBounds 직후 허용하는 최대 줌(값이 클수록 확대). 두 번째 스크린샷 정도의 배율을 목표로 15 고정 */
+const ROUTE_POLYLINE_FIT_MAX_ZOOM_LEVEL = 15;
+
+function padRouteBoundsForHomeFit(
+  minLat: number,
+  maxLat: number,
+  minLng: number,
+  maxLng: number,
+): { minLat: number; maxLat: number; minLng: number; maxLng: number } {
+  const cLat = (minLat + maxLat) / 2;
+  const cLng = (minLng + maxLng) / 2;
+  let latSpan = maxLat - minLat;
+  let lngSpan = maxLng - minLng;
+  latSpan = Math.max(latSpan * ROUTE_BOUNDS_INFLATE_RATIO, ROUTE_BOUNDS_MIN_SPAN_LAT);
+  lngSpan = Math.max(lngSpan * ROUTE_BOUNDS_INFLATE_RATIO, ROUTE_BOUNDS_MIN_SPAN_LNG);
+  return {
+    minLat: cLat - latSpan / 2,
+    maxLat: cLat + latSpan / 2,
+    minLng: cLng - lngSpan / 2,
+    maxLng: cLng + lngSpan / 2,
+  };
+}
+
+function clampHomeMapZoom(map: TmapMap): void {
+  const currentZoom = map.getZoom?.();
+  if (typeof currentZoom !== 'number') return;
+  const clamped = Math.min(MAX_ZOOM_LEVEL, Math.max(MIN_ZOOM_LEVEL, currentZoom));
+  if (clamped !== currentZoom) {
+    map.setZoom(clamped);
+  }
+}
+
+function clampRoutePolylineFitZoom(map: TmapMap): void {
+  const z = map.getZoom?.();
+  if (typeof z !== 'number') return;
+  if (z > ROUTE_POLYLINE_FIT_MAX_ZOOM_LEVEL) {
+    map.setZoom(ROUTE_POLYLINE_FIT_MAX_ZOOM_LEVEL);
+  }
 }
 
 function toSvgDataUrl(svgMarkup: string): string {
@@ -195,52 +290,6 @@ function getCurrentLocationIndicatorIconUrl(size: number): string {
   return toSvgDataUrl(svg);
 }
 
-function getLabelScaleByZoom(zoomLevel: number | undefined): number {
-  const zoom = typeof zoomLevel === 'number' ? zoomLevel : 15;
-  if (zoom <= 13) return 0.88;
-  if (zoom === 14) return 0.94;
-  if (zoom === 15) return 1;
-  if (zoom === 16) return 1.08;
-  return 1.14;
-}
-
-function getLabelIconSize(
-  title: string,
-  zoomLevel: number | undefined,
-): { width: number; height: number } {
-  const scale = getLabelScaleByZoom(zoomLevel);
-  const baseWidth = Math.max(120, Math.min(300, title.length * 12 + 32)) * scale;
-  const baseHeight = 40 * scale;
-  const evenWidth = baseWidth % 2 === 0 ? baseWidth : baseWidth + 1;
-  const evenHeight = baseHeight % 2 === 0 ? baseHeight : baseHeight + 1;
-  return { width: Math.round(evenWidth), height: Math.round(evenHeight) };
-}
-
-function buildMarkerLabelIconUrl(
-  title: string,
-  width: number,
-  height: number,
-  zoomLevel: number | undefined,
-): string {
-  const safeTitle = escapeHtml(title);
-  const scale = getLabelScaleByZoom(zoomLevel);
-  const liftGap = Math.round(84 * scale);
-  const totalHeight = height + liftGap;
-  const y = height / 2 + 1;
-  const textX = width / 2;
-  const radius = Math.round(12 * scale);
-  const fontSize = Math.round(14 * scale);
-
-  const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${totalHeight}" viewBox="0 0 ${width} ${totalHeight}">
-  <rect x="0" y="0" width="${width}" height="${height}" rx="${radius}" fill="#2F3146"/>
-  <text x="${textX}" y="${y}" text-anchor="middle" dominant-baseline="middle" fill="#fafafa" font-size="${fontSize}" font-weight="700">${safeTitle}</text>
-</svg>
-`.trim();
-
-  return toSvgDataUrl(svg);
-}
-
 export function TmapHome({
   bottomSheetVisibleHeight = 24,
   isBottomSheetExpanded = false,
@@ -249,6 +298,7 @@ export function TmapHome({
   markerClickRecenterToken = 0,
   onCourseMarkerClick,
   onViewportChanged,
+  onVisibleViewportChanged,
 }: TmapHomeProps) {
   const [isMobileOrTabletViewport, setIsMobileOrTabletViewport] = useState(false);
   // [상태] 지도/마커 인스턴스 참조 관리
@@ -256,8 +306,10 @@ export function TmapHome({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const currentLocationMarkerRef = useRef<TmapMarker | null>(null);
   const currentLocationCoordinateRef = useRef<{ lat: number; lng: number } | null>(null);
-  const selectedLabelMarkerRef = useRef<TmapMarker | null>(null);
   const selectedRoutePolylineRef = useRef<TmapPolyline | null>(null);
+  /** 선택 코스 폴리라인 요청 무효화(연속 클릭·선택 해제) */
+  const routePolylineGenerationRef = useRef(0);
+  const routePolylineAbortRef = useRef<AbortController | null>(null);
   const routeMarkerMapRef = useRef<Map<string, RouteMarkerEntry>>(new Map());
   const routeMarkerClusterRef = useRef<TmapMarkerCluster | null>(null);
   /** 확장 로더 유무와 무관하게, 마지막으로 적용한 코스 마커 표시 방식 */
@@ -267,6 +319,8 @@ export function TmapHome({
   /** 마지막으로 MarkerCluster에 붙인 generation */
   const routeMarkerClusterAttachGenerationRef = useRef(-1);
   const routesRef = useRef<Route[]>(routes);
+  /** syncRouteMarkers 가 실제 데이터 변경 시에만 돌도록 마지막 동기화 서명 */
+  const routesSyncSigRef = useRef<string | null>(null);
   const selectedRouteIdRef = useRef<string | null>(null);
   const viewportReportTimerRef = useRef<number | null>(null);
   const viewportSyncIntervalRef = useRef<number | null>(null);
@@ -277,12 +331,14 @@ export function TmapHome({
   const isMapInteractingRef = useRef(false);
   const interactionWatchdogTimerRef = useRef<number | null>(null);
   const lastAppliedZoomRef = useRef<number | null>(null);
-  const lastViewportRef = useRef<RouteViewport | null>(null);
+  const lastQueryViewportRef = useRef<RouteViewport | null>(null);
+  const lastVisibleViewportReportRef = useRef<RouteViewport | null>(null);
+  /** 클러스터 재구성 — 바텀 오버레이/선택 상태 변화 추적 */
+  const routeMarkerOverlaySignatureRef = useRef('');
   const routeVisualStateHandlerRef = useRef<(courseId: string, state: MarkerVisualState) => void>(
     () => undefined,
   );
   const selectedMarkerVisualHandlerRef = useRef<(courseId: string | null) => void>(() => undefined);
-  const selectedPolylineHandlerRef = useRef<(courseId: string | null) => void>(() => undefined);
   const markerHoverCountRef = useRef(0);
   const bottomSheetVisibleHeightRef = useRef(bottomSheetVisibleHeight);
   bottomSheetVisibleHeightRef.current = bottomSheetVisibleHeight;
@@ -385,8 +441,7 @@ export function TmapHome({
     [tryReadSdkLatLngFromMarker],
   );
 
-  /** 전체 getBounds가 아닌, 바텀시트가 가리는 높이를 뺀 보이는 영역 기준 뷰포트 */
-  const computeVisibleViewportFromMap = useCallback(
+  const readMapBoundsViewport = useCallback(
     (map: TmapMap): RouteViewport | null => {
       const bounds = map.getBounds?.();
       if (!bounds) return null;
@@ -405,6 +460,22 @@ export function TmapHome({
       ) {
         return null;
       }
+      return { northEastLat, northEastLng, southWestLat, southWestLng };
+    },
+    [readCoordinateValue],
+  );
+
+  /** useRoutes·쿼리용 — 바텀 오버레이와 무관하게 전체 지도 bounds */
+  const computeQueryViewportFromMap = useCallback(
+    (map: TmapMap): RouteViewport | null => readMapBoundsViewport(map),
+    [readMapBoundsViewport],
+  );
+
+  /** 목록·마커 오버레이용 — 바텀시트가 가리는 높이 반영 */
+  const computeVisibleViewportFromMap = useCallback(
+    (map: TmapMap): RouteViewport | null => {
+      const base = readMapBoundsViewport(map);
+      if (!base) return null;
 
       const mapElement = document.getElementById('map_div');
       const mapWidthPx = mapElement?.clientWidth ?? 0;
@@ -416,56 +487,215 @@ export function TmapHome({
       const overlayPx = Math.min(Math.max(0, bottomSheetVisibleHeightRef.current), mapHeightPx);
 
       return computeVisibleRouteViewportFromMapCanvas({
-        northEastLat,
-        northEastLng,
-        southWestLat,
-        southWestLng,
+        northEastLat: base.northEastLat,
+        northEastLng: base.northEastLng,
+        southWestLat: base.southWestLat,
+        southWestLng: base.southWestLng,
         mapWidthPx,
         mapHeightPx,
         bottomOverlayPx: overlayPx,
       });
     },
-    [readCoordinateValue],
+    [readMapBoundsViewport],
   );
 
-  const reportViewport = useCallback(
+  const emitViewportReports = useCallback(
     (map: TmapMap) => {
-      const viewport = computeVisibleViewportFromMap(map);
-      if (!viewport) return;
-      const previous = lastViewportRef.current;
-      if (
-        previous &&
-        previous.northEastLat === viewport.northEastLat &&
-        previous.northEastLng === viewport.northEastLng &&
-        previous.southWestLat === viewport.southWestLat &&
-        previous.southWestLng === viewport.southWestLng
-      ) {
-        return;
+      let queryEmitted = false;
+      let visibleEmitted = false;
+
+      const queryVp = computeQueryViewportFromMap(map);
+      if (queryVp) {
+        const prev = lastQueryViewportRef.current;
+        if (!isSameRouteViewport(prev, queryVp)) {
+          lastQueryViewportRef.current = queryVp;
+          onViewportChanged?.(queryVp);
+          queryEmitted = true;
+        }
       }
-      lastViewportRef.current = viewport;
-      onViewportChanged?.(viewport);
+
+      const visibleVp = computeVisibleViewportFromMap(map);
+      if (visibleVp) {
+        const prevV = lastVisibleViewportReportRef.current;
+        if (!isSameRouteViewport(prevV, visibleVp)) {
+          lastVisibleViewportReportRef.current = visibleVp;
+          onVisibleViewportChanged?.(visibleVp);
+          visibleEmitted = true;
+        }
+      }
+
+      if (isMarkerLifecycleDebugEnabled() && (queryEmitted || visibleEmitted)) {
+        /* eslint-disable no-console -- lifecycle */
+        console.info('[TmapHome:lifecycle] emitViewportReports', {
+          queryEmitted,
+          visibleEmitted,
+          resizeAvailable: typeof map.resize === 'function',
+        });
+        /* eslint-enable no-console */
+      }
     },
-    [computeVisibleViewportFromMap, onViewportChanged],
+    [
+      computeQueryViewportFromMap,
+      computeVisibleViewportFromMap,
+      onViewportChanged,
+      onVisibleViewportChanged,
+    ],
   );
+
+  /** 바텀시트 높이만 바뀔 때 — 부모의 데이터용 queryViewport는 건드리지 않음 */
+  const emitVisibleViewportReportOnly = useCallback(
+    (map: TmapMap) => {
+      const visibleVp = computeVisibleViewportFromMap(map);
+      if (!visibleVp) return;
+      const prevV = lastVisibleViewportReportRef.current;
+      if (isSameRouteViewport(prevV, visibleVp)) return;
+      lastVisibleViewportReportRef.current = visibleVp;
+      onVisibleViewportChanged?.(visibleVp);
+    },
+    [computeVisibleViewportFromMap, onVisibleViewportChanged],
+  );
+
+  const logRouteMarkerAttachSnapshot = (map: TmapMap | null, phase: string) => {
+    if (!isMarkerLifecycleDebugEnabled()) return;
+    const targetMap = map ?? mapInstance.current;
+    let routeMarkersAttachedToMap = 0;
+    const sample: Record<string, unknown>[] = [];
+    routeMarkerMapRef.current.forEach((entry, routeId) => {
+      const sdkMap = tryReadMarkerAttachedMap(entry.marker);
+      const markerOnTarget = sdkMap != null && sdkMap === targetMap;
+      if (markerOnTarget) routeMarkersAttachedToMap += 1;
+
+      let iconProbe: boolean | string = 'no-element';
+      const el = entry.marker.getElement?.();
+      if (el instanceof HTMLElement) {
+        const img = el.querySelector('img');
+        if (img) {
+          iconProbe = img.complete && img.naturalHeight > 0;
+        } else {
+          iconProbe = 'no-img';
+        }
+      }
+
+      if (sample.length < 8) {
+        sample.push({
+          id: `${routeId.slice(0, 10)}…`,
+          entryVisible: entry.isVisible,
+          markerOnTargetMap: markerOnTarget,
+          getMapOrMap: sdkMap != null,
+          iconOk: iconProbe,
+        });
+      }
+    });
+
+    const cluster = routeMarkerClusterRef.current as unknown as {
+      getMarkers?: () => unknown[];
+      markers?: unknown[];
+    } | null;
+    let clusterMarkerCount: number | null = null;
+    if (cluster && typeof cluster.getMarkers === 'function') {
+      try {
+        clusterMarkerCount = cluster.getMarkers()?.length ?? null;
+      } catch {
+        clusterMarkerCount = null;
+      }
+    } else if (cluster && Array.isArray(cluster.markers)) {
+      clusterMarkerCount = cluster.markers.length;
+    }
+
+    /* eslint-disable no-console -- DEBUG_TMAP_MARKER_LIFECYCLE */
+    console.groupCollapsed(`[TmapHome:lifecycle] SDK 부착 스냅샷 · ${phase}`);
+    console.log({
+      targetMapExists: !!targetMap,
+      mapMarkerEntryCount: routeMarkerMapRef.current.size,
+      routeMarkersAttachedToTargetMap: routeMarkersAttachedToMap,
+      clusterRefExists: !!routeMarkerClusterRef.current,
+      clusterMarkerCountProbe: clusterMarkerCount,
+      bottomSheetPx: bottomSheetVisibleHeightRef.current,
+      zoom: targetMap && typeof targetMap.getZoom === 'function' ? targetMap.getZoom() : null,
+      sampleRows: sample,
+    });
+    console.groupEnd();
+    /* eslint-enable no-console */
+  };
 
   const tearDownRouteMarkerCluster = useCallback(() => {
     const cluster = routeMarkerClusterRef.current;
-    if (!cluster) return;
-    if (typeof cluster.clearMarkers === 'function') {
+    if (!cluster) {
+      if (isMarkerLifecycleDebugEnabled()) {
+        /* eslint-disable no-console -- lifecycle */
+        console.info('[TmapHome:lifecycle] tearDownRouteMarkerCluster · noop (cluster ref 없음)');
+        /* eslint-enable no-console */
+      }
+      return;
+    }
+
+    const clusterLoose = cluster as unknown as {
+      clearMarkers?: () => void;
+      setMap?: (m: unknown) => void;
+      removeMarkers?: () => void;
+      getMarkers?: () => unknown[];
+      markers?: unknown[];
+    };
+
+    if (isMarkerLifecycleDebugEnabled()) {
+      let beforeCount: number | null = null;
+      if (typeof clusterLoose.getMarkers === 'function') {
+        try {
+          beforeCount = clusterLoose.getMarkers()?.length ?? null;
+        } catch {
+          beforeCount = null;
+        }
+      } else if (Array.isArray(clusterLoose.markers)) {
+        beforeCount = clusterLoose.markers.length;
+      }
+      /* eslint-disable no-console -- lifecycle */
+      console.groupCollapsed('[TmapHome:lifecycle] tearDownRouteMarkerCluster 실행');
+      console.log({
+        clusterMarkerCountBefore: beforeCount,
+        hasClearMarkers: typeof clusterLoose.clearMarkers === 'function',
+        hasRemoveMarkers: typeof clusterLoose.removeMarkers === 'function',
+      });
+      console.trace();
+      console.groupEnd();
+      /* eslint-enable no-console */
+    }
+
+    if (typeof clusterLoose.clearMarkers === 'function') {
       try {
-        cluster.clearMarkers();
-      } catch {
-        /* SDK 버전별 */
+        clusterLoose.clearMarkers();
+      } catch (e) {
+        if (isMarkerLifecycleDebugEnabled()) {
+          /* eslint-disable no-console -- lifecycle */
+          console.warn('[TmapHome:lifecycle] cluster.clearMarkers 예외', e);
+          /* eslint-enable no-console */
+        }
       }
     }
+
+    if (typeof clusterLoose.removeMarkers === 'function') {
+      try {
+        clusterLoose.removeMarkers();
+        if (isMarkerLifecycleDebugEnabled()) {
+          /* eslint-disable no-console -- lifecycle */
+          console.info('[TmapHome:lifecycle] cluster.removeMarkers() 호출됨');
+          /* eslint-enable no-console */
+        }
+      } catch (e) {
+        if (isMarkerLifecycleDebugEnabled()) {
+          /* eslint-disable no-console -- lifecycle */
+          console.warn('[TmapHome:lifecycle] cluster.removeMarkers 예외', e);
+          /* eslint-enable no-console */
+        }
+      }
+    }
+
     cluster.setMap?.(null);
     routeMarkerClusterRef.current = null;
   }, []);
 
   /**
-   * 줌에 따라 클러스터 모드 / 개별 마커 모드를 전환한다.
-   * - 클러스터: 모든 코스 마커는 `setMap(null)`, MarkerCluster만 map에 연결
-   * - 개별: cluster 제거(clearMarkers·setMap null) 후 각 마커 `setMap(map)`
+   * 줌 레벨만으로 클러스터 ↔ 개별 마커 전환.
+   * 바텀시트·오버레이와 무관 — 지도 코스 마커는 시트 클릭으로 숨기지 않음(목록 가시 viewport는 별도 콜백).
    */
   const syncRouteMarkersDisplayForZoom = useCallback(
     (map: TmapMap) => {
@@ -475,6 +705,7 @@ export function TmapHome({
         tearDownRouteMarkerCluster();
         routeMarkerRouteDisplayModeRef.current = 'individual';
         routeMarkerClusterAttachGenerationRef.current = -1;
+        routeMarkerOverlaySignatureRef.current = '';
         routeMarkerMapRef.current.forEach((entry) => {
           entry.marker.setMap(map);
           entry.isVisible = true;
@@ -484,12 +715,19 @@ export function TmapHome({
       }
 
       const rawZoom = map.getZoom();
-      if (typeof rawZoom !== 'number' || Number.isNaN(rawZoom)) return;
+      if (typeof rawZoom !== 'number' || Number.isNaN(rawZoom)) {
+        routeMarkerMapRef.current.forEach((entry) => {
+          entry.marker.setMap(map);
+          entry.isVisible = true;
+        });
+        return;
+      }
 
       if (markerCount === 0) {
         tearDownRouteMarkerCluster();
         routeMarkerRouteDisplayModeRef.current = 'individual';
         routeMarkerClusterAttachGenerationRef.current = -1;
+        routeMarkerOverlaySignatureRef.current = '';
         return;
       }
 
@@ -500,6 +738,7 @@ export function TmapHome({
         tearDownRouteMarkerCluster();
         routeMarkerRouteDisplayModeRef.current = 'individual';
         routeMarkerClusterAttachGenerationRef.current = -1;
+        routeMarkerOverlaySignatureRef.current = '';
         routeMarkerMapRef.current.forEach((entry) => {
           entry.marker.setMap(map);
           entry.isVisible = true;
@@ -517,26 +756,90 @@ export function TmapHome({
           gen !== routeMarkerClusterAttachGenerationRef.current;
 
         if (needsRebuild) {
+          if (isMarkerLifecycleDebugEnabled()) {
+            /* eslint-disable no-console -- lifecycle */
+            console.info('[TmapHome:lifecycle] MarkerCluster 재구성', {
+              prevMode,
+              gen,
+              attachGen: routeMarkerClusterAttachGenerationRef.current,
+              routeMarkerCount: routeMarkerMapRef.current.size,
+            });
+            /* eslint-enable no-console */
+          }
+
           tearDownRouteMarkerCluster();
           routeMarkerMapRef.current.forEach((entry) => {
             entry.marker.setMap(null);
           });
           const MarkerCluster = getTmapv3()?.extension?.MarkerCluster;
-          if (!MarkerCluster) return;
-          const markers = Array.from(routeMarkerMapRef.current.values(), (entry) => entry.marker);
-          if (markers.length === 0) return;
-          routeMarkerClusterRef.current = new MarkerCluster({ markers, map });
-          routeMarkerClusterAttachGenerationRef.current = gen;
+          if (!MarkerCluster) {
+            routeMarkerRouteDisplayModeRef.current = 'individual';
+            routeMarkerClusterAttachGenerationRef.current = -1;
+            routeMarkerOverlaySignatureRef.current = '';
+            routeMarkerMapRef.current.forEach((entry) => {
+              entry.marker.setMap(map);
+              entry.isVisible = true;
+              entry.outOfViewportSinceMs = null;
+            });
+            return;
+          }
+
+          routeMarkerMapRef.current.forEach((entry) => {
+            entry.isVisible = true;
+            entry.outOfViewportSinceMs = null;
+          });
+
+          const markers = Array.from(routeMarkerMapRef.current.values(), (e) => e.marker);
+
+          if (markers.length > 0) {
+            try {
+              routeMarkerClusterRef.current = new MarkerCluster({ markers, map });
+              routeMarkerClusterAttachGenerationRef.current = gen;
+            } catch {
+              routeMarkerClusterRef.current = null;
+              routeMarkerRouteDisplayModeRef.current = 'individual';
+              routeMarkerClusterAttachGenerationRef.current = -1;
+              routeMarkerMapRef.current.forEach((entry) => {
+                entry.marker.setMap(map);
+                entry.isVisible = true;
+                entry.outOfViewportSinceMs = null;
+              });
+              return;
+            }
+
+            if (isMarkerLifecycleDebugEnabled()) {
+              const inst = routeMarkerClusterRef.current as unknown as {
+                getMarkers?: () => unknown[];
+                markers?: unknown[];
+              };
+              let clusterReportsN: number | null = null;
+              if (typeof inst.getMarkers === 'function') {
+                try {
+                  clusterReportsN = inst.getMarkers()?.length ?? null;
+                } catch {
+                  clusterReportsN = null;
+                }
+              } else if (Array.isArray(inst.markers)) {
+                clusterReportsN = inst.markers.length;
+              }
+              /* eslint-disable no-console -- lifecycle */
+              console.info('[TmapHome:lifecycle] MarkerCluster attach 완료', {
+                markersPassedToCtor: markers.length,
+                clusterGetMarkersCount: clusterReportsN,
+              });
+              /* eslint-enable no-console */
+            }
+          }
         }
 
         routeMarkerRouteDisplayModeRef.current = 'cluster';
         return;
       }
 
-      // 상수 불일치 등으로 어중간한 줌대역만 있는 경우 → 개별 표시가 더 안전
       tearDownRouteMarkerCluster();
       routeMarkerRouteDisplayModeRef.current = 'individual';
       routeMarkerClusterAttachGenerationRef.current = -1;
+      routeMarkerOverlaySignatureRef.current = '';
       routeMarkerMapRef.current.forEach((entry) => {
         entry.marker.setMap(map);
         entry.isVisible = true;
@@ -549,6 +852,7 @@ export function TmapHome({
   const syncMarkerVisibilityByViewport = useCallback(
     (map: TmapMap) => {
       syncRouteMarkersDisplayForZoom(map);
+      logRouteMarkerAttachSnapshot(map, 'after syncRouteMarkersDisplayForZoom');
     },
     [syncRouteMarkersDisplayForZoom],
   );
@@ -582,10 +886,10 @@ export function TmapHome({
         window.clearTimeout(viewportReportTimerRef.current);
       }
       viewportReportTimerRef.current = window.setTimeout(() => {
-        reportViewport(map);
+        emitViewportReports(map);
       }, delay);
     },
-    [reportViewport],
+    [emitViewportReports],
   );
 
   const getRouteDistanceCategory = (route: Route): DistanceCategory => {
@@ -622,43 +926,6 @@ export function TmapHome({
     applyPointerCursorToTmapMarker(locationMarker);
     currentLocationMarkerRef.current = locationMarker;
   };
-
-  const upsertSelectedLabelMarker = useCallback((courseId: string | null) => {
-    const map = mapInstance.current;
-    const Tmapv3 = getTmapv3();
-    if (!map || !Tmapv3 || !courseId) {
-      selectedLabelMarkerRef.current?.setMap(null);
-      return;
-    }
-
-    const route = routesRef.current.find((item) => item.id === courseId);
-    const routeStart = route ? resolveRouteStartForMapMarker(route) : null;
-    if (!route || !routeStart) {
-      selectedLabelMarkerRef.current?.setMap(null);
-      return;
-    }
-
-    const zoomLevel = map.getZoom();
-    const { width, height } = getLabelIconSize(route.title, zoomLevel);
-    const labelIconHeight = height + Math.round(40 * getLabelScaleByZoom(zoomLevel));
-    const icon = buildMarkerLabelIconUrl(route.title, width, height, zoomLevel);
-    const position = new Tmapv3.LatLng(routeStart.lat, routeStart.lng);
-    const options: Record<string, unknown> = {
-      position,
-      map,
-      icon,
-      iconSize: new Tmapv3.Size(width, labelIconHeight),
-    };
-    if (Tmapv3.Point) {
-      options.iconAnchor = new Tmapv3.Point(width / 2, labelIconHeight);
-    }
-
-    // SDK 내부 상태(null screenSize) 충돌을 피하기 위해 라벨 마커는 갱신 시 재생성한다.
-    selectedLabelMarkerRef.current?.setMap(null);
-    const labelMarker = new Tmapv3.Marker(options);
-    applyPointerCursorToTmapMarker(labelMarker);
-    selectedLabelMarkerRef.current = labelMarker;
-  }, []);
 
   const registerMapListeners = useCallback(
     (map: TmapMap) => {
@@ -724,7 +991,6 @@ export function TmapHome({
         if (zoomUpdateRafRef.current !== null) return;
         zoomUpdateRafRef.current = window.requestAnimationFrame(() => {
           zoomUpdateRafRef.current = null;
-          upsertSelectedLabelMarker(selectedRouteIdRef.current);
           const currentLocation = currentLocationCoordinateRef.current;
           if (currentLocation) {
             createCustomMarker(map, currentLocation.lat, currentLocation.lng);
@@ -772,7 +1038,6 @@ export function TmapHome({
       scheduleMarkerVisibilitySync,
       scheduleViewportReport,
       syncRouteMarkersDisplayForZoom,
-      upsertSelectedLabelMarker,
     ],
   );
 
@@ -872,7 +1137,6 @@ export function TmapHome({
 
       addMarkerListener(marker, 'click', () => {
         selectedMarkerVisualHandlerRef.current(routeId);
-        selectedPolylineHandlerRef.current(routeId);
         onCourseMarkerClick?.(routeId);
       });
 
@@ -910,7 +1174,6 @@ export function TmapHome({
       routeMarkerMapRef.current.set(courseId, {
         marker: nextMarker,
         category: markerEntry.category,
-        title: markerEntry.title,
         visualState: state,
         lat: markerEntry.lat,
         lng: markerEntry.lng,
@@ -926,45 +1189,141 @@ export function TmapHome({
   );
   routeVisualStateHandlerRef.current = setRouteMarkerVisualState;
 
-  const setRouteMarkerLabelVisible = useCallback(
-    (courseId: string, visible: boolean) => {
-      if (!visible) {
-        selectedLabelMarkerRef.current?.setMap(null);
-        return;
-      }
-      upsertSelectedLabelMarker(courseId);
-    },
-    [upsertSelectedLabelMarker],
-  );
+  const syncSelectedRoutePolyline = useCallback((courseId: string | null) => {
+    routePolylineGenerationRef.current += 1;
+    const generation = routePolylineGenerationRef.current;
 
-  const syncSelectedRoutePolyline = useCallback((_courseId: string | null) => {
+    routePolylineAbortRef.current?.abort();
+    routePolylineAbortRef.current = null;
+
     selectedRoutePolylineRef.current?.setMap(null);
     selectedRoutePolylineRef.current = null;
-    // 저장 경로 폴리라인은 표시하지 않는다. 미리보기는 코스 상세 지도에서만 한다.
+
+    if (!courseId) {
+      return;
+    }
+
+    const map = mapInstance.current;
+    const Tmapv3 = getTmapv3();
+    if (!map || !Tmapv3) {
+      return;
+    }
+
+    const route = routesRef.current.find((item) => item.id === courseId);
+    if (!route) {
+      return;
+    }
+
+    const fallbackLine = dedupeConsecutiveCoordinates(
+      extractPathCoordinates(route.path_data, route.id),
+    );
+    const savedPoints = extractSavedRoutePoints(route.path_data);
+
+    const abortController = new AbortController();
+    routePolylineAbortRef.current = abortController;
+
+    const isStale = (): boolean =>
+      generation !== routePolylineGenerationRef.current || selectedRouteIdRef.current !== courseId;
+
+    void (async () => {
+      let lineCoordinates = fallbackLine;
+
+      if (savedPoints.length >= 2) {
+        try {
+          const coordsForApi = savedPoints.map((p) => ({ lat: p.lat, lng: p.lng }));
+          const result = await getPedestrianRoute(coordsForApi, abortController.signal);
+          const next = dedupeConsecutiveCoordinates(
+            result.path
+              .map((c) => ({ lat: Number(c.lat), lng: Number(c.lng) }))
+              .filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng)),
+          );
+          if (next.length >= 2) {
+            lineCoordinates = next;
+          }
+        } catch (error) {
+          if (abortController.signal.aborted) {
+            return;
+          }
+          console.warn('[TmapHome] 보행자 경로 재계산 실패, 저장 path 사용:', error);
+        }
+      }
+
+      if (isStale()) {
+        return;
+      }
+
+      const liveMap = mapInstance.current;
+      const liveTmap = getTmapv3();
+      if (!liveMap || !liveTmap || lineCoordinates.length < 2) {
+        return;
+      }
+
+      const latLngPath = lineCoordinates.map(
+        (coordinate) => new liveTmap.LatLng(coordinate.lat, coordinate.lng),
+      );
+
+      selectedRoutePolylineRef.current = new liveTmap.Polyline({
+        map: liveMap,
+        path: latLngPath,
+        strokeColor: '#2F80FF',
+        strokeWeight: 6,
+        strokeOpacity: 0.95,
+      });
+
+      if (typeof liveMap.fitBounds === 'function') {
+        const latValues = lineCoordinates.map((c) => c.lat);
+        const lngValues = lineCoordinates.map((c) => c.lng);
+        const rawMinLat = Math.min(...latValues);
+        const rawMaxLat = Math.max(...latValues);
+        const rawMinLng = Math.min(...lngValues);
+        const rawMaxLng = Math.max(...lngValues);
+        const padded = padRouteBoundsForHomeFit(rawMinLat, rawMaxLat, rawMinLng, rawMaxLng);
+        const southWest = new liveTmap.LatLng(padded.minLat, padded.minLng);
+        const northEast = new liveTmap.LatLng(padded.maxLat, padded.maxLng);
+
+        const LatLngBounds = (
+          liveTmap as unknown as { LatLngBounds?: new (sw: unknown, ne: unknown) => unknown }
+        ).LatLngBounds;
+
+        if (typeof LatLngBounds === 'function') {
+          const bounds = new LatLngBounds(southWest, northEast);
+          liveMap.fitBounds(bounds, ROUTE_POLYLINE_FIT_BOUNDS_PADDING_PX);
+        } else {
+          liveMap.fitBounds(southWest, northEast);
+        }
+        clampRoutePolylineFitZoom(liveMap);
+        clampHomeMapZoom(liveMap);
+      }
+    })();
   }, []);
-  selectedPolylineHandlerRef.current = syncSelectedRoutePolyline;
 
-  const clearAllRouteMarkerLabels = useCallback(() => {
-    routeMarkerMapRef.current.forEach((_entry, routeId) => {
-      setRouteMarkerLabelVisible(routeId, false);
-    });
-  }, [setRouteMarkerLabelVisible]);
-
-  const clearRouteMarkers = useCallback(() => {
+  /** 전체 코스 마커·폴리라인·클러스터 초기화(필요 시 effect/핸들러에서 호출) */
+  const _clearRouteMarkers = useCallback(() => {
+    if (isMarkerLifecycleDebugEnabled()) {
+      /* eslint-disable no-console -- lifecycle */
+      console.warn('[TmapHome:lifecycle] clearRouteMarkers() 호출 — 코스 마커 전량 제거');
+      console.trace();
+      /* eslint-enable no-console */
+    }
     tearDownRouteMarkerCluster();
+    routePolylineGenerationRef.current += 1;
+    routePolylineAbortRef.current?.abort();
+    routePolylineAbortRef.current = null;
+    selectedRoutePolylineRef.current?.setMap(null);
+    selectedRoutePolylineRef.current = null;
     routeMarkerMapRef.current.forEach((entry) => {
       entry.marker.setMap(null);
     });
     routeMarkerMapRef.current.clear();
     routeMarkerRouteDisplayModeRef.current = 'individual';
     routeMarkerClusterAttachGenerationRef.current = -1;
+    routeMarkerOverlaySignatureRef.current = '';
+    routesSyncSigRef.current = null;
   }, [tearDownRouteMarkerCluster]);
 
   const syncSelectedMarkerVisual = useCallback(
     (nextSelectedCourseId: string | null) => {
       const previousSelectedId = selectedRouteIdRef.current;
-
-      clearAllRouteMarkerLabels();
 
       if (previousSelectedId && previousSelectedId !== nextSelectedCourseId) {
         setRouteMarkerVisualState(previousSelectedId, 'default');
@@ -974,22 +1333,26 @@ export function TmapHome({
 
       if (nextSelectedCourseId) {
         setRouteMarkerVisualState(nextSelectedCourseId, 'clicked');
-        setRouteMarkerLabelVisible(nextSelectedCourseId, true);
       }
       syncSelectedRoutePolyline(nextSelectedCourseId);
     },
-    [
-      clearAllRouteMarkerLabels,
-      setRouteMarkerLabelVisible,
-      setRouteMarkerVisualState,
-      syncSelectedRoutePolyline,
-    ],
+    [setRouteMarkerVisualState, syncSelectedRoutePolyline],
   );
   selectedMarkerVisualHandlerRef.current = syncSelectedMarkerVisual;
 
   const syncRouteMarkers = useCallback(
     (map: TmapMap, nextRoutes: Route[]) => {
-      // [동기화] 공식 예제 패턴에 맞춰 매번 clear 후 Marker 재생성
+      if (isMarkerLifecycleDebugEnabled()) {
+        /* eslint-disable no-console -- lifecycle */
+        console.info('[TmapHome:lifecycle] syncRouteMarkers 진입', {
+          nextRouteCount: nextRoutes.length,
+          entriesBefore: routeMarkerMapRef.current.size,
+          dataSignature: buildRoutesSyncSignature(nextRoutes),
+        });
+        console.trace();
+        /* eslint-enable no-console */
+      }
+
       const normalizedRoutes = nextRoutes
         .map((route) => ({
           route,
@@ -999,44 +1362,120 @@ export function TmapHome({
           (item): item is { route: Route; start: { lat: number; lng: number } } =>
             item.start !== null,
         );
-      clearRouteMarkers();
+
+      const nextIdSet = new Set(normalizedRoutes.map(({ route }) => route.id));
+
+      const removedIds: string[] = [];
+      routeMarkerMapRef.current.forEach((_entry, routeId) => {
+        if (!nextIdSet.has(routeId)) removedIds.push(routeId);
+      });
+
+      let clusterStructureChanged = removedIds.length > 0;
+
+      if (removedIds.length > 0) {
+        tearDownRouteMarkerCluster();
+        removedIds.forEach((routeId) => {
+          const entry = routeMarkerMapRef.current.get(routeId);
+          entry?.marker.setMap(null);
+          routeMarkerMapRef.current.delete(routeId);
+        });
+      }
 
       normalizedRoutes.forEach(({ route, start }) => {
         const category = getRouteDistanceCategory(route);
         const state: MarkerVisualState =
           selectedRouteIdRef.current === route.id ? 'clicked' : 'default';
-        const marker = createRouteMarker(
-          isTmapRouteMarkerClusterLoaded() ? null : map,
-          route,
-          category,
-          state,
-        );
-        if (!marker) return;
 
-        routeMarkerMapRef.current.set(route.id, {
-          marker,
-          category,
-          title: route.title,
-          visualState: state,
-          lat: start.lat,
-          lng: start.lng,
-          isVisible: true,
-          outOfViewportSinceMs: null,
-        });
+        const existing = routeMarkerMapRef.current.get(route.id);
+        if (!existing) {
+          return;
+        }
 
-        attachRouteMarkerListeners(marker, route.id);
-        setRouteMarkerLabelVisible(route.id, selectedRouteIdRef.current === route.id);
+        let discardExisting = false;
+
+        if (existing.lat !== start.lat || existing.lng !== start.lng) {
+          const Tmapv3 = getTmapv3();
+          if (Tmapv3 && typeof existing.marker.setPosition === 'function') {
+            existing.marker.setPosition(new Tmapv3.LatLng(start.lat, start.lng) as TmapLatLng);
+            existing.lat = start.lat;
+            existing.lng = start.lng;
+            clusterStructureChanged = true;
+          } else {
+            discardExisting = true;
+          }
+        }
+
+        if (discardExisting) {
+          clusterStructureChanged = true;
+          tearDownRouteMarkerCluster();
+          existing.marker.setMap(null);
+          routeMarkerMapRef.current.delete(route.id);
+          return;
+        }
+
+        const categoryChanged = existing.category !== category;
+        const stateChanged = existing.visualState !== state;
+
+        if (categoryChanged) {
+          existing.category = category;
+          clusterStructureChanged = true;
+        }
+
+        if (stateChanged || categoryChanged) {
+          existing.visualState = state;
+          const icon = getRunningCourseMarkerIconUrlForCategory(category, state);
+          existing.marker.setIcon?.(icon);
+        }
       });
 
-      routeMarkerClusterGenerationRef.current += 1;
+      const routesToCreate = normalizedRoutes.filter(
+        ({ route }) => !routeMarkerMapRef.current.has(route.id),
+      );
+
+      if (routesToCreate.length > 0) {
+        clusterStructureChanged = true;
+        tearDownRouteMarkerCluster();
+
+        routesToCreate.forEach(({ route, start }) => {
+          const category = getRouteDistanceCategory(route);
+          const state: MarkerVisualState =
+            selectedRouteIdRef.current === route.id ? 'clicked' : 'default';
+
+          const marker = createRouteMarker(
+            isTmapRouteMarkerClusterLoaded() ? null : map,
+            route,
+            category,
+            state,
+          );
+          if (!marker) return;
+
+          routeMarkerMapRef.current.set(route.id, {
+            marker,
+            category,
+            visualState: state,
+            lat: start.lat,
+            lng: start.lng,
+            isVisible: true,
+            outOfViewportSinceMs: null,
+          });
+
+          attachRouteMarkerListeners(marker, route.id);
+        });
+      }
+
+      if (clusterStructureChanged) {
+        routeMarkerClusterGenerationRef.current += 1;
+      }
+
+      routesSyncSigRef.current = buildRoutesSyncSignature(nextRoutes);
       syncRouteMarkersDisplayForZoom(map);
+      logRouteMarkerAttachSnapshot(map, 'syncRouteMarkers 종료 직후');
     },
     [
       attachRouteMarkerListeners,
-      clearRouteMarkers,
       createRouteMarker,
-      setRouteMarkerLabelVisible,
       syncRouteMarkersDisplayForZoom,
+      tearDownRouteMarkerCluster,
     ],
   );
 
@@ -1145,7 +1584,7 @@ export function TmapHome({
         if (!isMapInteractingRef.current) {
           scheduleMarkerVisibilitySync(map);
         }
-        reportViewport(map);
+        emitViewportReports(map);
       }, 450);
       syncRouteMarkers(map, routesRef.current);
     };
@@ -1193,13 +1632,14 @@ export function TmapHome({
       routeMarkerMap.forEach((entry) => {
         entry.marker.setMap(null);
       });
-      selectedLabelMarkerRef.current?.setMap(null);
+      routePolylineAbortRef.current?.abort();
+      routePolylineAbortRef.current = null;
+      routePolylineGenerationRef.current += 1;
       selectedRoutePolylineRef.current?.setMap(null);
       routeMarkerMap.clear();
       mapInstance.current = null;
       currentLocationMarkerRef.current = null;
       currentLocationCoordinateRef.current = null;
-      selectedLabelMarkerRef.current = null;
       selectedRoutePolylineRef.current = null;
       selectedRouteIdRef.current = null;
       markerHoverCountRef.current = 0;
@@ -1226,12 +1666,13 @@ export function TmapHome({
         markerVisibilityTimerRef.current = null;
       }
       lastAppliedZoomRef.current = null;
-      lastViewportRef.current = null;
+      lastQueryViewportRef.current = null;
+      lastVisibleViewportReportRef.current = null;
     };
   }, [
+    emitViewportReports,
     enforceMinZoomLevel,
     registerMapListeners,
-    reportViewport,
     scheduleMarkerVisibilitySync,
     scheduleViewportReport,
     syncRouteMarkers,
@@ -1240,9 +1681,31 @@ export function TmapHome({
   ]);
 
   useEffect(() => {
-    // [동기화] 코스 데이터 변경 시 마커 반영
     const map = mapInstance.current;
     if (!map) return;
+
+    const sig = buildRoutesSyncSignature(routes);
+    if (routesSyncSigRef.current === sig) {
+      if (isMarkerLifecycleDebugEnabled()) {
+        /* eslint-disable no-console -- lifecycle */
+        console.info(
+          '[TmapHome:lifecycle] routes prop effect — syncRouteMarkers 생략(데이터 서명 동일)',
+          { count: routes.length },
+        );
+        /* eslint-enable no-console */
+      }
+      return;
+    }
+
+    if (isMarkerLifecycleDebugEnabled()) {
+      /* eslint-disable no-console -- lifecycle */
+      console.info('[TmapHome:lifecycle] routes prop effect — syncRouteMarkers 실행', {
+        prevSig: routesSyncSigRef.current?.slice(0, 80),
+        nextSig: sig.slice(0, 80),
+      });
+      /* eslint-enable no-console */
+    }
+
     syncRouteMarkers(map, routes);
     scheduleMarkerVisibilitySync(map);
   }, [routes, scheduleMarkerVisibilitySync, syncRouteMarkers]);
@@ -1250,7 +1713,11 @@ export function TmapHome({
   useEffect(() => {
     // [동기화] 외부 선택 상태(selectedCourseId)와 마커 clicked 상태 정합성 유지
     syncSelectedMarkerVisual(selectedCourseId);
-  }, [selectedCourseId, syncSelectedMarkerVisual]);
+    const map = mapInstance.current;
+    if (map) {
+      scheduleMarkerVisibilitySync(map);
+    }
+  }, [selectedCourseId, scheduleMarkerVisibilitySync, syncSelectedMarkerVisual]);
 
   // [마커 클릭] 바텀시트 높이가 반영된 뒤, 보이는 지도 영역의 시각적 중앙에 마커가 오도록 1회만 패닝
   useEffect(() => {
@@ -1320,16 +1787,26 @@ export function TmapHome({
     });
   }, [markerClickRecenterToken, selectedCourseId, bottomSheetVisibleHeight, readCoordinateValue]);
 
-  // 바텀시트 스냅/높이 변경 시 보이는 영역(bounds) 기준 뷰포트 재계산
+  // 바텀시트 높이 변경 시: 가시 viewport만 갱신(마커/클러스터 생명주기는 건드리지 않음)
   useEffect(() => {
     const map = mapInstance.current;
     if (!map) return undefined;
 
+    if (isMarkerLifecycleDebugEnabled()) {
+      /* eslint-disable no-console -- lifecycle */
+      console.info('[TmapHome:lifecycle] bottomSheetVisibleHeight effect · visible viewport만', {
+        sheetPx: bottomSheetVisibleHeight,
+      });
+      /* eslint-enable no-console */
+    }
+
     const frameId = requestAnimationFrame(() => {
-      reportViewport(map);
+      const liveMap = mapInstance.current;
+      if (!liveMap) return;
+      emitVisibleViewportReportOnly(liveMap);
     });
     return () => cancelAnimationFrame(frameId);
-  }, [bottomSheetVisibleHeight, reportViewport]);
+  }, [bottomSheetVisibleHeight, emitVisibleViewportReportOnly]);
 
   useEffect(() => {
     return () => {
@@ -1388,8 +1865,21 @@ export function TmapHome({
         return;
       }
       lastMapContainerSizeRef.current = { width, height };
+      if (isMarkerLifecycleDebugEnabled()) {
+        /* eslint-disable no-console -- lifecycle */
+        console.info(
+          '[TmapHome:lifecycle] map.resize + emitViewportReports (컨테이너 크기 실제 변경)',
+          {
+            width,
+            height,
+          },
+        );
+        /* eslint-enable no-console */
+      }
       map.resize?.();
-      reportViewport(map);
+      emitViewportReports(map);
+      routeMarkerClusterGenerationRef.current += 1;
+      syncRouteMarkersDisplayForZoom(map);
     };
 
     window.addEventListener('resize', handleViewportResize);
@@ -1398,7 +1888,7 @@ export function TmapHome({
       window.removeEventListener('resize', handleViewportResize);
       window.visualViewport?.removeEventListener('resize', handleViewportResize);
     };
-  }, [reportViewport]);
+  }, [emitViewportReports, syncRouteMarkersDisplayForZoom]);
 
   const sheetControlPositionClassName =
     bottomSheetVisibleHeight <= 24 ? styles.sheetControlsCollapsed : styles.sheetControlsPeek;

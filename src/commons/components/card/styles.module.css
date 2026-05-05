@@ -165,6 +165,21 @@
 
 .distance {
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.distanceLabel {
+  color: var(--color-card_outline-500);
+  font-family: var(--typography-body-2-ko-desktop-regular-font-family);
+  font-size: var(--typography-body-2-ko-desktop-regular-font-size);
+  line-height: 1.05rem; /* 동일 의미 토큰 부재로 하드코딩 */
+  font-weight: var(--typography-body-2-ko-desktop-regular-font-weight);
+  letter-spacing: var(--typography-body-2-ko-desktop-regular-letter-spacing);
+}
+
+.distanceValue {
   color: var(--color-black-900);
   font-family: var(--typography-body-2-ko-desktop-semibold-font-family);
   font-size: var(--typography-body-2-ko-desktop-semibold-font-size);

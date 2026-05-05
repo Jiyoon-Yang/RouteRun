@@ -66,6 +66,42 @@
   background: var(--color-white_grey-400);
 }
 
+.noCourseToastLayer {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  z-index: 20;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.noCourseToast {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  width: fit-content;
+  max-width: calc(100vw - 32px);
+  padding: 10px 14px;
+  border-radius: 8px;
+  background-color: var(--color-grey-900);
+  color: var(--color-white-100);
+  font-family: var(--typography-caption-1-ko-desktop-font-family);
+  font-size: var(--typography-caption-1-ko-desktop-font-size);
+  line-height: var(--typography-caption-1-ko-desktop-line-height);
+  font-weight: var(--typography-caption-1-ko-desktop-font-weight);
+  letter-spacing: var(--typography-caption-1-ko-desktop-letter-spacing);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-black-500) 18%, transparent);
+  white-space: nowrap;
+}
+
+.noCourseToastIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .mapPlaceholder {
   color: var(--color-blue-900);
   opacity: 0.6;

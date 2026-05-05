@@ -176,6 +176,7 @@ type TmapHomeProps = {
   onViewportChanged?: (viewport: RouteViewport) => void;
   /** UI용 — 바텀시트가 가리지 않는 영역 근사 bounds */
   onVisibleViewportChanged?: (viewport: RouteViewport | null) => void;
+  onZoomLimitReached?: (limit: 'min' | 'max') => void;
 };
 
 type RouteMarkerEntry = {
@@ -299,6 +300,7 @@ export function TmapHome({
   onCourseMarkerClick,
   onViewportChanged,
   onVisibleViewportChanged,
+  onZoomLimitReached,
 }: TmapHomeProps) {
   const [isMobileOrTabletViewport, setIsMobileOrTabletViewport] = useState(false);
   // [상태] 지도/마커 인스턴스 참조 관리
@@ -1501,30 +1503,45 @@ export function TmapHome({
     );
   };
 
-  const adjustZoomLevel = useCallback((delta: 1 | -1) => {
-    const map = mapInstance.current;
-    if (!map) return;
+  const adjustZoomLevel = useCallback(
+    (delta: 1 | -1) => {
+      const map = mapInstance.current;
+      if (!map) return;
 
-    const runtimeZoom = map.getZoom();
-    if (typeof runtimeZoom !== 'number') return;
-    const nextZoom =
-      delta < 0
-        ? Math.max(MIN_ZOOM_LEVEL, runtimeZoom + delta)
-        : Math.min(MAX_ZOOM_LEVEL, runtimeZoom + delta);
-    if (nextZoom === runtimeZoom) return;
-    // Tmap이 제공하는 zoomIn/zoomOut을 우선 사용해 부드러운 전환을 유도한다.
-    if (delta > 0 && typeof map.zoomIn === 'function') {
-      map.zoomIn();
-      return;
-    }
-    if (delta < 0 && typeof map.zoomOut === 'function') {
-      map.zoomOut();
-      return;
-    }
+      const runtimeZoom = map.getZoom();
+      if (typeof runtimeZoom !== 'number') return;
+      const nextZoom =
+        delta < 0
+          ? Math.max(MIN_ZOOM_LEVEL, runtimeZoom + delta)
+          : Math.min(MAX_ZOOM_LEVEL, runtimeZoom + delta);
+      if (nextZoom === runtimeZoom) return;
+      const reachedMin = nextZoom === MIN_ZOOM_LEVEL;
+      const reachedMax = nextZoom === MAX_ZOOM_LEVEL;
+      const reachedLimit = reachedMin || reachedMax;
+      // Tmap이 제공하는 zoomIn/zoomOut을 우선 사용해 부드러운 전환을 유도한다.
+      if (delta > 0 && typeof map.zoomIn === 'function') {
+        map.zoomIn();
+        if (reachedLimit) {
+          onZoomLimitReached?.(reachedMax ? 'max' : 'min');
+        }
+        return;
+      }
+      if (delta < 0 && typeof map.zoomOut === 'function') {
+        map.zoomOut();
+        if (reachedLimit) {
+          onZoomLimitReached?.(reachedMax ? 'max' : 'min');
+        }
+        return;
+      }
 
-    // zoomIn/zoomOut 미지원 런타임에서는 애니메이션 옵션을 포함해 폴백한다.
-    map.setZoom(nextZoom, { animation: true, animate: true, duration: 200 });
-  }, []);
+      // zoomIn/zoomOut 미지원 런타임에서는 애니메이션 옵션을 포함해 폴백한다.
+      map.setZoom(nextZoom, { animation: true, animate: true, duration: 200 });
+      if (reachedLimit) {
+        onZoomLimitReached?.(reachedMax ? 'max' : 'min');
+      }
+    },
+    [onZoomLimitReached],
+  );
 
   // [이벤트] 휠 줌을 버튼과 동일한 제한 로직으로 통일
   const handleMapWheel = useCallback(

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { Icon } from '@/commons/components/icons';
 import { TabButton } from '@/commons/components/tab';
 import { ROUTES } from '@/commons/constants/url';
 import { Header } from '@/commons/layout/header';
@@ -40,6 +41,8 @@ export function Home() {
   const [selectedCategories, setSelectedCategories] = useState<Set<DistanceCategory>>(new Set());
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [mapViewport, setMapViewport] = useState<RouteViewport | null>(null);
+  const [homeToastMessage, setHomeToastMessage] = useState<string | null>(null);
+  const [mapMoveSignal, setMapMoveSignal] = useState(0);
   /** 데이터 필터용 — 전체 지도 getBounds 기준만 반영 (바텀시트 오버레이 제외) */
   const [queryViewport, setQueryViewport] = useState<RouteViewport | null>(null);
   /** 목록 노출용 — 바텀시트로 가려지지 않은 영역 */
@@ -48,6 +51,12 @@ export function Home() {
     useState<ReferenceLocation>(SEOUL_CITY_HALL_REFERENCE);
   const { routes, allRoutes, isLoading, errorMessage } = useRoutes(queryViewport);
   const router = useRouter();
+  const previousQueryViewportRef = useRef<RouteViewport | null>(null);
+  const noCourseToastDelayTimerRef = useRef<number | null>(null);
+
+  const showHomeToast = useCallback((message: string) => {
+    setHomeToastMessage(message);
+  }, []);
 
   const isSameViewport = useCallback((left: RouteViewport | null, right: RouteViewport | null) => {
     if (!left || !right) return false;
@@ -86,6 +95,45 @@ export function Home() {
       isSameViewport(previous, mapViewport) ? previous : { ...mapViewport },
     );
   }, [isSameViewport, mapViewport]);
+
+  useEffect(() => {
+    if (!queryViewport) return;
+    const previous = previousQueryViewportRef.current;
+    if (previous && !isSameViewport(previous, queryViewport)) {
+      setMapMoveSignal((prev) => prev + 1);
+    }
+    previousQueryViewportRef.current = queryViewport;
+  }, [isSameViewport, queryViewport]);
+
+  useEffect(() => {
+    if (noCourseToastDelayTimerRef.current !== null) {
+      window.clearTimeout(noCourseToastDelayTimerRef.current);
+      noCourseToastDelayTimerRef.current = null;
+    }
+
+    if (!mapMoveSignal || isLoading || !!errorMessage) return;
+    if (routes.length > 0) return;
+
+    noCourseToastDelayTimerRef.current = window.setTimeout(() => {
+      showHomeToast('해당 영역에 등록된 코스가 없습니다.');
+      noCourseToastDelayTimerRef.current = null;
+    }, 1500);
+
+    return () => {
+      if (noCourseToastDelayTimerRef.current !== null) {
+        window.clearTimeout(noCourseToastDelayTimerRef.current);
+        noCourseToastDelayTimerRef.current = null;
+      }
+    };
+  }, [errorMessage, isLoading, mapMoveSignal, routes.length, showHomeToast]);
+
+  useEffect(() => {
+    return () => {
+      if (noCourseToastDelayTimerRef.current !== null) {
+        window.clearTimeout(noCourseToastDelayTimerRef.current);
+      }
+    };
+  }, []);
 
   // [파생데이터] 필터/정렬 결과 계산 (선택된 코스는 뷰포트 밖이어도 목록·지도에 유지)
   const filteredRoutes = useMemo(() => {
@@ -226,8 +274,25 @@ export function Home() {
             onCourseMarkerClick={handleCourseMarkerClick}
             onViewportChanged={handleViewportChanged}
             onVisibleViewportChanged={handleVisibleRouteViewportChanged}
+            onZoomLimitReached={(limit) => {
+              if (limit === 'min') {
+                showHomeToast('최소 배율 도달');
+                return;
+              }
+              showHomeToast('최대 배율 도달');
+            }}
           />
         </div>
+        {homeToastMessage ? (
+          <div className={styles.noCourseToastLayer} aria-live="polite">
+            <div className={styles.noCourseToast}>
+              <span className={styles.noCourseToastIcon}>
+                <Icon name="circleAlert" size={16} strokeWidth={2} />
+              </span>
+              <span>{homeToastMessage}</span>
+            </div>
+          </div>
+        ) : null}
         <CoursesList
           cards={courseCards}
           isLoading={isLoading}

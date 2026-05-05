@@ -49,9 +49,8 @@ export function Home() {
   const [mapMoveSignal, setMapMoveSignal] = useState(0);
   /** 목록 노출용 — 바텀시트로 가려지지 않은 영역 */
   const [visibleRouteViewport, setVisibleRouteViewport] = useState<RouteViewport | null>(null);
-  const [frozenVisibleRouteViewport, setFrozenVisibleRouteViewport] = useState<RouteViewport | null>(
-    null,
-  );
+  const [frozenVisibleRouteViewport, setFrozenVisibleRouteViewport] =
+    useState<RouteViewport | null>(null);
   const [referenceLocation, setReferenceLocation] =
     useState<ReferenceLocation>(SEOUL_CITY_HALL_REFERENCE);
   const effectiveQueryViewport = isSheetExpanded
@@ -65,6 +64,17 @@ export function Home() {
   const showHomeToast = useCallback((type: HomeToast['type'], message: string) => {
     setHomeToast({ type, message });
   }, []);
+
+  const handleZoomLimitReached = useCallback(
+    (limit: 'min' | 'max') => {
+      if (limit === 'min') {
+        showHomeToast('zoom-limit', '최소 배율 도달');
+        return;
+      }
+      showHomeToast('zoom-limit', '최대 배율 도달');
+    },
+    [showHomeToast],
+  );
 
   const isSameViewport = useCallback((left: RouteViewport | null, right: RouteViewport | null) => {
     if (!left || !right) return false;
@@ -123,7 +133,7 @@ export function Home() {
     noCourseToastDelayTimerRef.current = window.setTimeout(() => {
       showHomeToast('no-course', '해당 영역에 등록된 코스가 없습니다.');
       noCourseToastDelayTimerRef.current = null;
-    }, 1500);
+    }, 500);
 
     return () => {
       if (noCourseToastDelayTimerRef.current !== null) {
@@ -158,7 +168,7 @@ export function Home() {
   }, [routes, selectedCategories, selectedCourseId, allRoutes]);
 
   const routesForCourseList = useMemo(() => {
-    const base = filterRoutesByRouteViewport(filteredRoutes, visibleRouteViewport);
+    const base = filterRoutesByRouteViewport(filteredRoutes, effectiveQueryViewport);
     if (!selectedCourseId) {
       return base;
     }
@@ -170,7 +180,7 @@ export function Home() {
       return base;
     }
     return dedupeRoutesById([selected, ...base]);
-  }, [filteredRoutes, visibleRouteViewport, selectedCourseId, allRoutes]);
+  }, [allRoutes, effectiveQueryViewport, filteredRoutes, selectedCourseId]);
 
   const courseCards = useMemo(
     () => buildCourseCardViews(routesForCourseList, referenceLocation, selectedCourseId),
@@ -280,13 +290,7 @@ export function Home() {
             onCourseMarkerClick={handleCourseMarkerClick}
             onViewportChanged={handleViewportChanged}
             onVisibleViewportChanged={handleVisibleRouteViewportChanged}
-            onZoomLimitReached={(limit) => {
-              if (limit === 'min') {
-                showHomeToast('zoom-limit', '최소 배율 도달');
-                return;
-              }
-              showHomeToast('zoom-limit', '최대 배율 도달');
-            }}
+            onZoomLimitReached={handleZoomLimitReached}
           />
         </div>
         {homeToast ? (

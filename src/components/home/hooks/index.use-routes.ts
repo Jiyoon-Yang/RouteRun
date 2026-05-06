@@ -14,6 +14,17 @@ type UseRoutesResult = {
   errorMessage: string | null;
 };
 
+const homeRoutesViewportCache = new Map<string, Route[]>();
+
+function toViewportCacheKey(viewport: RouteViewport): string {
+  return [
+    viewport.northEastLat.toFixed(6),
+    viewport.northEastLng.toFixed(6),
+    viewport.southWestLat.toFixed(6),
+    viewport.southWestLng.toFixed(6),
+  ].join(',');
+}
+
 export function useRoutes(viewport: RouteViewport | null): UseRoutesResult {
   const [allRoutes, setAllRoutes] = useState<Route[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,6 +59,15 @@ export function useRoutes(viewport: RouteViewport | null): UseRoutesResult {
 
     // [조회] 코스 목록 요청 및 상태 갱신 처리 (home 전용 데이터 통신은 repositories/services에서 처리)
     const loadRoutes = async () => {
+      const cacheKey = toViewportCacheKey(viewport);
+      const cached = homeRoutesViewportCache.get(cacheKey);
+      if (cached) {
+        setAllRoutes(cached);
+        setIsLoading(false);
+        setErrorMessage(null);
+        return;
+      }
+
       setIsLoading(true);
       setErrorMessage(null);
 
@@ -56,6 +76,7 @@ export function useRoutes(viewport: RouteViewport | null): UseRoutesResult {
 
         if (!isMounted) return;
 
+        homeRoutesViewportCache.set(cacheKey, routes);
         setAllRoutes(routes);
       } catch (error) {
         // [오류] 조회 실패 메시지 상태 반영

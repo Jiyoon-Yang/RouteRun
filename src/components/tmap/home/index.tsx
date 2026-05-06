@@ -179,6 +179,7 @@ type TmapHomeProps = {
   onVisibleViewportChanged?: (viewport: RouteViewport | null) => void;
   onZoomLimitReached?: (limit: 'min' | 'max') => void;
   onZoomLimitCleared?: () => void;
+  onDragSettled?: () => void;
 };
 
 type RouteMarkerEntry = {
@@ -305,6 +306,7 @@ export function TmapHome({
   onVisibleViewportChanged,
   onZoomLimitReached,
   onZoomLimitCleared,
+  onDragSettled,
 }: TmapHomeProps) {
   const [isMobileOrTabletViewport, setIsMobileOrTabletViewport] = useState(false);
   const [mapReadyToken, setMapReadyToken] = useState(0);
@@ -1066,12 +1068,17 @@ export function TmapHome({
         });
       };
 
-      const boundZoomEvents = bindMapEvent(['zoom_end', 'zoomend', 'idle'], handleZoomChanged);
+      // 런타임별로 zoom 종료 이벤트가 다르게 동작할 수 있어 변경/종료 계열을 함께 구독한다.
+      const boundZoomEvents = bindMapEvent(
+        ['zoom', 'zoom_changed', 'zoom_end', 'zoomend', 'idle'],
+        handleZoomChanged,
+      );
 
       const reportAfterMove = () => {
         syncRouteMarkersDisplayForZoom(map);
         scheduleMarkerVisibilitySync(map);
         scheduleViewportReport(map);
+        onDragSettled?.();
       };
 
       const boundMoveEvents = bindMapEvent(
@@ -1101,6 +1108,7 @@ export function TmapHome({
       logMarkerCoordinateAudit,
       onZoomLimitCleared,
       onZoomLimitReached,
+      onDragSettled,
       scheduleMarkerVisibilitySync,
       scheduleViewportReport,
       syncRouteMarkersDisplayForZoom,
@@ -1666,30 +1674,56 @@ export function TmapHome({
     );
   };
 
-  const adjustZoomLevel = useCallback((delta: 1 | -1) => {
-    const map = mapInstance.current;
-    if (!map) return;
+  const adjustZoomLevel = useCallback(
+    (delta: 1 | -1) => {
+      const map = mapInstance.current;
+      if (!map) return;
 
-    const runtimeZoom = map.getZoom();
-    if (typeof runtimeZoom !== 'number') return;
-    const nextZoom =
-      delta < 0
-        ? Math.max(MIN_ZOOM_LEVEL, runtimeZoom + delta)
-        : Math.min(MAX_ZOOM_LEVEL, runtimeZoom + delta);
-    if (nextZoom === runtimeZoom) return;
-    // Tmap이 제공하는 zoomIn/zoomOut을 우선 사용해 부드러운 전환을 유도한다.
-    if (delta > 0 && typeof map.zoomIn === 'function') {
-      map.zoomIn();
-      return;
-    }
-    if (delta < 0 && typeof map.zoomOut === 'function') {
-      map.zoomOut();
-      return;
-    }
+      const runtimeZoom = map.getZoom();
+      if (typeof runtimeZoom !== 'number') return;
+      const nextZoom =
+        delta < 0
+          ? Math.max(MIN_ZOOM_LEVEL, runtimeZoom + delta)
+          : Math.min(MAX_ZOOM_LEVEL, runtimeZoom + delta);
+      if (nextZoom === runtimeZoom) {
+        if (runtimeZoom <= MIN_ZOOM_LEVEL) {
+          if (lastZoomLimitNoticeRef.current !== 'min') {
+            lastZoomLimitNoticeRef.current = 'min';
+            onZoomLimitReached?.('min');
+          }
+          return;
+        }
+        if (runtimeZoom >= MAX_ZOOM_LEVEL) {
+          if (lastZoomLimitNoticeRef.current !== 'max') {
+            lastZoomLimitNoticeRef.current = 'max';
+            onZoomLimitReached?.('max');
+          }
+          return;
+        }
+        return;
+      }
+      // 이벤트 누락 환경에서도 재도달 토스트가 동작하도록 중간 배율 진입 시 즉시 limit 상태를 해제한다.
+      if (nextZoom > MIN_ZOOM_LEVEL && nextZoom < MAX_ZOOM_LEVEL) {
+        if (lastZoomLimitNoticeRef.current !== null) {
+          onZoomLimitCleared?.();
+        }
+        lastZoomLimitNoticeRef.current = null;
+      }
+      // Tmap이 제공하는 zoomIn/zoomOut을 우선 사용해 부드러운 전환을 유도한다.
+      if (delta > 0 && typeof map.zoomIn === 'function') {
+        map.zoomIn();
+        return;
+      }
+      if (delta < 0 && typeof map.zoomOut === 'function') {
+        map.zoomOut();
+        return;
+      }
 
-    // zoomIn/zoomOut 미지원 런타임에서는 애니메이션 옵션을 포함해 폴백한다.
-    map.setZoom(nextZoom, { animation: true, animate: true, duration: 200 });
-  }, []);
+      // zoomIn/zoomOut 미지원 런타임에서는 애니메이션 옵션을 포함해 폴백한다.
+      map.setZoom(nextZoom, { animation: true, animate: true, duration: 200 });
+    },
+    [onZoomLimitCleared, onZoomLimitReached],
+  );
 
   // [이벤트] 휠 줌을 버튼과 동일한 제한 로직으로 통일
   const handleMapWheel = useCallback(

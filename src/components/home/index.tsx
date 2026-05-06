@@ -119,6 +119,10 @@ export function Home() {
     setHomeToast((previous) => (previous?.type === 'zoom-limit' ? null : previous));
   }, []);
 
+  const handleMapDragSettled = useCallback(() => {
+    setMapMoveSignal((previous) => previous + 1);
+  }, []);
+
   const isSameViewport = useCallback((left: RouteViewport | null, right: RouteViewport | null) => {
     if (!left || !right) return false;
     return (
@@ -140,7 +144,10 @@ export function Home() {
 
       if (typeof window !== 'undefined' && isValidRouteViewport(nextViewport)) {
         // 상세 진입 직전 타이밍 이슈를 피하려고 홈에서 관측되는 최신 viewport를 항상 동기화한다.
-        window.sessionStorage.setItem(HOME_SESSION_KEYS.savedViewport, JSON.stringify(nextViewport));
+        window.sessionStorage.setItem(
+          HOME_SESSION_KEYS.savedViewport,
+          JSON.stringify(nextViewport),
+        );
       }
     },
     [isSameViewport],
@@ -223,14 +230,7 @@ export function Home() {
     lastSyncedQueryRef.current = nextQuery;
     const nextUrl = nextQuery ? `${pathname}?${nextQuery}` : pathname;
     router.replace(nextUrl, { scroll: false });
-  }, [
-    isSheetExpanded,
-    pathname,
-    router,
-    searchParams,
-    selectedCategories,
-    selectedCourseId,
-  ]);
+  }, [isSheetExpanded, pathname, router, searchParams, selectedCategories, selectedCourseId]);
 
   useEffect(() => {
     if (!isSheetExpanded && visibleRouteViewport) {
@@ -242,10 +242,6 @@ export function Home() {
 
   useEffect(() => {
     if (!effectiveQueryViewport) return;
-    const previous = previousQueryViewportRef.current;
-    if (previous && !isSameViewport(previous, effectiveQueryViewport)) {
-      setMapMoveSignal((prev) => prev + 1);
-    }
     previousQueryViewportRef.current = effectiveQueryViewport;
   }, [effectiveQueryViewport, isSameViewport]);
 
@@ -415,7 +411,9 @@ export function Home() {
         window.sessionStorage.setItem(HOME_SESSION_KEYS.restoreViewportOnce, '1');
       } else {
         // null 타이밍에 기존 저장값까지 지워지면 뒤로가기 복원이 깨지므로 유지한다.
-        const hasSavedViewport = Boolean(window.sessionStorage.getItem(HOME_SESSION_KEYS.savedViewport));
+        const hasSavedViewport = Boolean(
+          window.sessionStorage.getItem(HOME_SESSION_KEYS.savedViewport),
+        );
         if (hasSavedViewport) {
           window.sessionStorage.setItem(HOME_SESSION_KEYS.restoreViewportOnce, '1');
         } else {
@@ -431,7 +429,14 @@ export function Home() {
       window.history.replaceState(window.history.state, '', nextUrl);
       lastSyncedQueryRef.current = nextQuery;
     },
-    [effectiveQueryViewport, frozenVisibleRouteViewport, isSheetExpanded, pathname, selectedCategories, visibleRouteViewport],
+    [
+      effectiveQueryViewport,
+      frozenVisibleRouteViewport,
+      isSheetExpanded,
+      pathname,
+      selectedCategories,
+      visibleRouteViewport,
+    ],
   );
 
   return (
@@ -479,6 +484,7 @@ export function Home() {
             onVisibleViewportChanged={handleVisibleRouteViewportChanged}
             onZoomLimitReached={handleZoomLimitReached}
             onZoomLimitCleared={handleZoomLimitCleared}
+            onDragSettled={handleMapDragSettled}
           />
         </div>
         {homeToast ? (

@@ -39,6 +39,7 @@ const HOME_QUERY_KEYS = {
 const HOME_SESSION_KEYS = {
   savedViewport: 'homeSavedViewport',
   restoreViewportOnce: 'homeRestoreViewportOnce',
+  restoreSelectedFocusOnce: 'homeRestoreSelectedFocusOnce',
 } as const;
 
 function isValidRouteViewport(viewport: RouteViewport | null): viewport is RouteViewport {
@@ -89,14 +90,6 @@ export function Home() {
   const zoomLimitToastHideTimerRef = useRef<number | null>(null);
   const hasRestoredFromQueryRef = useRef(false);
   const lastSyncedQueryRef = useRef('');
-  const navigationTypeRef = useRef<PerformanceNavigationTiming['type'] | null>(null);
-
-  if (navigationTypeRef.current === null && typeof window !== 'undefined') {
-    const [navigationEntry] = performance.getEntriesByType(
-      'navigation',
-    ) as PerformanceNavigationTiming[];
-    navigationTypeRef.current = navigationEntry?.type ?? 'navigate';
-  }
 
   const showHomeToast = useCallback((type: HomeToast['type'], message: string) => {
     setHomeToast({ type, message });
@@ -173,12 +166,13 @@ export function Home() {
     if (sheetFromQuery === 'expanded') {
       setIsSheetExpanded(true);
     }
-    const isReloadNavigation = navigationTypeRef.current === 'reload';
-    const shouldRestoreViewport = !isReloadNavigation && typeof window !== 'undefined';
+    const shouldRestoreViewport = typeof window !== 'undefined';
 
     if (shouldRestoreViewport) {
       const shouldRestoreOnce =
         window.sessionStorage.getItem(HOME_SESSION_KEYS.restoreViewportOnce) === '1';
+      const shouldRestoreSelectedFocusOnce =
+        window.sessionStorage.getItem(HOME_SESSION_KEYS.restoreSelectedFocusOnce) === '1';
       if (shouldRestoreOnce) {
         const rawViewport = window.sessionStorage.getItem(HOME_SESSION_KEYS.savedViewport);
         if (rawViewport) {
@@ -194,7 +188,11 @@ export function Home() {
           }
         }
       }
+      if (selectedCourseFromQuery && shouldRestoreSelectedFocusOnce) {
+        setMarkerClickRecenterToken((prev) => prev + 1);
+      }
       window.sessionStorage.removeItem(HOME_SESSION_KEYS.restoreViewportOnce);
+      window.sessionStorage.removeItem(HOME_SESSION_KEYS.restoreSelectedFocusOnce);
     }
     hasRestoredFromQueryRef.current = true;
   }, [searchParams]);
@@ -393,6 +391,7 @@ export function Home() {
 
       const params = new URLSearchParams();
       params.set(HOME_QUERY_KEYS.selectedCourseId, courseId);
+      window.sessionStorage.setItem(HOME_SESSION_KEYS.restoreSelectedFocusOnce, '1');
 
       if (selectedCategories.size > 0) {
         const encodedCategories = TAB_ITEMS.map((item) => item.category).filter((category) =>
@@ -405,8 +404,9 @@ export function Home() {
         params.set(HOME_QUERY_KEYS.sheet, 'expanded');
       }
 
+      // 실제 사용자가 보고 있던 지도 화면과 가장 가까운 값을 우선 저장한다.
       const viewportForSnapshot =
-        effectiveQueryViewport ?? visibleRouteViewport ?? frozenVisibleRouteViewport;
+        visibleRouteViewport ?? effectiveQueryViewport ?? frozenVisibleRouteViewport;
       if (isValidRouteViewport(viewportForSnapshot)) {
         window.sessionStorage.setItem(
           HOME_SESSION_KEYS.savedViewport,

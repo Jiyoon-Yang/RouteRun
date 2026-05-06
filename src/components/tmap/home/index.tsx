@@ -307,6 +307,7 @@ export function TmapHome({
   onZoomLimitCleared,
 }: TmapHomeProps) {
   const [isMobileOrTabletViewport, setIsMobileOrTabletViewport] = useState(false);
+  const [mapReadyToken, setMapReadyToken] = useState(0);
   // [상태] 지도/마커 인스턴스 참조 관리
   const mapInstance = useRef<TmapMap | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -1713,6 +1714,7 @@ export function TmapHome({
       lastAppliedZoomRef.current = map.getZoom();
       createCustomMarker(map, lat, lng);
       mapInstance.current = map;
+      setMapReadyToken((previous) => previous + 1);
       if (!initialViewport) {
         centerMapToLocationInVisibleArea(map, lat, lng);
       }
@@ -1860,6 +1862,7 @@ export function TmapHome({
 
   useEffect(() => {
     // [동기화] 외부 선택 상태(selectedCourseId)와 마커 clicked 상태 정합성 유지
+    // 뒤로 복귀 직후에는 지도/코스 데이터 준비 타이밍이 엇갈릴 수 있어 재시도 트리거를 넓힌다.
     const shouldFocusSelectedCourse = Boolean(selectedCourseId) && markerClickRecenterToken > 0;
     syncSelectedMarkerVisual(selectedCourseId, shouldFocusSelectedCourse);
     const map = mapInstance.current;
@@ -1867,7 +1870,9 @@ export function TmapHome({
       scheduleMarkerVisibilitySync(map);
     }
   }, [
+    mapReadyToken,
     markerClickRecenterToken,
+    routes,
     selectedCourseId,
     scheduleMarkerVisibilitySync,
     syncSelectedMarkerVisual,

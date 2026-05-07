@@ -168,6 +168,7 @@ type TmapHomeProps = {
   bottomSheetVisibleHeight?: number;
   isBottomSheetExpanded?: boolean;
   routes?: Route[];
+  initialViewport?: RouteViewport | null;
   selectedCourseId?: string | null;
   /** 마커 클릭 시마다 증가 — 보이는 지도 영역 기준 1회 중앙 정렬에만 사용 */
   markerClickRecenterToken?: number;
@@ -176,6 +177,9 @@ type TmapHomeProps = {
   onViewportChanged?: (viewport: RouteViewport) => void;
   /** UI용 — 바텀시트가 가리지 않는 영역 근사 bounds */
   onVisibleViewportChanged?: (viewport: RouteViewport | null) => void;
+  onZoomLimitReached?: (limit: 'min' | 'max') => void;
+  onZoomLimitCleared?: () => void;
+  onDragSettled?: () => void;
 };
 
 type RouteMarkerEntry = {
@@ -294,13 +298,18 @@ export function TmapHome({
   bottomSheetVisibleHeight = 24,
   isBottomSheetExpanded = false,
   routes = [],
+  initialViewport = null,
   selectedCourseId = null,
   markerClickRecenterToken = 0,
   onCourseMarkerClick,
   onViewportChanged,
   onVisibleViewportChanged,
+  onZoomLimitReached,
+  onZoomLimitCleared,
+  onDragSettled,
 }: TmapHomeProps) {
   const [isMobileOrTabletViewport, setIsMobileOrTabletViewport] = useState(false);
+  const [mapReadyToken, setMapReadyToken] = useState(0);
   // [상태] 지도/마커 인스턴스 참조 관리
   const mapInstance = useRef<TmapMap | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -310,6 +319,7 @@ export function TmapHome({
   /** 선택 코스 폴리라인 요청 무효화(연속 클릭·선택 해제) */
   const routePolylineGenerationRef = useRef(0);
   const routePolylineAbortRef = useRef<AbortController | null>(null);
+  const selectedPolylineRetryTimerRef = useRef<number | null>(null);
   const routeMarkerMapRef = useRef<Map<string, RouteMarkerEntry>>(new Map());
   const routeMarkerClusterRef = useRef<TmapMarkerCluster | null>(null);
   /** 확장 로더 유무와 무관하게, 마지막으로 적용한 코스 마커 표시 방식 */
@@ -322,6 +332,7 @@ export function TmapHome({
   /** syncRouteMarkers 가 실제 데이터 변경 시에만 돌도록 마지막 동기화 서명 */
   const routesSyncSigRef = useRef<string | null>(null);
   const selectedRouteIdRef = useRef<string | null>(null);
+  const selectedRouteDataReadyRef = useRef(false);
   const viewportReportTimerRef = useRef<number | null>(null);
   const viewportSyncIntervalRef = useRef<number | null>(null);
   const mapListenersRegisteredRef = useRef(false);
@@ -331,6 +342,7 @@ export function TmapHome({
   const isMapInteractingRef = useRef(false);
   const interactionWatchdogTimerRef = useRef<number | null>(null);
   const lastAppliedZoomRef = useRef<number | null>(null);
+  const lastZoomLimitNoticeRef = useRef<'min' | 'max' | null>(null);
   const lastQueryViewportRef = useRef<RouteViewport | null>(null);
   const lastVisibleViewportReportRef = useRef<RouteViewport | null>(null);
   /** 클러스터 재구성 — 바텀 오버레이/선택 상태 변화 추적 */
@@ -342,11 +354,11 @@ export function TmapHome({
   const markerHoverCountRef = useRef(0);
   const bottomSheetVisibleHeightRef = useRef(bottomSheetVisibleHeight);
   bottomSheetVisibleHeightRef.current = bottomSheetVisibleHeight;
-  const lastMarkerRecenterSignatureRef = useRef<string>('');
   const lastMapContainerSizeRef = useRef<{ width: number; height: number }>({
     width: 0,
     height: 0,
   });
+  const hasAppliedInitialViewportRef = useRef(false);
 
   const setMarkerHoverCursor = useCallback((isHover: boolean) => {
     const rootElement = rootRef.current;
@@ -497,6 +509,42 @@ export function TmapHome({
       });
     },
     [readMapBoundsViewport],
+  );
+
+  const centerMapToLocationInVisibleArea = useCallback(
+    (map: TmapMap, lat: number, lng: number) => {
+      const Tmapv3 = getTmapv3();
+      if (!Tmapv3) return;
+      map.setCenter(new Tmapv3.LatLng(lat, lng));
+
+      requestAnimationFrame(() => {
+        const liveTmap = getTmapv3();
+        if (!liveTmap) return;
+        const mapElement = document.getElementById('map_div');
+        const mapHeightPx = mapElement?.clientHeight ?? 0;
+        if (mapHeightPx <= 0) return;
+
+        const overlayPx = Math.min(Math.max(0, bottomSheetVisibleHeightRef.current), mapHeightPx);
+        if (overlayPx <= 0) return;
+
+        const bounds = map.getBounds?.();
+        const northEast = bounds?.getNorthEast?.();
+        const southWest = bounds?.getSouthWest?.();
+        if (!bounds || !northEast || !southWest) return;
+
+        const northEastLat = readCoordinateValue(northEast, 'lat');
+        const southWestLat = readCoordinateValue(southWest, 'lat');
+        if (northEastLat === null || southWestLat === null) return;
+
+        const latSpan = northEastLat - southWestLat;
+        if (!Number.isFinite(latSpan) || latSpan <= 0) return;
+
+        // 바텀시트가 가리는 하단만큼, 지도 중심을 남쪽으로 내려야 타깃이 시각적 중앙(위쪽)으로 올라온다.
+        const latOffset = (overlayPx / 2 / mapHeightPx) * latSpan;
+        map.setCenter(new liveTmap.LatLng(lat - latOffset, lng));
+      });
+    },
+    [readCoordinateValue],
   );
 
   const emitViewportReports = useCallback(
@@ -980,6 +1028,24 @@ export function TmapHome({
       const handleZoomChanged = () => {
         const currentZoom = enforceMinZoomLevel(map);
         if (currentZoom === null) return;
+
+        if (currentZoom === MIN_ZOOM_LEVEL) {
+          if (lastZoomLimitNoticeRef.current !== 'min') {
+            lastZoomLimitNoticeRef.current = 'min';
+            onZoomLimitReached?.('min');
+          }
+        } else if (currentZoom === MAX_ZOOM_LEVEL) {
+          if (lastZoomLimitNoticeRef.current !== 'max') {
+            lastZoomLimitNoticeRef.current = 'max';
+            onZoomLimitReached?.('max');
+          }
+        } else {
+          if (lastZoomLimitNoticeRef.current !== null) {
+            onZoomLimitCleared?.();
+          }
+          lastZoomLimitNoticeRef.current = null;
+        }
+
         if (currentZoom === lastAppliedZoomRef.current) {
           syncRouteMarkersDisplayForZoom(map);
           scheduleMarkerVisibilitySync(map);
@@ -1002,12 +1068,17 @@ export function TmapHome({
         });
       };
 
-      const boundZoomEvents = bindMapEvent(['zoom_end', 'zoomend', 'idle'], handleZoomChanged);
+      // 런타임별로 zoom 종료 이벤트가 다르게 동작할 수 있어 변경/종료 계열을 함께 구독한다.
+      const boundZoomEvents = bindMapEvent(
+        ['zoom', 'zoom_changed', 'zoom_end', 'zoomend', 'idle'],
+        handleZoomChanged,
+      );
 
       const reportAfterMove = () => {
         syncRouteMarkersDisplayForZoom(map);
         scheduleMarkerVisibilitySync(map);
         scheduleViewportReport(map);
+        onDragSettled?.();
       };
 
       const boundMoveEvents = bindMapEvent(
@@ -1035,6 +1106,9 @@ export function TmapHome({
       enforceMinZoomLevel,
       isMapInteractingRef,
       logMarkerCoordinateAudit,
+      onZoomLimitCleared,
+      onZoomLimitReached,
+      onDragSettled,
       scheduleMarkerVisibilitySync,
       scheduleViewportReport,
       syncRouteMarkersDisplayForZoom,
@@ -1189,113 +1263,211 @@ export function TmapHome({
   );
   routeVisualStateHandlerRef.current = setRouteMarkerVisualState;
 
-  const syncSelectedRoutePolyline = useCallback((courseId: string | null) => {
-    routePolylineGenerationRef.current += 1;
-    const generation = routePolylineGenerationRef.current;
+  const syncSelectedRoutePolyline = useCallback(
+    (courseId: string | null, retryCount = 0) => {
+      if (selectedPolylineRetryTimerRef.current !== null) {
+        window.clearTimeout(selectedPolylineRetryTimerRef.current);
+        selectedPolylineRetryTimerRef.current = null;
+      }
+      routePolylineGenerationRef.current += 1;
+      const generation = routePolylineGenerationRef.current;
 
-    routePolylineAbortRef.current?.abort();
-    routePolylineAbortRef.current = null;
+      routePolylineAbortRef.current?.abort();
+      routePolylineAbortRef.current = null;
 
-    selectedRoutePolylineRef.current?.setMap(null);
-    selectedRoutePolylineRef.current = null;
+      if (!courseId) {
+        selectedRoutePolylineRef.current?.setMap(null);
+        selectedRoutePolylineRef.current = null;
+        return;
+      }
 
-    if (!courseId) {
-      return;
-    }
-
-    const map = mapInstance.current;
-    const Tmapv3 = getTmapv3();
-    if (!map || !Tmapv3) {
-      return;
-    }
-
-    const route = routesRef.current.find((item) => item.id === courseId);
-    if (!route) {
-      return;
-    }
-
-    const fallbackLine = dedupeConsecutiveCoordinates(
-      extractPathCoordinates(route.path_data, route.id),
-    );
-    const savedPoints = extractSavedRoutePoints(route.path_data);
-
-    const abortController = new AbortController();
-    routePolylineAbortRef.current = abortController;
-
-    const isStale = (): boolean =>
-      generation !== routePolylineGenerationRef.current || selectedRouteIdRef.current !== courseId;
-
-    void (async () => {
-      let lineCoordinates = fallbackLine;
-
-      if (savedPoints.length >= 2) {
-        try {
-          const coordsForApi = savedPoints.map((p) => ({ lat: p.lat, lng: p.lng }));
-          const result = await getPedestrianRoute(coordsForApi, abortController.signal);
-          const next = dedupeConsecutiveCoordinates(
-            result.path
-              .map((c) => ({ lat: Number(c.lat), lng: Number(c.lng) }))
-              .filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng)),
-          );
-          if (next.length >= 2) {
-            lineCoordinates = next;
-          }
-        } catch (error) {
-          if (abortController.signal.aborted) {
-            return;
-          }
-          console.warn('[TmapHome] 보행자 경로 재계산 실패, 저장 path 사용:', error);
+      const map = mapInstance.current;
+      const Tmapv3 = getTmapv3();
+      if (!map || !Tmapv3) {
+        if (retryCount < 2) {
+          selectedPolylineRetryTimerRef.current = window.setTimeout(() => {
+            selectedPolylineRetryTimerRef.current = null;
+            if (selectedRouteIdRef.current !== courseId) return;
+            syncSelectedRoutePolyline(courseId, retryCount + 1);
+          }, 120);
         }
-      }
-
-      if (isStale()) {
         return;
       }
 
-      const liveMap = mapInstance.current;
-      const liveTmap = getTmapv3();
-      if (!liveMap || !liveTmap || lineCoordinates.length < 2) {
+      const route = routesRef.current.find((item) => item.id === courseId);
+      if (!route) {
+        if (retryCount < 2) {
+          selectedPolylineRetryTimerRef.current = window.setTimeout(() => {
+            selectedPolylineRetryTimerRef.current = null;
+            if (selectedRouteIdRef.current !== courseId) return;
+            syncSelectedRoutePolyline(courseId, retryCount + 1);
+          }, 120);
+        }
         return;
       }
 
-      const latLngPath = lineCoordinates.map(
-        (coordinate) => new liveTmap.LatLng(coordinate.lat, coordinate.lng),
+      const fallbackLine = dedupeConsecutiveCoordinates(
+        extractPathCoordinates(route.path_data, route.id),
       );
+      const savedPoints = extractSavedRoutePoints(route.path_data);
 
-      selectedRoutePolylineRef.current = new liveTmap.Polyline({
-        map: liveMap,
-        path: latLngPath,
-        strokeColor: '#2F80FF',
-        strokeWeight: 6,
-        strokeOpacity: 0.95,
-      });
+      const abortController = new AbortController();
+      routePolylineAbortRef.current = abortController;
 
-      if (typeof liveMap.fitBounds === 'function') {
-        const latValues = lineCoordinates.map((c) => c.lat);
-        const lngValues = lineCoordinates.map((c) => c.lng);
-        const rawMinLat = Math.min(...latValues);
-        const rawMaxLat = Math.max(...latValues);
-        const rawMinLng = Math.min(...lngValues);
-        const rawMaxLng = Math.max(...lngValues);
-        const padded = padRouteBoundsForHomeFit(rawMinLat, rawMaxLat, rawMinLng, rawMaxLng);
-        const southWest = new liveTmap.LatLng(padded.minLat, padded.minLng);
-        const northEast = new liveTmap.LatLng(padded.maxLat, padded.maxLng);
+      const isStale = (): boolean =>
+        generation !== routePolylineGenerationRef.current ||
+        selectedRouteIdRef.current !== courseId;
 
-        const LatLngBounds = (
-          liveTmap as unknown as { LatLngBounds?: new (sw: unknown, ne: unknown) => unknown }
-        ).LatLngBounds;
+      void (async () => {
+        let lineCoordinates = fallbackLine;
 
-        if (typeof LatLngBounds === 'function') {
-          const bounds = new LatLngBounds(southWest, northEast);
-          liveMap.fitBounds(bounds, ROUTE_POLYLINE_FIT_BOUNDS_PADDING_PX);
-        } else {
-          liveMap.fitBounds(southWest, northEast);
+        if (savedPoints.length >= 2) {
+          try {
+            const coordsForApi = savedPoints.map((p) => ({ lat: p.lat, lng: p.lng }));
+            const result = await getPedestrianRoute(coordsForApi, abortController.signal);
+            const next = dedupeConsecutiveCoordinates(
+              result.path
+                .map((c) => ({ lat: Number(c.lat), lng: Number(c.lng) }))
+                .filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng)),
+            );
+            if (next.length >= 2) {
+              lineCoordinates = next;
+            }
+          } catch (error) {
+            if (abortController.signal.aborted) {
+              return;
+            }
+            console.warn('[TmapHome] 보행자 경로 재계산 실패, 저장 path 사용:', error);
+          }
         }
-        clampRoutePolylineFitZoom(liveMap);
-        clampHomeMapZoom(liveMap);
+
+        if (isStale()) {
+          return;
+        }
+
+        const liveMap = mapInstance.current;
+        const liveTmap = getTmapv3();
+        if (!liveMap || !liveTmap || lineCoordinates.length < 2) {
+          return;
+        }
+
+        const latLngPath = lineCoordinates.map(
+          (coordinate) => new liveTmap.LatLng(coordinate.lat, coordinate.lng),
+        );
+
+        const previousPolyline = selectedRoutePolylineRef.current;
+        const nextPolyline = new liveTmap.Polyline({
+          map: liveMap,
+          path: latLngPath,
+          strokeColor: '#2F80FF',
+          strokeWeight: 6,
+          strokeOpacity: 0.95,
+        });
+        selectedRoutePolylineRef.current = nextPolyline;
+        previousPolyline?.setMap(null);
+
+        if (typeof liveMap.fitBounds === 'function') {
+          const latValues = lineCoordinates.map((c) => c.lat);
+          const lngValues = lineCoordinates.map((c) => c.lng);
+          const rawMinLat = Math.min(...latValues);
+          const rawMaxLat = Math.max(...latValues);
+          const rawMinLng = Math.min(...lngValues);
+          const rawMaxLng = Math.max(...lngValues);
+          const rawCenterLat = (rawMinLat + rawMaxLat) / 2;
+          const rawCenterLng = (rawMinLng + rawMaxLng) / 2;
+          const padded = padRouteBoundsForHomeFit(rawMinLat, rawMaxLat, rawMinLng, rawMaxLng);
+          const southWest = new liveTmap.LatLng(padded.minLat, padded.minLng);
+          const northEast = new liveTmap.LatLng(padded.maxLat, padded.maxLng);
+
+          const LatLngBounds = (
+            liveTmap as unknown as { LatLngBounds?: new (sw: unknown, ne: unknown) => unknown }
+          ).LatLngBounds;
+
+          if (typeof LatLngBounds === 'function') {
+            const bounds = new LatLngBounds(southWest, northEast);
+            liveMap.fitBounds(bounds, ROUTE_POLYLINE_FIT_BOUNDS_PADDING_PX);
+          } else {
+            liveMap.fitBounds(southWest, northEast);
+          }
+
+          requestAnimationFrame(() => {
+            if (isStale()) {
+              return;
+            }
+            const mapAfterFit = mapInstance.current;
+            const tmapAfterFit = getTmapv3();
+            if (!mapAfterFit || !tmapAfterFit) {
+              return;
+            }
+            const mapElement = document.getElementById('map_div');
+            const mapHeightPx = mapElement?.clientHeight ?? 0;
+            if (mapHeightPx <= 0) {
+              return;
+            }
+            const overlayPx = Math.min(
+              Math.max(0, bottomSheetVisibleHeightRef.current),
+              mapHeightPx,
+            );
+            if (overlayPx <= 0) {
+              return;
+            }
+
+            const boundsAfterFit = mapAfterFit.getBounds?.();
+            const northEastAfterFit = boundsAfterFit?.getNorthEast?.();
+            const southWestAfterFit = boundsAfterFit?.getSouthWest?.();
+            if (!boundsAfterFit || !northEastAfterFit || !southWestAfterFit) {
+              return;
+            }
+
+            const northEastLat = readCoordinateValue(northEastAfterFit, 'lat');
+            const southWestLat = readCoordinateValue(southWestAfterFit, 'lat');
+            if (northEastLat === null || southWestLat === null) {
+              return;
+            }
+            const latSpan = northEastLat - southWestLat;
+            if (!Number.isFinite(latSpan) || latSpan <= 0) {
+              return;
+            }
+
+            const centerYOffsetPx = overlayPx / 2;
+            // 폴리라인 중심도 동일하게 남쪽 보정해, 경로가 보이는 영역의 중앙에 오도록 맞춘다.
+            const latOffset = (centerYOffsetPx / mapHeightPx) * latSpan;
+            mapAfterFit.setCenter(new tmapAfterFit.LatLng(rawCenterLat - latOffset, rawCenterLng));
+          });
+
+          clampRoutePolylineFitZoom(liveMap);
+          clampHomeMapZoom(liveMap);
+        }
+      })();
+    },
+    [readCoordinateValue],
+  );
+
+  const applyInitialViewport = useCallback(
+    (map: TmapMap) => {
+      if (hasAppliedInitialViewportRef.current) return;
+      const viewport = initialViewport;
+      const Tmapv3 = getTmapv3();
+      if (!viewport || !Tmapv3) return;
+      if (typeof map.fitBounds !== 'function') return;
+
+      const southWest = new Tmapv3.LatLng(viewport.southWestLat, viewport.southWestLng);
+      const northEast = new Tmapv3.LatLng(viewport.northEastLat, viewport.northEastLng);
+      const LatLngBounds = (
+        Tmapv3 as unknown as { LatLngBounds?: new (sw: unknown, ne: unknown) => unknown }
+      ).LatLngBounds;
+
+      if (typeof LatLngBounds === 'function') {
+        const bounds = new LatLngBounds(southWest, northEast);
+        map.fitBounds(bounds, 0);
+      } else {
+        map.fitBounds(southWest, northEast);
       }
-    })();
-  }, []);
+      clampHomeMapZoom(map);
+      hasAppliedInitialViewportRef.current = true;
+    },
+    [initialViewport],
+  );
 
   /** 전체 코스 마커·폴리라인·클러스터 초기화(필요 시 effect/핸들러에서 호출) */
   const _clearRouteMarkers = useCallback(() => {
@@ -1309,6 +1481,10 @@ export function TmapHome({
     routePolylineGenerationRef.current += 1;
     routePolylineAbortRef.current?.abort();
     routePolylineAbortRef.current = null;
+    if (selectedPolylineRetryTimerRef.current !== null) {
+      window.clearTimeout(selectedPolylineRetryTimerRef.current);
+      selectedPolylineRetryTimerRef.current = null;
+    }
     selectedRoutePolylineRef.current?.setMap(null);
     selectedRoutePolylineRef.current = null;
     routeMarkerMapRef.current.forEach((entry) => {
@@ -1322,7 +1498,7 @@ export function TmapHome({
   }, [tearDownRouteMarkerCluster]);
 
   const syncSelectedMarkerVisual = useCallback(
-    (nextSelectedCourseId: string | null) => {
+    (nextSelectedCourseId: string | null, shouldFocusSelectedCourse: boolean) => {
       const previousSelectedId = selectedRouteIdRef.current;
 
       if (previousSelectedId && previousSelectedId !== nextSelectedCourseId) {
@@ -1334,7 +1510,7 @@ export function TmapHome({
       if (nextSelectedCourseId) {
         setRouteMarkerVisualState(nextSelectedCourseId, 'clicked');
       }
-      syncSelectedRoutePolyline(nextSelectedCourseId);
+      syncSelectedRoutePolyline(shouldFocusSelectedCourse ? nextSelectedCourseId : null);
     },
     [setRouteMarkerVisualState, syncSelectedRoutePolyline],
   );
@@ -1487,11 +1663,8 @@ export function TmapHome({
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        const Tmapv3 = getTmapv3();
-        if (Tmapv3) {
-          map.setCenter(new Tmapv3.LatLng(latitude, longitude));
-          createCustomMarker(map, latitude, longitude);
-        }
+        centerMapToLocationInVisibleArea(map, latitude, longitude);
+        createCustomMarker(map, latitude, longitude);
       },
       (error) => {
         console.error('위치 갱신 실패:', error);
@@ -1501,30 +1674,56 @@ export function TmapHome({
     );
   };
 
-  const adjustZoomLevel = useCallback((delta: 1 | -1) => {
-    const map = mapInstance.current;
-    if (!map) return;
+  const adjustZoomLevel = useCallback(
+    (delta: 1 | -1) => {
+      const map = mapInstance.current;
+      if (!map) return;
 
-    const runtimeZoom = map.getZoom();
-    if (typeof runtimeZoom !== 'number') return;
-    const nextZoom =
-      delta < 0
-        ? Math.max(MIN_ZOOM_LEVEL, runtimeZoom + delta)
-        : Math.min(MAX_ZOOM_LEVEL, runtimeZoom + delta);
-    if (nextZoom === runtimeZoom) return;
-    // Tmap이 제공하는 zoomIn/zoomOut을 우선 사용해 부드러운 전환을 유도한다.
-    if (delta > 0 && typeof map.zoomIn === 'function') {
-      map.zoomIn();
-      return;
-    }
-    if (delta < 0 && typeof map.zoomOut === 'function') {
-      map.zoomOut();
-      return;
-    }
+      const runtimeZoom = map.getZoom();
+      if (typeof runtimeZoom !== 'number') return;
+      const nextZoom =
+        delta < 0
+          ? Math.max(MIN_ZOOM_LEVEL, runtimeZoom + delta)
+          : Math.min(MAX_ZOOM_LEVEL, runtimeZoom + delta);
+      if (nextZoom === runtimeZoom) {
+        if (runtimeZoom <= MIN_ZOOM_LEVEL) {
+          if (lastZoomLimitNoticeRef.current !== 'min') {
+            lastZoomLimitNoticeRef.current = 'min';
+            onZoomLimitReached?.('min');
+          }
+          return;
+        }
+        if (runtimeZoom >= MAX_ZOOM_LEVEL) {
+          if (lastZoomLimitNoticeRef.current !== 'max') {
+            lastZoomLimitNoticeRef.current = 'max';
+            onZoomLimitReached?.('max');
+          }
+          return;
+        }
+        return;
+      }
+      // 이벤트 누락 환경에서도 재도달 토스트가 동작하도록 중간 배율 진입 시 즉시 limit 상태를 해제한다.
+      if (nextZoom > MIN_ZOOM_LEVEL && nextZoom < MAX_ZOOM_LEVEL) {
+        if (lastZoomLimitNoticeRef.current !== null) {
+          onZoomLimitCleared?.();
+        }
+        lastZoomLimitNoticeRef.current = null;
+      }
+      // Tmap이 제공하는 zoomIn/zoomOut을 우선 사용해 부드러운 전환을 유도한다.
+      if (delta > 0 && typeof map.zoomIn === 'function') {
+        map.zoomIn();
+        return;
+      }
+      if (delta < 0 && typeof map.zoomOut === 'function') {
+        map.zoomOut();
+        return;
+      }
 
-    // zoomIn/zoomOut 미지원 런타임에서는 애니메이션 옵션을 포함해 폴백한다.
-    map.setZoom(nextZoom, { animation: true, animate: true, duration: 200 });
-  }, []);
+      // zoomIn/zoomOut 미지원 런타임에서는 애니메이션 옵션을 포함해 폴백한다.
+      map.setZoom(nextZoom, { animation: true, animate: true, duration: 200 });
+    },
+    [onZoomLimitCleared, onZoomLimitReached],
+  );
 
   // [이벤트] 휠 줌을 버튼과 동일한 제한 로직으로 통일
   const handleMapWheel = useCallback(
@@ -1550,6 +1749,22 @@ export function TmapHome({
   }, [routes]);
 
   useEffect(() => {
+    if (!selectedCourseId) {
+      selectedRouteDataReadyRef.current = false;
+      return;
+    }
+
+    const isSelectedRouteReady = routes.some((route) => route.id === selectedCourseId);
+    if (!isSelectedRouteReady) return;
+    if (selectedRouteDataReadyRef.current) return;
+    selectedRouteDataReadyRef.current = true;
+
+    // 뒤로 복귀 시 선택 코스 데이터가 늦게 들어와도 폴리라인 동기화를 1회 보장한다.
+    const shouldFocusSelectedCourse = markerClickRecenterToken > 0;
+    syncSelectedMarkerVisual(selectedCourseId, shouldFocusSelectedCourse);
+  }, [markerClickRecenterToken, routes, selectedCourseId, syncSelectedMarkerVisual]);
+
+  useEffect(() => {
     // [초기화] 지도 라이브러리 로드 대기 및 최초 지도 생성
     let cancelled = false;
 
@@ -1572,6 +1787,11 @@ export function TmapHome({
       lastAppliedZoomRef.current = map.getZoom();
       createCustomMarker(map, lat, lng);
       mapInstance.current = map;
+      setMapReadyToken((previous) => previous + 1);
+      if (!initialViewport) {
+        centerMapToLocationInVisibleArea(map, lat, lng);
+      }
+      applyInitialViewport(map);
       enforceMinZoomLevel(map);
       registerMapListeners(map);
       scheduleViewportReport(map, 500);
@@ -1635,6 +1855,10 @@ export function TmapHome({
       routePolylineAbortRef.current?.abort();
       routePolylineAbortRef.current = null;
       routePolylineGenerationRef.current += 1;
+      if (selectedPolylineRetryTimerRef.current !== null) {
+        window.clearTimeout(selectedPolylineRetryTimerRef.current);
+        selectedPolylineRetryTimerRef.current = null;
+      }
       selectedRoutePolylineRef.current?.setMap(null);
       routeMarkerMap.clear();
       mapInstance.current = null;
@@ -1670,8 +1894,11 @@ export function TmapHome({
       lastVisibleViewportReportRef.current = null;
     };
   }, [
+    applyInitialViewport,
+    centerMapToLocationInVisibleArea,
     emitViewportReports,
     enforceMinZoomLevel,
+    initialViewport,
     registerMapListeners,
     scheduleMarkerVisibilitySync,
     scheduleViewportReport,
@@ -1712,80 +1939,21 @@ export function TmapHome({
 
   useEffect(() => {
     // [동기화] 외부 선택 상태(selectedCourseId)와 마커 clicked 상태 정합성 유지
-    syncSelectedMarkerVisual(selectedCourseId);
+    // 뒤로 복귀 직후에는 지도/코스 데이터 준비 타이밍이 엇갈릴 수 있어 재시도 트리거를 넓힌다.
+    selectedRouteDataReadyRef.current = false;
+    const shouldFocusSelectedCourse = Boolean(selectedCourseId) && markerClickRecenterToken > 0;
+    syncSelectedMarkerVisual(selectedCourseId, shouldFocusSelectedCourse);
     const map = mapInstance.current;
     if (map) {
       scheduleMarkerVisibilitySync(map);
     }
-  }, [selectedCourseId, scheduleMarkerVisibilitySync, syncSelectedMarkerVisual]);
-
-  // [마커 클릭] 바텀시트 높이가 반영된 뒤, 보이는 지도 영역의 시각적 중앙에 마커가 오도록 1회만 패닝
-  useEffect(() => {
-    if (!markerClickRecenterToken || !selectedCourseId) {
-      return;
-    }
-
-    const sheetPx = bottomSheetVisibleHeightRef.current;
-    if (sheetPx <= 24) {
-      return;
-    }
-
-    const completionKey = `${markerClickRecenterToken}|${selectedCourseId}`;
-    if (lastMarkerRecenterSignatureRef.current === completionKey) {
-      return;
-    }
-    lastMarkerRecenterSignatureRef.current = completionKey;
-
-    const map = mapInstance.current;
-    const Tmapv3 = getTmapv3();
-    if (!map || !Tmapv3) {
-      return;
-    }
-
-    const route = routesRef.current.find((item) => item.id === selectedCourseId);
-    const entry = routeMarkerMapRef.current.get(selectedCourseId);
-    const routeStart = route ? resolveRouteStartForMapMarker(route) : null;
-    const start = routeStart ?? (entry ? { lat: entry.lat, lng: entry.lng } : null);
-    if (!start) {
-      return;
-    }
-
-    map.setCenter(new Tmapv3.LatLng(start.lat, start.lng));
-
-    requestAnimationFrame(() => {
-      const liveMap = mapInstance.current;
-      const liveTmap = getTmapv3();
-      if (!liveMap || !liveTmap) {
-        return;
-      }
-
-      const liveSheetPx = Math.max(24, bottomSheetVisibleHeightRef.current);
-      const mapElement = document.getElementById('map_div');
-      const mapHeightPx = mapElement?.clientHeight ?? 0;
-      if (mapHeightPx <= 0) {
-        return;
-      }
-
-      const bounds = liveMap.getBounds?.();
-      const northEast = bounds?.getNorthEast?.();
-      const southWest = bounds?.getSouthWest?.();
-      if (!bounds || !northEast || !southWest) {
-        return;
-      }
-
-      const northEastLat = readCoordinateValue(northEast, 'lat');
-      const southWestLat = readCoordinateValue(southWest, 'lat');
-      if (northEastLat === null || southWestLat === null) {
-        return;
-      }
-
-      const latSpan = northEastLat - southWestLat;
-      const pixelOffsetY = -(liveSheetPx / 2);
-      const adjustedLat = start.lat + (pixelOffsetY / mapHeightPx) * latSpan;
-
-      liveMap.setCenter(new liveTmap.LatLng(adjustedLat, start.lng));
-    });
-  }, [markerClickRecenterToken, selectedCourseId, bottomSheetVisibleHeight, readCoordinateValue]);
+  }, [
+    mapReadyToken,
+    markerClickRecenterToken,
+    selectedCourseId,
+    scheduleMarkerVisibilitySync,
+    syncSelectedMarkerVisual,
+  ]);
 
   // 바텀시트 높이 변경 시: 가시 viewport만 갱신(마커/클러스터 생명주기는 건드리지 않음)
   useEffect(() => {

@@ -1,8 +1,9 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { Icon } from '@/commons/components/icons';
 import { TabButton } from '@/commons/components/tab';
 import { ROUTES } from '@/commons/constants/url';
 import { Header } from '@/commons/layout/header';
@@ -29,7 +30,34 @@ const TAB_ITEMS = [
   { label: '10km~', variant: 'orange' as const, category: 'OVER_10' as const },
 ];
 
+const HOME_QUERY_KEYS = {
+  selectedCourseId: 'courseId',
+  categories: 'categories',
+  sheet: 'sheet',
+} as const;
+
+const HOME_SESSION_KEYS = {
+  savedViewport: 'homeSavedViewport',
+  restoreViewportOnce: 'homeRestoreViewportOnce',
+  restoreSelectedFocusOnce: 'homeRestoreSelectedFocusOnce',
+} as const;
+
+function isValidRouteViewport(viewport: RouteViewport | null): viewport is RouteViewport {
+  if (!viewport) return false;
+  return (
+    Number.isFinite(viewport.northEastLat) &&
+    Number.isFinite(viewport.northEastLng) &&
+    Number.isFinite(viewport.southWestLat) &&
+    Number.isFinite(viewport.southWestLng)
+  );
+}
+
 export function Home() {
+  type HomeToast = {
+    type: 'no-course' | 'zoom-limit';
+    message: string;
+  };
+
   // [상태] 홈 화면 기본 상태 관리
   const [sheetVisibleHeight, setSheetVisibleHeight] = useState(260);
   const sheetVisibleHeightRef = useRef(sheetVisibleHeight);
@@ -39,15 +67,61 @@ export function Home() {
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<DistanceCategory>>(new Set());
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
-  const [mapViewport, setMapViewport] = useState<RouteViewport | null>(null);
-  /** 데이터 필터용 — 전체 지도 getBounds 기준만 반영 (바텀시트 오버레이 제외) */
-  const [queryViewport, setQueryViewport] = useState<RouteViewport | null>(null);
+  const [homeToast, setHomeToast] = useState<HomeToast | null>(null);
+  const [mapMoveSignal, setMapMoveSignal] = useState(0);
   /** 목록 노출용 — 바텀시트로 가려지지 않은 영역 */
   const [visibleRouteViewport, setVisibleRouteViewport] = useState<RouteViewport | null>(null);
+  const [frozenVisibleRouteViewport, setFrozenVisibleRouteViewport] =
+    useState<RouteViewport | null>(null);
+  const [restoredInitialViewport, setRestoredInitialViewport] = useState<RouteViewport | null>(
+    null,
+  );
   const [referenceLocation, setReferenceLocation] =
     useState<ReferenceLocation>(SEOUL_CITY_HALL_REFERENCE);
-  const { routes, allRoutes, isLoading, errorMessage } = useRoutes(queryViewport);
+  const effectiveQueryViewport = isSheetExpanded
+    ? frozenVisibleRouteViewport
+    : visibleRouteViewport;
+  const { routes, allRoutes, isLoading, errorMessage } = useRoutes(effectiveQueryViewport);
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const previousQueryViewportRef = useRef<RouteViewport | null>(null);
+  const noCourseToastDelayTimerRef = useRef<number | null>(null);
+  const zoomLimitToastHideTimerRef = useRef<number | null>(null);
+  const hasRestoredFromQueryRef = useRef(false);
+  const lastSyncedQueryRef = useRef('');
+
+  const showHomeToast = useCallback((type: HomeToast['type'], message: string) => {
+    setHomeToast({ type, message });
+    if (type !== 'zoom-limit') return;
+    if (zoomLimitToastHideTimerRef.current !== null) {
+      window.clearTimeout(zoomLimitToastHideTimerRef.current);
+      zoomLimitToastHideTimerRef.current = null;
+    }
+    zoomLimitToastHideTimerRef.current = window.setTimeout(() => {
+      setHomeToast((previous) => (previous?.type === 'zoom-limit' ? null : previous));
+      zoomLimitToastHideTimerRef.current = null;
+    }, 1500);
+  }, []);
+
+  const handleZoomLimitReached = useCallback(
+    (limit: 'min' | 'max') => {
+      if (limit === 'min') {
+        showHomeToast('zoom-limit', '최소 배율 도달');
+        return;
+      }
+      showHomeToast('zoom-limit', '최대 배율 도달');
+    },
+    [showHomeToast],
+  );
+
+  const handleZoomLimitCleared = useCallback(() => {
+    setHomeToast((previous) => (previous?.type === 'zoom-limit' ? null : previous));
+  }, []);
+
+  const handleMapDragSettled = useCallback(() => {
+    setMapMoveSignal((previous) => previous + 1);
+  }, []);
 
   const isSameViewport = useCallback((left: RouteViewport | null, right: RouteViewport | null) => {
     if (!left || !right) return false;
@@ -59,15 +133,7 @@ export function Home() {
     );
   }, []);
 
-  const handleViewportChanged = useCallback(
-    (nextViewport: RouteViewport) => {
-      setMapViewport((previous) =>
-        isSameViewport(previous, nextViewport) ? previous : nextViewport,
-      );
-      setQueryViewport((previous) => previous ?? { ...nextViewport });
-    },
-    [isSameViewport],
-  );
+  const handleViewportChanged = useCallback(() => {}, []);
 
   const handleVisibleRouteViewportChanged = useCallback(
     (nextViewport: RouteViewport | null) => {
@@ -75,17 +141,148 @@ export function Home() {
       setVisibleRouteViewport((previous) =>
         isSameViewport(previous, nextViewport) ? previous : { ...nextViewport },
       );
+
+      if (typeof window !== 'undefined' && isValidRouteViewport(nextViewport)) {
+        // 상세 진입 직전 타이밍 이슈를 피하려고 홈에서 관측되는 최신 viewport를 항상 동기화한다.
+        window.sessionStorage.setItem(
+          HOME_SESSION_KEYS.savedViewport,
+          JSON.stringify(nextViewport),
+        );
+      }
     },
     [isSameViewport],
   );
 
-  // 지도 이동·줌으로 바뀐 전체 bounds만 데이터 필터에 반영 (바텀시트 높이는 제외)
   useEffect(() => {
-    if (!mapViewport) return;
-    setQueryViewport((previous) =>
-      isSameViewport(previous, mapViewport) ? previous : { ...mapViewport },
-    );
-  }, [isSameViewport, mapViewport]);
+    if (hasRestoredFromQueryRef.current) return;
+    const selectedCourseFromQuery = searchParams.get(HOME_QUERY_KEYS.selectedCourseId);
+    const categoriesFromQuery = searchParams.get(HOME_QUERY_KEYS.categories);
+    const sheetFromQuery = searchParams.get(HOME_QUERY_KEYS.sheet);
+    if (selectedCourseFromQuery) {
+      setSelectedCourseId(selectedCourseFromQuery);
+    }
+    if (categoriesFromQuery) {
+      const categorySet = new Set<DistanceCategory>();
+      categoriesFromQuery.split(',').forEach((category) => {
+        if (TAB_ITEMS.some((item) => item.category === category)) {
+          categorySet.add(category as DistanceCategory);
+        }
+      });
+      setSelectedCategories(categorySet);
+    }
+    if (sheetFromQuery === 'expanded') {
+      setIsSheetExpanded(true);
+    }
+    const shouldRestoreViewport = typeof window !== 'undefined';
+
+    if (shouldRestoreViewport) {
+      const shouldRestoreOnce =
+        window.sessionStorage.getItem(HOME_SESSION_KEYS.restoreViewportOnce) === '1';
+      const shouldRestoreSelectedFocusOnce =
+        window.sessionStorage.getItem(HOME_SESSION_KEYS.restoreSelectedFocusOnce) === '1';
+      if (shouldRestoreOnce) {
+        const rawViewport = window.sessionStorage.getItem(HOME_SESSION_KEYS.savedViewport);
+        if (rawViewport) {
+          try {
+            const parsed = JSON.parse(rawViewport) as RouteViewport;
+            if (isValidRouteViewport(parsed)) {
+              setVisibleRouteViewport(parsed);
+              setFrozenVisibleRouteViewport(parsed);
+              setRestoredInitialViewport(parsed);
+            }
+          } catch {
+            // 손상된 저장값은 무시하고 현재 위치 초기화를 따른다.
+          }
+        }
+      }
+      if (selectedCourseFromQuery && shouldRestoreSelectedFocusOnce) {
+        setMarkerClickRecenterToken((prev) => prev + 1);
+      }
+      window.sessionStorage.removeItem(HOME_SESSION_KEYS.restoreViewportOnce);
+      window.sessionStorage.removeItem(HOME_SESSION_KEYS.restoreSelectedFocusOnce);
+    }
+    hasRestoredFromQueryRef.current = true;
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!hasRestoredFromQueryRef.current) return;
+
+    const params = new URLSearchParams();
+    if (selectedCourseId) {
+      params.set(HOME_QUERY_KEYS.selectedCourseId, selectedCourseId);
+    }
+    if (selectedCategories.size > 0) {
+      const encodedCategories = TAB_ITEMS.map((item) => item.category).filter((category) =>
+        selectedCategories.has(category),
+      );
+      params.set(HOME_QUERY_KEYS.categories, encodedCategories.join(','));
+    }
+    if (isSheetExpanded) {
+      params.set(HOME_QUERY_KEYS.sheet, 'expanded');
+    }
+    const nextQuery = params.toString();
+    const currentQuery = searchParams.toString();
+    if (nextQuery === currentQuery) {
+      lastSyncedQueryRef.current = nextQuery;
+      return;
+    }
+    if (lastSyncedQueryRef.current === nextQuery) return;
+    lastSyncedQueryRef.current = nextQuery;
+    const nextUrl = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+    router.replace(nextUrl, { scroll: false });
+  }, [isSheetExpanded, pathname, router, searchParams, selectedCategories, selectedCourseId]);
+
+  useEffect(() => {
+    if (!isSheetExpanded && visibleRouteViewport) {
+      setFrozenVisibleRouteViewport((previous) =>
+        isSameViewport(previous, visibleRouteViewport) ? previous : { ...visibleRouteViewport },
+      );
+    }
+  }, [isSameViewport, isSheetExpanded, visibleRouteViewport]);
+
+  useEffect(() => {
+    if (!effectiveQueryViewport) return;
+    previousQueryViewportRef.current = effectiveQueryViewport;
+  }, [effectiveQueryViewport, isSameViewport]);
+
+  useEffect(() => {
+    if (noCourseToastDelayTimerRef.current !== null) {
+      window.clearTimeout(noCourseToastDelayTimerRef.current);
+      noCourseToastDelayTimerRef.current = null;
+    }
+
+    if (!mapMoveSignal || isLoading || !!errorMessage) {
+      setHomeToast((previous) => (previous?.type === 'no-course' ? null : previous));
+      return;
+    }
+    if (routes.length > 0) {
+      setHomeToast((previous) => (previous?.type === 'no-course' ? null : previous));
+      return;
+    }
+
+    noCourseToastDelayTimerRef.current = window.setTimeout(() => {
+      showHomeToast('no-course', '해당 영역에 등록된 코스가 없습니다.');
+      noCourseToastDelayTimerRef.current = null;
+    }, 1500);
+
+    return () => {
+      if (noCourseToastDelayTimerRef.current !== null) {
+        window.clearTimeout(noCourseToastDelayTimerRef.current);
+        noCourseToastDelayTimerRef.current = null;
+      }
+    };
+  }, [errorMessage, isLoading, mapMoveSignal, routes.length, showHomeToast]);
+
+  useEffect(() => {
+    return () => {
+      if (noCourseToastDelayTimerRef.current !== null) {
+        window.clearTimeout(noCourseToastDelayTimerRef.current);
+      }
+      if (zoomLimitToastHideTimerRef.current !== null) {
+        window.clearTimeout(zoomLimitToastHideTimerRef.current);
+      }
+    };
+  }, []);
 
   // [파생데이터] 필터/정렬 결과 계산 (선택된 코스는 뷰포트 밖이어도 목록·지도에 유지)
   const filteredRoutes = useMemo(() => {
@@ -104,7 +301,7 @@ export function Home() {
   }, [routes, selectedCategories, selectedCourseId, allRoutes]);
 
   const routesForCourseList = useMemo(() => {
-    const base = filterRoutesByRouteViewport(filteredRoutes, visibleRouteViewport);
+    const base = filterRoutesByRouteViewport(filteredRoutes, effectiveQueryViewport);
     if (!selectedCourseId) {
       return base;
     }
@@ -116,7 +313,7 @@ export function Home() {
       return base;
     }
     return dedupeRoutesById([selected, ...base]);
-  }, [filteredRoutes, visibleRouteViewport, selectedCourseId, allRoutes]);
+  }, [allRoutes, effectiveQueryViewport, filteredRoutes, selectedCourseId]);
 
   const courseCards = useMemo(
     () => buildCourseCardViews(routesForCourseList, referenceLocation, selectedCourseId),
@@ -184,6 +381,64 @@ export function Home() {
     }
   }, []);
 
+  const snapshotHomeQueryBeforeDetail = useCallback(
+    (courseId: string) => {
+      if (typeof window === 'undefined') return;
+
+      const params = new URLSearchParams();
+      params.set(HOME_QUERY_KEYS.selectedCourseId, courseId);
+      window.sessionStorage.setItem(HOME_SESSION_KEYS.restoreSelectedFocusOnce, '1');
+
+      if (selectedCategories.size > 0) {
+        const encodedCategories = TAB_ITEMS.map((item) => item.category).filter((category) =>
+          selectedCategories.has(category),
+        );
+        params.set(HOME_QUERY_KEYS.categories, encodedCategories.join(','));
+      }
+
+      if (isSheetExpanded) {
+        params.set(HOME_QUERY_KEYS.sheet, 'expanded');
+      }
+
+      // 실제 사용자가 보고 있던 지도 화면과 가장 가까운 값을 우선 저장한다.
+      const viewportForSnapshot =
+        visibleRouteViewport ?? effectiveQueryViewport ?? frozenVisibleRouteViewport;
+      if (isValidRouteViewport(viewportForSnapshot)) {
+        window.sessionStorage.setItem(
+          HOME_SESSION_KEYS.savedViewport,
+          JSON.stringify(viewportForSnapshot),
+        );
+        window.sessionStorage.setItem(HOME_SESSION_KEYS.restoreViewportOnce, '1');
+      } else {
+        // null 타이밍에 기존 저장값까지 지워지면 뒤로가기 복원이 깨지므로 유지한다.
+        const hasSavedViewport = Boolean(
+          window.sessionStorage.getItem(HOME_SESSION_KEYS.savedViewport),
+        );
+        if (hasSavedViewport) {
+          window.sessionStorage.setItem(HOME_SESSION_KEYS.restoreViewportOnce, '1');
+        } else {
+          window.sessionStorage.removeItem(HOME_SESSION_KEYS.restoreViewportOnce);
+        }
+      }
+
+      const nextQuery = params.toString();
+      const nextUrl = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+      const currentUrl = `${window.location.pathname}${window.location.search}`;
+      if (currentUrl === nextUrl) return;
+
+      window.history.replaceState(window.history.state, '', nextUrl);
+      lastSyncedQueryRef.current = nextQuery;
+    },
+    [
+      effectiveQueryViewport,
+      frozenVisibleRouteViewport,
+      isSheetExpanded,
+      pathname,
+      selectedCategories,
+      visibleRouteViewport,
+    ],
+  );
+
   return (
     <section className={styles.container}>
       {/* [UI] 상단 헤더 영역 */}
@@ -221,13 +476,27 @@ export function Home() {
             bottomSheetVisibleHeight={sheetVisibleHeight}
             isBottomSheetExpanded={isSheetExpanded}
             routes={filteredRoutes}
+            initialViewport={restoredInitialViewport}
             selectedCourseId={selectedCourseId}
             markerClickRecenterToken={markerClickRecenterToken}
             onCourseMarkerClick={handleCourseMarkerClick}
             onViewportChanged={handleViewportChanged}
             onVisibleViewportChanged={handleVisibleRouteViewportChanged}
+            onZoomLimitReached={handleZoomLimitReached}
+            onZoomLimitCleared={handleZoomLimitCleared}
+            onDragSettled={handleMapDragSettled}
           />
         </div>
+        {homeToast ? (
+          <div className={styles.noCourseToastLayer} aria-live="polite">
+            <div className={styles.noCourseToast}>
+              <span className={styles.noCourseToastIcon}>
+                <Icon name="circleAlert" size={16} strokeWidth={2} />
+              </span>
+              <span>{homeToast.message}</span>
+            </div>
+          </div>
+        ) : null}
         <CoursesList
           cards={courseCards}
           isLoading={isLoading}
@@ -236,6 +505,7 @@ export function Home() {
           openPeekFromCollapsedSignal={openPeekFromCollapsedSignal}
           onCourseSelect={(courseId) => {
             setSelectedCourseId(courseId);
+            snapshotHomeQueryBeforeDetail(courseId);
             router.push(ROUTES.COURSES.DETAIL(courseId));
           }}
           onCourseLikeToggle={toggleCourseLike}

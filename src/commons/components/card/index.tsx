@@ -117,7 +117,10 @@ export function Card({
             </div>
           </div>
 
-          <p className={styles.distance}>{distanceText}</p>
+          <p className={styles.distance}>
+            <span className={styles.distanceLabel}>총 거리</span>
+            <span className={styles.distanceValue}>{distanceText}</span>
+          </p>
         </div>
       </section>
 

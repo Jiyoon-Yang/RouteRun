@@ -14,24 +14,69 @@ type UseRoutesResult = {
   errorMessage: string | null;
 };
 
+const homeRoutesViewportCache = new Map<string, Route[]>();
+
+function toViewportCacheKey(viewport: RouteViewport): string {
+  return [
+    viewport.northEastLat.toFixed(6),
+    viewport.northEastLng.toFixed(6),
+    viewport.southWestLat.toFixed(6),
+    viewport.southWestLng.toFixed(6),
+  ].join(',');
+}
+
 export function useRoutes(viewport: RouteViewport | null): UseRoutesResult {
   const [allRoutes, setAllRoutes] = useState<Route[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
+    if (!viewport) {
+      setAllRoutes([]);
+      setIsLoading(false);
+      setErrorMessage(null);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    const values = [
+      viewport.northEastLat,
+      viewport.northEastLng,
+      viewport.southWestLat,
+      viewport.southWestLng,
+    ];
+    const hasInvalidViewport = values.some((value) => !Number.isFinite(value));
+    if (hasInvalidViewport) {
+      setAllRoutes([]);
+      setIsLoading(false);
+      setErrorMessage(null);
+      return () => {
+        isMounted = false;
+      };
+    }
 
     // [조회] 코스 목록 요청 및 상태 갱신 처리 (home 전용 데이터 통신은 repositories/services에서 처리)
     const loadRoutes = async () => {
+      const cacheKey = toViewportCacheKey(viewport);
+      const cached = homeRoutesViewportCache.get(cacheKey);
+      if (cached) {
+        setAllRoutes(cached);
+        setIsLoading(false);
+        setErrorMessage(null);
+        return;
+      }
+
       setIsLoading(true);
       setErrorMessage(null);
 
       try {
-        const routes = await fetchHomeRoutes();
+        const routes = await fetchHomeRoutes(viewport);
 
         if (!isMounted) return;
 
+        homeRoutesViewportCache.set(cacheKey, routes);
         setAllRoutes(routes);
       } catch (error) {
         // [오류] 조회 실패 메시지 상태 반영
@@ -51,35 +96,9 @@ export function useRoutes(viewport: RouteViewport | null): UseRoutesResult {
       // [정리] 언마운트 이후 상태 업데이트 방지
       isMounted = false;
     };
-  }, []);
+  }, [viewport]);
 
-  const routes = useMemo(() => {
-    if (!viewport) {
-      return allRoutes;
-    }
-
-    const { northEastLat, northEastLng, southWestLat, southWestLng } = viewport;
-    const values = [northEastLat, northEastLng, southWestLat, southWestLng];
-    const hasInvalidViewport = values.some((value) => !Number.isFinite(value));
-    if (hasInvalidViewport) {
-      return allRoutes;
-    }
-
-    // SDK/브라우저 조합에 따라 bounds 축이 역전되어 들어오는 케이스를 보정한다.
-    const minLat = Math.min(northEastLat, southWestLat);
-    const maxLat = Math.max(northEastLat, southWestLat);
-    const minLng = Math.min(northEastLng, southWestLng);
-    const maxLng = Math.max(northEastLng, southWestLng);
-
-    return allRoutes.filter((route) => {
-      return (
-        route.start_lat >= minLat &&
-        route.start_lat <= maxLat &&
-        route.start_lng >= minLng &&
-        route.start_lng <= maxLng
-      );
-    });
-  }, [allRoutes, viewport]);
+  const routes = useMemo(() => allRoutes, [allRoutes]);
 
   return { routes, allRoutes, isLoading, errorMessage };
 }

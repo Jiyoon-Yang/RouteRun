@@ -350,7 +350,9 @@ export function TmapHome({
   const routeVisualStateHandlerRef = useRef<(courseId: string, state: MarkerVisualState) => void>(
     () => undefined,
   );
-  const selectedMarkerVisualHandlerRef = useRef<(courseId: string | null) => void>(() => undefined);
+  const selectedMarkerVisualHandlerRef = useRef<
+    (courseId: string | null, shouldFocusSelectedCourse: boolean) => void
+  >(() => {});
   const markerHoverCountRef = useRef(0);
   const bottomSheetVisibleHeightRef = useRef(bottomSheetVisibleHeight);
   bottomSheetVisibleHeightRef.current = bottomSheetVisibleHeight;
@@ -1210,7 +1212,7 @@ export function TmapHome({
       });
 
       addMarkerListener(marker, 'click', () => {
-        selectedMarkerVisualHandlerRef.current(routeId);
+        selectedMarkerVisualHandlerRef.current(routeId, true);
         onCourseMarkerClick?.(routeId);
       });
 

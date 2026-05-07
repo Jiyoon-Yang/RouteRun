@@ -1,5 +1,11 @@
+import { Suspense } from 'react';
+
 import HomeWireframe from '@/components/home/';
 
 export default function HomePage() {
-  return <HomeWireframe />;
+  return (
+    <Suspense fallback={null}>
+      <HomeWireframe />
+    </Suspense>
+  );
 }

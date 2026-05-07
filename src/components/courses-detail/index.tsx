@@ -22,6 +22,7 @@ import 'swiper/css/navigation';
 
 import { Icon } from '@/commons/components/icons';
 import { ROUTES } from '@/commons/constants/url';
+import { useCourseLikes } from '@/commons/hooks/useCourseLikes';
 import { Header } from '@/commons/layout/header';
 import type { Route } from '@/commons/types/runroute';
 import { TmapCourseDetail } from '@/components/tmap/course-detail';

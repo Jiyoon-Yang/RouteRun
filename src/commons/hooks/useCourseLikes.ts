@@ -83,9 +83,12 @@ export function useCourseLikes(initialLikeCounts: LikeCountsByCourseId) {
   );
 
   const getCourseLikeCount = useCallback(
-    (courseId: string) =>
-      optimisticLikeCounts[courseId] ?? clampLikeCount(initialLikeCounts[courseId] ?? 0),
-    [initialLikeCounts, optimisticLikeCounts],
+    (courseId: string) => {
+      const count =
+        optimisticLikeCounts[courseId] ?? clampLikeCount(initialLikeCounts[courseId] ?? 0);
+      return likedCourseIds.has(courseId) ? Math.max(1, count) : count;
+    },
+    [initialLikeCounts, likedCourseIds, optimisticLikeCounts],
   );
 
   const toggleCourseLike = useCallback(

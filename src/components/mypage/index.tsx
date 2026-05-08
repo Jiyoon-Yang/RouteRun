@@ -17,12 +17,13 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 
 import { Button } from '@/commons/components/button';
 import { Icon } from '@/commons/components/icons';
 import { Modal } from '@/commons/components/modal';
+import { useCourseLikes } from '@/commons/hooks/useCourseLikes';
 import { useGuestGuard } from '@/commons/hooks/useGuestGuard';
 import { Header } from '@/commons/layout/header';
 import { useAuth } from '@/commons/providers/auth/auth.provider';
@@ -88,6 +89,16 @@ export type MypageProps = {
 export default function Mypage({ profile, myRoutes, likedRoutes }: MypageProps) {
   const { linkGoogle, isPending: isLinkGooglePending } = useLinkGoogle({ returnTo: '/mypage' });
   const { activeTab, setTab, courses } = useMyPageTabs(myRoutes, likedRoutes);
+  const likedRouteLikeCounts = useMemo(
+    () =>
+      likedRoutes.reduce<Record<string, number>>((acc, route) => {
+        acc[route.id] = route.likeCount;
+        return acc;
+      }, {}),
+    [likedRoutes],
+  );
+  const { isCourseLiked, getCourseLikeCount, toggleCourseLike } =
+    useCourseLikes(likedRouteLikeCounts);
   const { isAnonymous } = useAuth();
   const { executeLogoutOrDelete, isPending: isLogoutPending, isError } = useLogout();
   const { isOpen, openModal, closeModal, handleConfirm, modalData } = useLogoutModal(
@@ -164,7 +175,16 @@ export default function Mypage({ profile, myRoutes, likedRoutes }: MypageProps) 
         {courses.length === 0 ? (
           <p className={styles.emptyState}>{emptyMessage}</p>
         ) : (
-          courses.map((route) => <RouteCard key={route.id} tab={activeTab} route={route} />)
+          courses.map((route) => (
+            <RouteCard
+              key={route.id}
+              tab={activeTab}
+              route={route}
+              isCourseLiked={isCourseLiked}
+              getCourseLikeCount={getCourseLikeCount}
+              toggleCourseLike={toggleCourseLike}
+            />
+          ))
         )}
       </section>
 

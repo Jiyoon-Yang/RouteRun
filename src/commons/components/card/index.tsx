@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 import { Button } from '@/commons/components/button';
 import { Icon } from '@/commons/components/icons';
 
@@ -13,10 +15,13 @@ type CardBaseProps = {
   location?: string;
   distanceText?: string;
   likeCount?: number;
+  thumbnailUrl?: string;
+  readonlyLike?: boolean;
   onLikeClick?: () => void;
   onPrimaryActionClick?: () => void;
   primaryActionLabel?: string;
   onSecondaryActionClick?: () => void;
+  secondaryActionLabel?: string;
   secondaryActionDisabled?: boolean;
 };
 
@@ -41,15 +46,20 @@ export function Card({
   location = '여의도 한강공원',
   distanceText = '5km',
   likeCount = 234,
+  thumbnailUrl,
+  readonlyLike = false,
   onLikeClick,
   onPrimaryActionClick,
   primaryActionLabel,
   onSecondaryActionClick,
+  secondaryActionLabel,
   secondaryActionDisabled = false,
 }: CardProps) {
   const showActions = type === 'my-course' || type === 'liked-course';
   const resolvedPrimaryActionLabel =
     primaryActionLabel ?? (type === 'my-course' ? '수정' : '상세보기');
+  const resolvedSecondaryActionLabel =
+    secondaryActionLabel ?? (type === 'my-course' ? '삭제' : '좋아요 취소');
 
   const rootClass = [
     styles.root,
@@ -76,14 +86,18 @@ export function Card({
     <article className={rootClass}>
       <section className={styles.topSection}>
         <div className={styles.thumbnailWrap}>
-          <span className={styles.thumbnailPlaceholder}>썸네일</span>
+          {thumbnailUrl ? (
+            <Image src={thumbnailUrl} alt="" fill className={styles.thumbnailImage} />
+          ) : (
+            <span className={styles.thumbnailPlaceholder}>썸네일</span>
+          )}
         </div>
 
         <div className={styles.content}>
           <div className={styles.contentInfo}>
             <div className={styles.contentTop}>
               <h3 className={styles.title}>{title}</h3>
-              {onLikeClick ? (
+              {onLikeClick && !readonlyLike ? (
                 <button
                   type="button"
                   className={`${styles.likeWrap} ${styles.likeButton}`}
@@ -117,7 +131,10 @@ export function Card({
             </div>
           </div>
 
-          <p className={styles.distance}>{distanceText}</p>
+          <p className={styles.distance}>
+            <span className={styles.distanceLabel}>총 거리</span>
+            <span className={styles.distanceValue}>{distanceText}</span>
+          </p>
         </div>
       </section>
 
@@ -155,7 +172,7 @@ export function Card({
             onClick={onSecondaryActionClick}
             disabled={secondaryActionDisabled}
           >
-            {type === 'my-course' ? '삭제' : '좋아요 취소'}
+            {resolvedSecondaryActionLabel}
           </Button>
         </section>
       ) : null}

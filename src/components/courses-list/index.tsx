@@ -115,6 +115,7 @@ export function CoursesList({
               location={card.location}
               distanceText={card.distanceText}
               likeCount={getCourseLikeCount?.(card.courseId) ?? card.likeCount}
+              thumbnailUrl={card.thumbnailUrl}
               readonlyLike={true}
             />
           </div>

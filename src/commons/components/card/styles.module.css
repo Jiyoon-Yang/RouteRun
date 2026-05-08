@@ -36,6 +36,7 @@
 }
 
 .thumbnailWrap {
+  position: relative;
   display: flex;
   width: 5rem;
   height: 5rem;

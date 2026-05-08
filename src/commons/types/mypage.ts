@@ -13,6 +13,7 @@ export interface MypageRouteCardData {
   start_address_region?: string | null;
   distanceText: string;
   likeCount: number;
+  thumbnailUrl?: string;
 }
 
 export interface MypagePagePayload {

@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 import { Button } from '@/commons/components/button';
 import { Icon } from '@/commons/components/icons';
 
@@ -13,6 +15,7 @@ type CardBaseProps = {
   location?: string;
   distanceText?: string;
   likeCount?: number;
+  thumbnailUrl?: string;
   readonlyLike?: boolean;
   onLikeClick?: () => void;
   onPrimaryActionClick?: () => void;
@@ -43,6 +46,7 @@ export function Card({
   location = '여의도 한강공원',
   distanceText = '5km',
   likeCount = 234,
+  thumbnailUrl,
   readonlyLike = false,
   onLikeClick,
   onPrimaryActionClick,
@@ -82,7 +86,11 @@ export function Card({
     <article className={rootClass}>
       <section className={styles.topSection}>
         <div className={styles.thumbnailWrap}>
-          <span className={styles.thumbnailPlaceholder}>썸네일</span>
+          {thumbnailUrl ? (
+            <Image src={thumbnailUrl} alt="" fill className={styles.thumbnailImage} />
+          ) : (
+            <span className={styles.thumbnailPlaceholder}>썸네일</span>
+          )}
         </div>
 
         <div className={styles.content}>

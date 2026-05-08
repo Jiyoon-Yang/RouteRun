@@ -41,6 +41,7 @@ export function RouteCard({
       location={locationText}
       distanceText={route.distanceText}
       likeCount={likeCount}
+      thumbnailUrl={route.thumbnailUrl}
       primaryActionLabel={isMyCourse ? '상세보기' : undefined}
       onPrimaryActionClick={() => {
         router.push(ROUTES.COURSES.DETAIL(route.id));

@@ -13,7 +13,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { A11y, Navigation } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 
@@ -25,46 +25,38 @@ import { ROUTES } from '@/commons/constants/url';
 import { Header } from '@/commons/layout/header';
 import type { Route } from '@/commons/types/runroute';
 import { TmapCourseDetail } from '@/components/tmap/course-detail';
-import { useCourseLikes } from '@/hooks/useCourseLikes';
 
+import { COURSES_DETAIL_COPY as COPY } from './constants/copy';
+import { useCourseDetailLikes } from './hooks/use-course-detail-likes';
 import styles from './styles.module.css';
-
-const COPY = {
-  mapPreview: '[MAP PREVIEW]',
-  descriptionTitle: '코스 설명',
-  imageTitle: '코스 이미지',
-  imageAltPrefix: '코스 이미지',
-  emptyImageTitle: '등록된 이미지가 없습니다',
-  previousImage: '이전 이미지',
-  nextImage: '다음 이미지',
-} as const;
+import {
+  buildCarouselNavButtonClassNames,
+  filterNonemptyImageUrls,
+  formatCourseDistanceKm,
+  getCourseDescriptionDisplay,
+} from './utils/course-detail-display';
 
 type CoursesDetailProps = {
   course: Route;
   authorNickname: string;
   location: string;
-  /** 로그인한 사용자가 이 코스 작성자일 때만 헤더 수정 버튼 표시 */
   canEdit?: boolean;
 };
 
 export function Courses({ course, authorNickname, location, canEdit = false }: CoursesDetailProps) {
   const router = useRouter();
-  const distanceText = `${(course.distance_meters / 1000).toFixed(1)}km`;
-  const courseLikeCounts = useMemo(
-    () => ({ [course.id]: course.likes_count ?? 0 }),
-    [course.id, course.likes_count],
-  );
-  const { isCourseLiked, getCourseLikeCount, toggleCourseLike } = useCourseLikes(courseLikeCounts);
+  const distanceText = formatCourseDistanceKm(course.distance_meters);
+  const { isCourseLiked, getCourseLikeCount, toggleCourseLike } = useCourseDetailLikes(course);
   const isLiked = isCourseLiked(course.id);
   const likesCount = getCourseLikeCount(course.id);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
-  const descriptionText = course.description?.trim() || '설명이 없습니다.';
-  const imageUrls = course.image_urls.filter((url) => url.trim().length > 0);
+  const descriptionText = getCourseDescriptionDisplay(course.description, COPY.emptyDescription);
+  const imageUrls = filterNonemptyImageUrls(course.image_urls);
   const hasImages = imageUrls.length > 0;
   const carouselLabels = imageUrls.map((_, idx) => `코스 이미지 ${idx + 1}`);
-  const safeCourseClassToken = course.id.replace(/[^a-zA-Z0-9_-]/g, '-');
-  const nextButtonClass = `course-detail-next-${safeCourseClassToken}`;
-  const prevButtonClass = `course-detail-prev-${safeCourseClassToken}`;
+  const { prev: prevButtonClass, next: nextButtonClass } = buildCarouselNavButtonClassNames(
+    course.id,
+  );
 
   return (
     <main className={styles.container}>
@@ -77,8 +69,6 @@ export function Courses({ course, authorNickname, location, canEdit = false }: C
           router.push(ROUTES.COURSES.EDIT(course.id));
         }}
         onLeftIconClick={() => {
-          // history.length는 브라우저별 추정치라 신뢰하면 안 됨(오탐 시 홈으로만 이동하는 버그).
-          // 마이페이지·홈 등 이전 페이지는 브라우저 세션 스택의 router.back()으로 복귀한다.
           router.back();
         }}
       />

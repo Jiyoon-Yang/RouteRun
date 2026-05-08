@@ -138,6 +138,7 @@ export function buildCourseCardViews(
         distanceText: toDistanceText(route.distance_meters),
         likeCount: route.likes_count,
         isPinnedTop: false,
+        thumbnailUrl: route.image_urls[0],
       };
     })
     .sort((left, right) => {

@@ -70,6 +70,7 @@ function routeToMypageCard(route: Route): MypageRouteCardData {
     start_address_region: route.start_address_region ?? null,
     distanceText: `${(route.distance_meters / 1000).toFixed(1)}km`,
     likeCount: route.likes_count,
+    thumbnailUrl: route.image_urls[0],
   };
 }
 

@@ -38,6 +38,7 @@ export interface CourseCardView {
   distanceText: string;
   likeCount: number;
   isPinnedTop: boolean;
+  thumbnailUrl?: string;
 }
 
 // 홈 페이지(지도)에서 쓰는 뷰포트 경계 타입

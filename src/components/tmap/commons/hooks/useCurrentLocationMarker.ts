@@ -2,8 +2,8 @@
 
 import { useCallback, useRef } from 'react';
 
-import { getTmapv3Runtime } from '@/components/tmap/map-core/runtime';
 import { applyPointerCursorToTmapMarker } from '@/components/tmap/utils/apply-pointer-cursor-to-tmap-marker';
+import { getTmapv3Runtime } from '@/components/tmap/utils/runtime';
 
 import type { TmapMap, TmapMarker } from '../../home/types';
 

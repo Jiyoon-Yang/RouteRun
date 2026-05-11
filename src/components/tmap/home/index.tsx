@@ -5,8 +5,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Icon } from '@/commons/components/icons';
 import type { Route, RouteViewport } from '@/commons/types/runroute';
 import { useCurrentLocationMarker } from '@/components/tmap/commons/hooks/useCurrentLocationMarker';
-import { bindMapEvents } from '@/components/tmap/map-core/events';
-import { getTmapv3Runtime } from '@/components/tmap/map-core/runtime';
+import { bindMapEvents } from '@/components/tmap/utils/events';
+import { getTmapv3Runtime } from '@/components/tmap/utils/runtime';
 
 import { useHomeMapLifecycle } from './hooks/useHomeMapLifecycle';
 import { useMapZoomControls } from './hooks/useMapZoomControls';

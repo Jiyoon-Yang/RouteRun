@@ -6,7 +6,7 @@ import { Button } from '@/commons/components/button';
 import { Icon } from '@/commons/components/icons';
 import { useCurrentLocationMarker } from '@/components/tmap/commons/hooks/useCurrentLocationMarker';
 import { getCurrentPositionWithFallback } from '@/components/tmap/commons/utils/geolocation';
-import { getTmapv3Runtime } from '@/components/tmap/map-core/runtime';
+import { getTmapv3Runtime } from '@/components/tmap/utils/runtime';
 
 import { useCourseMap, type SaveRoutePayload } from './hooks/useCourseMap';
 import styles from './styles.module.css';

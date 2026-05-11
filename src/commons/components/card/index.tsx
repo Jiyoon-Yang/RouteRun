@@ -91,7 +91,7 @@ export function Card({
             <Image src={thumbnailUrl} alt="" fill className={styles.thumbnailImage} />
           ) : (
             <span className={styles.thumbnailPlaceholder}>
-              <LogoIcon width={56} height={56} />
+              <LogoIcon width={48} height={32} />
             </span>
           )}
         </div>

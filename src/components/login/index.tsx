@@ -75,7 +75,7 @@ export default function Login({ returnTo = '/' }: LoginProps) {
       <div className={styles.inner}>
         {/* 로고 섹션 */}
         <div className={styles.logoSection} aria-label="RouteRun 로고">
-          <LogoIcon width={220} height={220} />
+          <LogoIcon width={120} height={112} />
         </div>
 
         {/* 버튼 섹션 */}

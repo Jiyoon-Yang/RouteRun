@@ -7,8 +7,8 @@ import { useCallback, useRef } from 'react';
 import type { Route } from '@/commons/types/runroute';
 import { resolveRouteStartForMapMarker } from '@/commons/utils/route-marker-position';
 import { getDistanceCategory, type DistanceCategory } from '@/components/home/utils/course-filter';
-import { bindSingleEvent } from '@/components/tmap/map-core/events';
 import { applyPointerCursorToTmapMarker } from '@/components/tmap/utils/apply-pointer-cursor-to-tmap-marker';
+import { bindSingleEvent } from '@/components/tmap/utils/events';
 
 import {
   getRunningCourseMarkerIconUrlForCategory,

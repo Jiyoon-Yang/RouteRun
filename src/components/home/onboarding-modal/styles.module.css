@@ -20,7 +20,7 @@
   height: 542px;
   background-color: var(--color-white-500);
   border-radius: 24px;
-  padding: 20px 20px 16px;
+  padding: 28px 20px 20px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -124,8 +124,7 @@
   padding: 12px 14px;
   height: 60px;
   box-sizing: border-box;
-  margin-top: auto;
-  margin-bottom: 14px;
+  margin: 12px 0;
   overflow: hidden;
 }
 
@@ -158,10 +157,12 @@
   display: flex;
   gap: 8px;
   flex-shrink: 0;
+  margin-top: auto;
 }
 
 .buttonPrev {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   height: 44px;
   border-radius: 999px;
   background-color: var(--color-grey-100);
@@ -177,7 +178,8 @@
 }
 
 .buttonNext {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   height: 44px;
   border-radius: 999px;
   background-color: var(--color-green-400);
@@ -190,10 +192,18 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
+  position: relative;
 }
 
 .buttonNext:active {
   background-color: var(--color-green-500);
+}
+
+.step2NextIcon {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
 }
 
 /* ===== step 1 image ===== */
@@ -204,49 +214,80 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 14px;
 }
 
 .step1Image {
   width: 100%;
   height: auto;
-  max-width: 256px;
   max-height: 100%;
   object-fit: contain;
 }
 
 /* ===== step 2 image ===== */
 
+.step2ImageArea {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 4px 0;
+}
+
 .step2ImageBg {
   position: relative;
   width: 100%;
-  height: 200px;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 12px;
+  max-width: 280px;
+  aspect-ratio: 10 / 9;
+  overflow: auto;
 }
 
 .step2FillImage {
   object-fit: cover;
+  object-position: center 30%;
+  border-radius: 12px;
+
+  transform: scale(0.87);
+  transform-origin: center center;
 }
 
 /* ===== step 3 guide ===== */
 
 .guideSection {
+  flex: 1;
+  min-height: 0;
   display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  margin-top: 0;
+}
+
+.guideGroup {
+  display: flex;
+  align-items: center;
+
   gap: 12px;
-  margin-bottom: 14px;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  padding-top: 4px;
 }
 
 .guideSteps {
-  flex: 1;
+  flex: 0 1 auto;
   display: flex;
+  align-items: flex-start;
+  justify-content: center;
   flex-direction: column;
+  width: auto;
+  min-width: 0;
 }
 
 .guideItem {
   display: flex;
   gap: 10px;
+  width: auto;
 }
 
 .guideItemLeft {
@@ -277,7 +318,7 @@
 
 .guideStepNum {
   position: absolute;
-  top: -5px;
+  top: 0;
   right: -5px;
   width: 14px;
   height: 14px;
@@ -302,12 +343,17 @@
 }
 
 .guideItemContent {
-  flex: 1;
-  padding-top: 4px;
-  padding-bottom: 14px;
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  width: auto;
+
+  padding-bottom: 12px;
 }
 
 .guideStepTitle {
+  display: inline-block;
+  width: fit-content;
   margin: 0 0 3px;
   font-size: 11px;
   font-weight: 500;
@@ -316,6 +362,8 @@
 }
 
 .guideStepDesc {
+  display: inline-block;
+  width: fit-content;
   margin: 0;
   font-size: 10px;
   line-height: 1.4;
@@ -324,13 +372,18 @@
 }
 
 .guideImageWrap {
-  flex-shrink: 0;
+  flex: 0 0 40%;
   align-self: flex-start;
-  width: 90px;
+  min-width: 96px;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
 }
 
 .guideImage {
-  width: 90px;
-  height: auto;
-  border-radius: 8px;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: left center;
 }

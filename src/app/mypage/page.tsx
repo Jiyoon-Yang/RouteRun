@@ -1,5 +1,5 @@
-import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
 
 import { ROUTES } from '@/commons/constants/url';
 import Mypage from '@/components/mypage';

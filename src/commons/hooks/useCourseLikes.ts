@@ -139,7 +139,15 @@ export function useCourseLikes(initialLikeCounts: LikeCountsByCourseId) {
       });
       setOptimisticLikeCounts((previous) => ({ ...previous, [courseId]: previousCount }));
     },
-    [canUseCourseLike, getCourseLikeCount, isLoading, likedCourseIds, openGoogleLoginConfirm, user],
+    [
+      canUseCourseLike,
+      getCourseLikeCount,
+      isLoading,
+      likedCourseIds,
+      openGoogleLoginConfirm,
+      pathname,
+      user,
+    ],
   );
 
   return { isCourseLiked, getCourseLikeCount, toggleCourseLike };

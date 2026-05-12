@@ -77,12 +77,12 @@ export function Home() {
     setFrozenVisibleRouteViewport,
   });
 
+  // 선택이 없어질 때만 스냅샷을 비운다. id 불일치 시 null로 만들면(예: URL·상태 갱신 한 틱 어긋남)
+  // 뷰포트 밖 병합이 깨져 지도 마커가 제거될 수 있다. 병합 쪽은 이미 snapshot.id === selectedCourseId를 검증한다.
   useEffect(() => {
-    setSelectedRouteSnapshot((previous) => {
-      if (!selectedCourseId) return null;
-      if (previous && previous.id !== selectedCourseId) return null;
-      return previous;
-    });
+    if (!selectedCourseId) {
+      setSelectedRouteSnapshot(null);
+    }
   }, [selectedCourseId]);
 
   const { snapshotHomeQueryBeforeDetail } = useHomeUrlSync({

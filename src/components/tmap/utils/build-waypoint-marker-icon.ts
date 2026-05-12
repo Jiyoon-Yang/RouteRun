@@ -13,7 +13,7 @@ function markerTitleByRole(role: WaypointMarkerRole): string {
 /** `public/icons` 에셋 경로 */
 const ROLE_TO_ICON_PATH: Record<WaypointMarkerRole, string> = {
   start: '/icons/flag_start.png',
-  via: '/icons/flag_point.png',
+  via: '/icons/flag_point_1.png',
   end: '/icons/flag_finish.png',
 };
 

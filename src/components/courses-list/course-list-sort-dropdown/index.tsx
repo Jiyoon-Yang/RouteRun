@@ -5,9 +5,9 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import { Icon } from '@/commons/components/icons';
 
-import styles from './styles.module.css';
+import styles from '../styles.module.css';
 
-import type { CourseListSortMode } from './utils/sort-course-cards';
+import type { CourseListSortMode } from '../utils/sort-course-cards';
 
 const SORT_OPTIONS: { value: CourseListSortMode; label: string }[] = [
   { value: 'distance', label: '가까운 순' },

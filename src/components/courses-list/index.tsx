@@ -6,6 +6,8 @@ import { Card } from '@/commons/components/card';
 import type { CourseCardView } from '@/commons/types/runroute';
 
 import { CourseListSortDropdown } from './course-list-sort-dropdown';
+import { CoursesListSkeleton } from './courses-list-skeleton';
+import { useCourseCardKeyboardSelect } from './hooks/use-course-card-keyboard-select';
 import { useCourseListSort } from './hooks/use-course-list-sort';
 import {
   useCoursesListBottomSheet,
@@ -13,9 +15,7 @@ import {
 } from './hooks/use-courses-list-bottom-sheet';
 import { useCoursesListEmptySheetState } from './hooks/use-courses-list-empty-sheet-state';
 import styles from './styles.module.css';
-import { SKELETON_CARD_COUNT } from './utils/bottom-sheet';
-
-import type { KeyboardEvent } from 'react';
+import { buildCoursesListSheetRootClassName } from './utils/sheet-root-class-name';
 
 type CoursesListProps = {
   cards?: CourseCardView[];
@@ -63,26 +63,18 @@ export function CoursesList({
     onSheetPositionChange,
   });
 
-  const sheetStateClassName =
-    sheetState === 'collapsed'
-      ? styles.collapsed
-      : sheetState === 'peek'
-        ? styles.peek
-        : styles.expanded;
+  const sheetRootClassName = buildCoursesListSheetRootClassName(sheetState, isDragging, {
+    courseList: styles.courseList,
+    collapsed: styles.collapsed,
+    peek: styles.peek,
+    expanded: styles.expanded,
+    dragging: styles.dragging,
+  });
 
-  const handleCardKeyDown = (event: KeyboardEvent<HTMLDivElement>, courseId: string) => {
-    if (event.target !== event.currentTarget) return;
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      onCourseSelect?.(courseId);
-    }
-  };
+  const handleCardKeyDown = useCourseCardKeyboardSelect(onCourseSelect);
 
   return (
-    <div
-      ref={sheetRef}
-      className={`${styles.courseList} ${sheetStateClassName} ${isDragging ? styles.dragging : ''}`}
-    >
+    <div ref={sheetRef} className={sheetRootClassName}>
       <motion.div
         className={styles.bottomSheetHandleArea}
         role="button"
@@ -101,20 +93,7 @@ export function CoursesList({
         <CourseListSortDropdown sortMode={sortMode} onSelect={selectSortMode} />
       </div>
       <div ref={cardListRef} className={styles.cardList}>
-        {isLoading && cards.length === 0 ? (
-          <div className={styles.listLoadingBlock} aria-busy>
-            {Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (
-              <div key={`skeleton-${index}`} className={styles.loadingCardSkeleton}>
-                <div className={styles.loadingThumbnailSkeleton} />
-                <div className={styles.loadingContentSkeleton}>
-                  <div className={styles.loadingLineLg} />
-                  <div className={styles.loadingLineMd} />
-                  <div className={styles.loadingLineSm} />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : null}
+        {isLoading && cards.length === 0 ? <CoursesListSkeleton /> : null}
         {displayCards.map((card) => (
           <div
             key={card.courseId}

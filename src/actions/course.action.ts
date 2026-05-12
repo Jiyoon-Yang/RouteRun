@@ -148,6 +148,7 @@ export async function createCourseAction(
     start_lng,
     start_address_region,
     image_urls: input.imageUrls,
+    is_round_trip: Boolean(input.routeData.isRoundTrip),
   });
 
   if (error || !data) {

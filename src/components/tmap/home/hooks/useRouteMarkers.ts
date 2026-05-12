@@ -14,6 +14,7 @@ import {
   getRunningCourseMarkerIconUrlForCategory,
   type MarkerVisualState,
 } from '../build-running-course-marker-icon';
+import { syncRouteMarkerDomVisualState } from '../sync-route-marker-dom-visual';
 
 import type {
   RouteMarkerEntry,
@@ -468,6 +469,7 @@ export function useRouteMarkers({
       const icon = getRunningCourseMarkerIconUrlForCategory(markerEntry.category, state);
       if (typeof markerEntry.marker.setIcon === 'function') {
         markerEntry.marker.setIcon(icon);
+        syncRouteMarkerDomVisualState(markerEntry.marker, state);
         return;
       }
 
@@ -495,6 +497,7 @@ export function useRouteMarkers({
         outOfViewportSinceMs: markerEntry.outOfViewportSinceMs,
       });
       attachRouteMarkerListeners(nextMarker, courseId);
+      syncRouteMarkerDomVisualState(nextMarker, state);
       routeMarkerClusterGenerationRef.current += 1;
       syncRouteMarkersDisplayForZoom(map);
     },
@@ -585,6 +588,7 @@ export function useRouteMarkers({
         if (stateChanged || categoryChanged) {
           existing.visualState = state;
           existing.marker.setIcon?.(getRunningCourseMarkerIconUrlForCategory(category, state));
+          syncRouteMarkerDomVisualState(existing.marker, state);
         }
       });
 
@@ -615,6 +619,7 @@ export function useRouteMarkers({
             outOfViewportSinceMs: null,
           });
           attachRouteMarkerListeners(marker, route.id);
+          syncRouteMarkerDomVisualState(marker, state);
         });
       }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Icon } from '@/commons/components/icons';
 import { TabButton } from '@/commons/components/tab';
@@ -13,6 +13,9 @@ import { CoursesList } from '@/components/courses-list';
 import { TmapHome } from '@/components/tmap/home';
 
 import { useRoutes } from './hooks/index.use-routes';
+import { useClearSelectedRouteSnapshotOnDeselect } from './hooks/use-clear-selected-route-snapshot';
+import { useHomeCourseMarkerClick } from './hooks/use-home-course-marker-click';
+import { useHomeDistanceCategories } from './hooks/use-home-distance-categories';
 import { useHomeFrozenViewportSync } from './hooks/use-home-frozen-viewport';
 import { useHomeToast } from './hooks/use-home-toast';
 import { useHomeUrlSync } from './hooks/use-home-url-sync';
@@ -20,8 +23,9 @@ import { useHomeVisibleRouteViewport } from './hooks/use-home-visible-viewport';
 import { useReferenceLocation } from './hooks/use-reference-location';
 import { OnboardingModal } from './onboarding-modal';
 import styles from './styles.module.css';
-import { buildCourseCardViews, type DistanceCategory } from './utils/course-filter';
+import { buildCourseCardViews } from './utils/course-filter';
 import { TAB_ITEMS } from './utils/home-constants';
+import { buildCourseLikeCountsLookup } from './utils/home-like-counts';
 import {
   computeFilteredRoutesForHome,
   computeRoutesForCourseListForHome,
@@ -35,7 +39,7 @@ export function Home() {
   const [openPeekFromCollapsedSignal, setOpenPeekFromCollapsedSignal] = useState(0);
   const [markerClickRecenterToken, setMarkerClickRecenterToken] = useState(0);
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState<Set<DistanceCategory>>(new Set());
+  const { selectedCategories, setSelectedCategories, toggleCategory } = useHomeDistanceCategories();
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   /** 뷰포트 밖으로 이동해도 선택 코스를 목록·지도에 유지 (조회 결과 우선, 없을 때만 사용) */
   const [selectedRouteSnapshot, setSelectedRouteSnapshot] = useState<Route | null>(null);
@@ -67,8 +71,6 @@ export function Home() {
     setMapMoveSignal((previous) => previous + 1);
   }, []);
 
-  const handleViewportChanged = useCallback(() => {}, []);
-
   const handleVisibleRouteViewportChanged = useHomeVisibleRouteViewport(setVisibleRouteViewport);
 
   useHomeFrozenViewportSync({
@@ -77,13 +79,7 @@ export function Home() {
     setFrozenVisibleRouteViewport,
   });
 
-  // 선택이 없어질 때만 스냅샷을 비운다. id 불일치 시 null로 만들면(예: URL·상태 갱신 한 틱 어긋남)
-  // 뷰포트 밖 병합이 깨져 지도 마커가 제거될 수 있다. 병합 쪽은 이미 snapshot.id === selectedCourseId를 검증한다.
-  useEffect(() => {
-    if (!selectedCourseId) {
-      setSelectedRouteSnapshot(null);
-    }
-  }, [selectedCourseId]);
+  useClearSelectedRouteSnapshotOnDeselect(selectedCourseId, setSelectedRouteSnapshot);
 
   const { snapshotHomeQueryBeforeDetail } = useHomeUrlSync({
     searchParams,
@@ -133,42 +129,20 @@ export function Home() {
     [routesForCourseList, referenceLocation, selectedCourseId],
   );
 
-  const courseLikeCounts = useMemo(() => {
-    const acc = allRoutes.reduce<Record<string, number>>((map, route) => {
-      map[route.id] = route.likes_count;
-      return map;
-    }, {});
-    if (
-      selectedCourseId &&
-      selectedRouteSnapshot?.id === selectedCourseId &&
-      acc[selectedCourseId] === undefined
-    ) {
-      acc[selectedCourseId] = selectedRouteSnapshot.likes_count;
-    }
-    return acc;
-  }, [allRoutes, selectedCourseId, selectedRouteSnapshot]);
+  const courseLikeCounts = useMemo(
+    () => buildCourseLikeCountsLookup(allRoutes, selectedCourseId, selectedRouteSnapshot),
+    [allRoutes, selectedCourseId, selectedRouteSnapshot],
+  );
   const { isCourseLiked, getCourseLikeCount } = useCourseLikes(courseLikeCounts);
 
-  const toggleCategory = (category: DistanceCategory) => {
-    setSelectedCategories((previous) => {
-      const next = new Set(previous);
-      if (next.has(category)) {
-        next.delete(category);
-      } else {
-        next.add(category);
-      }
-      return next;
-    });
-  };
-
-  const handleCourseMarkerClick = useCallback((courseId: string, route: Route) => {
-    setSelectedCourseId(courseId);
-    setSelectedRouteSnapshot(route);
-    setMarkerClickRecenterToken((previous) => previous + 1);
-    if (sheetVisibleHeightRef.current <= 24) {
-      setOpenPeekFromCollapsedSignal((previous) => previous + 1);
-    }
-  }, []);
+  const handleCourseMarkerClick = useHomeCourseMarkerClick({
+    collapsedPeekHeightThreshold: 24,
+    sheetVisibleHeightRef,
+    setSelectedCourseId,
+    setSelectedRouteSnapshot,
+    setMarkerClickRecenterToken,
+    setOpenPeekFromCollapsedSignal,
+  });
 
   return (
     <section className={styles.container}>
@@ -209,7 +183,6 @@ export function Home() {
             selectedCourseId={selectedCourseId}
             markerClickRecenterToken={markerClickRecenterToken}
             onCourseMarkerClick={handleCourseMarkerClick}
-            onViewportChanged={handleViewportChanged}
             onVisibleViewportChanged={handleVisibleRouteViewportChanged}
             onZoomLimitReached={handleZoomLimitReached}
             onZoomLimitCleared={handleZoomLimitCleared}

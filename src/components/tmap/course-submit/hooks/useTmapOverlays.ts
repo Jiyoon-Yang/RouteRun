@@ -8,7 +8,10 @@ import type { RefObject } from 'react';
 
 type MarkerRole = 'start' | 'via' | 'end';
 
-export function useTmapOverlays(mapRef: RefObject<TmapMapLike | null>) {
+export function useTmapOverlays(
+  mapRef: RefObject<TmapMapLike | null>,
+  isRoundTripRef: RefObject<boolean>,
+) {
   const markerRefs = useRef<TmapMarkerLike[]>([]);
   const polylineRef = useRef<{ setMap: (map: TmapMapLike | null) => void } | null>(null);
 
@@ -31,16 +34,21 @@ export function useTmapOverlays(mapRef: RefObject<TmapMapLike | null>) {
         const role: MarkerRole = isStart ? 'start' : isEnd ? 'end' : 'via';
         const viaOrder = !isStart && !isEnd ? index : undefined;
 
+        const iconUrl =
+          role === 'end' && isRoundTripRef.current
+            ? '/icons/flag_turn.png'
+            : getWaypointMarkerIconUrl(role, viaOrder);
+
         const marker = new Tmapv3.Marker({
           // Tmap 공식 예제와 동일하게 LatLng(lat, lon) 순서로 변환한다.
           position: new Tmapv3.LatLng(point.lat, point.lng),
-          icon: getWaypointMarkerIconUrl(role, viaOrder),
+          icon: iconUrl,
           map,
         });
         markerRefs.current.push(marker);
       });
     },
-    [clearMarkers, mapRef],
+    [clearMarkers, mapRef, isRoundTripRef],
   );
 
   const clearPolyline = useCallback(() => {

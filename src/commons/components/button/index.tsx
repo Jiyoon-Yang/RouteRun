@@ -1,13 +1,14 @@
 import styles from './styles.module.css';
 
 interface ButtonProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   variant: 'fill' | 'outline';
   borderRadius: 'r12' | 'r16';
   size: 'small' | 'medium' | 'large' | 'Xlarge';
   color: 'blue' | 'red' | 'dark';
-  leftIcon?: React.ReactNode; // 왼쪽 아이콘 (선택 사항)
-  rightIcon?: React.ReactNode; // 오른쪽 아이콘 (선택 사항)
+  iconOnly?: boolean;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
   disabled?: boolean;
   className?: string;
   style?: React.CSSProperties;
@@ -20,6 +21,7 @@ export const Button = ({
   borderRadius,
   size,
   color,
+  iconOnly,
   leftIcon,
   rightIcon,
   disabled,
@@ -37,11 +39,12 @@ export const Button = ({
   const iconClass = `${styles.iconBase} ${iconSize[size]}`;
 
   const buttonClass = `
-    ${styles.base} 
+    ${styles.base}
     ${styles[variant]}
     ${styles[borderRadius]}
     ${styles[size]}
     ${styles[color]}
+    ${iconOnly ? styles.iconOnly : ''}
     ${className ?? ''}
   `;
 

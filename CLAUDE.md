@@ -16,6 +16,7 @@ npm run lint             # ESLint 실행
 npm run storybook        # Storybook (localhost:6006)
 npm run build-storybook  # Storybook 정적 사이트 빌드
 npx vitest               # Storybook 컴포넌트/인터랙션 테스트 (Vitest 브라우저 모드)
+npm run migrate:route-paths  # path_data 마이그레이션 (일회성, .env.local 필요)
 ```
 
 ## 아키텍처
@@ -37,7 +38,7 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
 
 - `src/app/` — Next.js App Router 페이지 & 레이아웃
 - `src/actions/` — 인증, 코스, 유저 관련 Server Actions
-- `src/components/` — 기능별 컴포넌트 (`home/`, `courses-detail/`, `mypage/`, `course-submit/`, `tmap/` 등)
+- `src/components/` — 기능별 컴포넌트 (`home/`, `courses-detail/`, `courses-list/`, `mypage/`, `course-submit/`, `tmap/` 등)
 - `src/commons/` — 공통 UI 컴포넌트, 훅, 상수, 프로바이더, 타입, 유틸
 - `src/repositories/` — 데이터 접근 (course, user, map 레포지토리)
 - `src/services/` — 비즈니스 로직 (course, user, map 서비스)
@@ -51,7 +52,7 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
 - `isAuthenticated` — 실제 OAuth 로그인 유저 (익명 아님)
 - `isAnonymous` — 게스트 세션
 
-미들웨어 (`middleware.ts`)는 모든 요청에서 세션을 갱신하고 비공개 라우트를 보호합니다. 익명 유저는 탐색만 가능하며 코스 생성/수정/좋아요는 불가합니다.
+미들웨어 (`middleware.ts`)는 모든 요청에서 세션을 갱신하고 비공개 라우트를 보호합니다. 세션이 없는 경우(완전 미로그인)만 차단하고 `/login`으로 리다이렉트합니다. 익명(게스트) 세션은 라우트를 통과하나, 코스 생성·수정·좋아요 등 mutation은 Action 레벨에서 `isAnonymous` 여부로 별도 차단됩니다.
 
 **비공개 라우트:** `/courses/new`, `/courses/[id]/edit`, `/mypage`
 
@@ -82,6 +83,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 - **`console.log` 사용 금지** (ESLint 경고); `console.error/warn/info`는 허용.
 - **React Strict Mode** 비활성화 (`next.config.mjs`).
 - import 순서는 ESLint로 강제: 외부 → 내부 → 상대경로.
+- **SVG:** `next.config.mjs` webpack 설정으로 `.svg`를 `import`로 사용 가능 (asset/resource로 처리됨).
 
 ## Git 워크플로우
 

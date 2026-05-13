@@ -64,6 +64,11 @@
   border-radius: 16px;
 }
 
+/* 아이콘 전용 버튼 */
+.iconOnly {
+  padding: 10px;
+}
+
 /* 버튼 크기 */
 .small {
   height: 36px;

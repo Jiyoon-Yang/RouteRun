@@ -33,6 +33,7 @@ export default function TmapCourseSubmit({ onSaveRoute }: CourseSubmitMapProps) 
     mapRef,
     initializeMap,
     undo,
+    reset,
     saveRoute,
   } = useCourseMap({ onSaveRoute });
 
@@ -67,21 +68,17 @@ export default function TmapCourseSubmit({ onSaveRoute }: CourseSubmitMapProps) 
     <section className={styles.root}>
       <div id={mapContainerIdRef.current} className={styles.map} />
 
-      <div className={styles.topControls}>
-        <Button
-          variant="outline"
-          borderRadius="r12"
-          size="small"
-          color="dark"
-          leftIcon={<Icon name="undo-2" size={16} />}
-          onClick={undo}
-          disabled={points.length === 0}
-        >
-          되돌리기
-        </Button>
-      </div>
+      <div className={styles.topRight}>
+        <div className={styles.topInfoPanel}>
+          <p className={styles.distanceText}>
+            총 거리: {displayDistanceKm !== null ? `${displayDistanceKm.toFixed(2)}km` : '-'}
+          </p>
+          <p className={isPointLimitReached ? styles.waypointTextFull : styles.waypointText}>
+            경로 지점 {points.length}/7
+          </p>
+          {errorMessage && <p className={styles.errorText}>{errorMessage}</p>}
+        </div>
 
-      <div className={styles.bottomPanel}>
         <label className={styles.roundTripLabel}>
           <input
             type="checkbox"
@@ -89,31 +86,43 @@ export default function TmapCourseSubmit({ onSaveRoute }: CourseSubmitMapProps) 
             onChange={(e) => setIsRoundTrip(e.target.checked)}
             className={styles.roundTripCheckbox}
           />
-          왕복
+          왕복코스
         </label>
+      </div>
 
-        <div className={styles.metaPanel}>
-          <p className={styles.metaText}>
-            경로 지점 {points.length}개 | 총 거리{' '}
-            {displayDistanceKm !== null ? `${displayDistanceKm.toFixed(2)}km` : '-'}
-          </p>
-          {isPointLimitReached && (
-            <p className={styles.warningText}>최대 7개 지점까지 선택할 수 있습니다.</p>
-          )}
-          {errorMessage && <p className={styles.errorText}>{errorMessage}</p>}
-        </div>
+      <div className={styles.bottomPanel}>
+        <Button
+          variant="fill"
+          borderRadius="r12"
+          size="small"
+          color="dark"
+          iconOnly
+          leftIcon={<Icon name="undo-2" size={16} />}
+          onClick={undo}
+          disabled={points.length === 0}
+        />
 
         <Button
           variant="fill"
           borderRadius="r12"
           size="small"
           color="dark"
+          iconOnly
+          leftIcon={<Icon name="rotateCcw" size={16} />}
+          onClick={reset}
+          disabled={points.length === 0}
+        />
+
+        <Button
+          variant="fill"
+          borderRadius="r12"
+          size="small"
+          color="dark"
+          iconOnly
           leftIcon={<Icon name="save" size={16} />}
           onClick={() => void saveRoute()}
           disabled={isSaving || points.length < 2}
-        >
-          {isSaving ? '저장 중...' : '코스 저장'}
-        </Button>
+        />
       </div>
     </section>
   );

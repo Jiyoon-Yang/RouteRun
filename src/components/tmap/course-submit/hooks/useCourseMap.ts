@@ -35,12 +35,17 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
   const rawDistanceKmRef = useRef<number | null>(null);
   const lastRouteRef = useRef<Pick<SaveRoutePayload, 'pathData' | 'startPoint'> | null>(null);
   const mapRef = useRef<TmapMapLike | null>(null);
+  const isRoundTripRef = useRef(false);
+  const pointsRef = useRef<TmapCoordinate[]>([]);
 
   const setMapInstance = useCallback((map: TmapMapLike) => {
     mapRef.current = map;
   }, []);
 
-  const { clearPolyline, drawPointMarkers, drawRoutePolyline } = useTmapOverlays(mapRef);
+  const { clearPolyline, drawPointMarkers, drawRoutePolyline } = useTmapOverlays(
+    mapRef,
+    isRoundTripRef,
+  );
 
   const { initializeMap } = useTmapMapInitialization({
     drawPointMarkers,
@@ -77,6 +82,16 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
     rawDistanceKmRef.current = null;
     lastRouteRef.current = null;
     clearPolyline();
+  }, [clearPolyline, drawPointMarkers]);
+
+  const reset = useCallback(() => {
+    setPoints([]);
+    setRawDistanceKm(null);
+    setErrorMessage(null);
+    rawDistanceKmRef.current = null;
+    lastRouteRef.current = null;
+    clearPolyline();
+    drawPointMarkers([]);
   }, [clearPolyline, drawPointMarkers]);
 
   const runSaveRoute = useCallback(async () => {
@@ -128,12 +143,20 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
   }, [drawRoutePolyline, isRoundTrip, onSaveRoute, points]);
 
   useEffect(() => {
+    pointsRef.current = points;
+  }, [points]);
+
+  useEffect(() => {
+    isRoundTripRef.current = isRoundTrip;
+    if (pointsRef.current.length > 0) {
+      drawPointMarkers(pointsRef.current);
+    }
     if (!lastRouteRef.current || rawDistanceKmRef.current === null) return;
     const adjusted = Number((rawDistanceKmRef.current * (isRoundTrip ? 2 : 1)).toFixed(2));
     onSaveRoute?.({ totalDistanceKm: adjusted, isRoundTrip, ...lastRouteRef.current });
-    // rawDistanceKmRef and lastRouteRef are refs — they don't need to be listed
+    // pointsRef, rawDistanceKmRef, lastRouteRef are refs — they don't need to be listed
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isRoundTrip]);
+  }, [isRoundTrip, drawPointMarkers]);
 
   const saveRoute = useCallback(() => {
     openModal({
@@ -165,6 +188,7 @@ export function useCourseMap({ onSaveRoute }: UseCourseMapParams = {}) {
     initializeMap,
     addPoint,
     undo,
+    reset,
     saveRoute,
   };
 }

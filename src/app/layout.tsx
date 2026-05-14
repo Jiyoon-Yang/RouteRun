@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     siteName: '루트런',
     locale: 'ko_KR',
     type: 'website',
-    images: [{ url: '/icons/rr-logo.png', alt: '루트런 로고' }],
+    images: [{ url: 'https://routerun.co.kr/icons/rr-logo.png', alt: '루트런 로고' }],
   },
   icons: {
     icon: [

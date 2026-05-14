@@ -25,17 +25,15 @@ import { ROUTES } from '@/commons/constants/url';
 import { Header } from '@/commons/layout/header';
 import { useToast } from '@/commons/providers/toast/toast.provider';
 import type { Route } from '@/commons/types/runroute';
+import { formatDistanceKm as formatCourseDistanceKm } from '@/commons/utils/distance/format';
+import { filterNonemptyImageUrls } from '@/commons/utils/image/filter';
+import { getCourseDescriptionDisplay } from '@/commons/utils/text/display';
 import { TmapCourseDetail } from '@/components/tmap/course-detail';
 
 import { COURSES_DETAIL_COPY as COPY } from './constants/copy';
 import { useCourseDetailLikes } from './hooks/use-course-detail-likes';
 import styles from './styles.module.css';
-import {
-  buildCarouselNavButtonClassNames,
-  filterNonemptyImageUrls,
-  formatCourseDistanceKm,
-  getCourseDescriptionDisplay,
-} from './utils/course-detail-display';
+import { buildCarouselNavButtonClassNames } from './utils/course-detail-display';
 
 type CoursesDetailProps = {
   course: Route;

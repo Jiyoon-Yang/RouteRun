@@ -4,7 +4,7 @@ import { useCallback, useRef } from 'react';
 
 import { getTmapv3Runtime } from '@/commons/utils/tmap/runtime';
 import type { TmapMap, TmapMarker } from '@/commons/utils/tmap/types';
-import { applyPointerCursorToTmapMarker } from '@/components/tmap/utils/apply-pointer-cursor-to-tmap-marker';
+import { applyPointerCursorToTmapMarker } from '@/components/tmap/commons/utils/apply-pointer-cursor-to-tmap-marker';
 
 const INDICATOR_SIZE = 40;
 

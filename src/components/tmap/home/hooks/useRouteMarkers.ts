@@ -20,7 +20,7 @@ import type {
   TmapMarkerCluster,
   TmapV3API,
 } from '@/commons/utils/tmap/types';
-import { applyPointerCursorToTmapMarker } from '@/components/tmap/utils/apply-pointer-cursor-to-tmap-marker';
+import { applyPointerCursorToTmapMarker } from '@/components/tmap/commons/utils/apply-pointer-cursor-to-tmap-marker';
 
 import { syncRouteMarkerDomVisualState } from '../sync-route-marker-dom-visual';
 

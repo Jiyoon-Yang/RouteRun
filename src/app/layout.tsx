@@ -66,7 +66,7 @@ export default async function RootLayout({
       error: userError,
     } = await supabase.auth.getUser();
 
-    if (userError) {
+    if (userError && userError.message !== 'Auth session missing!') {
       console.error('[RootLayout] getUser 실패:', userError.message);
     }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { Icon } from '@/commons/components/icons';
 import { TabButton } from '@/commons/components/tab';
@@ -45,7 +45,6 @@ export function Home() {
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   /** 뷰포트 밖으로 이동해도 선택 코스를 목록·지도에 유지 (조회 결과 우선, 없을 때만 사용) */
   const [selectedRouteSnapshot, setSelectedRouteSnapshot] = useState<Route | null>(null);
-  const [mapMoveSignal, setMapMoveSignal] = useState(0);
   const [visibleRouteViewport, setVisibleRouteViewport] = useState<RouteViewport | null>(null);
   const [frozenVisibleRouteViewport, setFrozenVisibleRouteViewport] =
     useState<RouteViewport | null>(null);
@@ -63,16 +62,13 @@ export function Home() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const { homeToast, handleZoomLimitReached, handleZoomLimitCleared } = useHomeToast({
-    mapMoveSignal,
-    routesLength: routes.length,
-    isLoading,
-    errorMessage,
-  });
-
-  const handleMapDragSettled = useCallback(() => {
-    setMapMoveSignal((previous) => previous + 1);
-  }, []);
+  const { homeToast, isHomeToastFadingOut, handleZoomLimitReached, handleZoomLimitCleared } =
+    useHomeToast({
+      queryViewport: effectiveQueryViewport,
+      routesLength: routes.length,
+      isLoading,
+      errorMessage,
+    });
 
   const handleVisibleRouteViewportChanged = useHomeVisibleRouteViewport(setVisibleRouteViewport);
 
@@ -200,11 +196,19 @@ export function Home() {
             onVisibleViewportChanged={handleVisibleRouteViewportChanged}
             onZoomLimitReached={handleZoomLimitReached}
             onZoomLimitCleared={handleZoomLimitCleared}
-            onDragSettled={handleMapDragSettled}
           />
         </div>
         {homeToast ? (
-          <div className={styles.noCourseToastLayer} aria-live="polite">
+          <div
+            className={[
+              styles.noCourseToastLayer,
+              !isHomeToastFadingOut ? styles.noCourseToastLayerEnter : '',
+              isHomeToastFadingOut ? styles.noCourseToastLayerLeaving : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            aria-live="polite"
+          >
             <div className={styles.noCourseToast}>
               <span className={styles.noCourseToastIcon}>
                 <Icon name="circleAlert" size={16} />

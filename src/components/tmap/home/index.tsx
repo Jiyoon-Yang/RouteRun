@@ -276,6 +276,7 @@ export function TmapHome({
     syncSelectedMarkerVisual: syncSelectedMarkerVisualByHook,
     syncRouteMarkers: syncRouteMarkersByHook,
   } = useRouteMarkers({
+    mapRootRef: rootRef,
     mapRef: mapInstance,
     routesRef,
     routeMarkerMapRef,
@@ -484,6 +485,13 @@ export function TmapHome({
         /* noop */
       }
       isPrimaryPointerDownOnMapRef.current = false;
+      // 마우스 팬은 dragend가 없고 bounds_changed만 올 수 있어 플래그가 남으면
+      // scheduleViewportReport(220ms)가 억제되고 무코스 토스트까지 막힌다.
+      isMapInteractingRef.current = false;
+      if (interactionWatchdogTimerRef.current !== null) {
+        window.clearTimeout(interactionWatchdogTimerRef.current);
+        interactionWatchdogTimerRef.current = null;
+      }
       const map = mapInstance.current;
       if (!map) return;
       syncRouteMarkersDisplayForZoomByHook(map);
@@ -494,6 +502,8 @@ export function TmapHome({
 
     const onPointerDown = (event: PointerEvent) => {
       if (event.pointerType === 'mouse' && event.button !== 0) return;
+      // 지도 캔버스(팬)에서만 캡처 — 마커·오버레이 클릭은 click/pointerup이 타겟까지 전달되게 한다.
+      if (!(event.target instanceof HTMLCanvasElement)) return;
       activePointerId = event.pointerId;
       isPrimaryPointerDownOnMapRef.current = true;
       try {

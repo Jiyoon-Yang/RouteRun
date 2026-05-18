@@ -5,8 +5,15 @@
 import type { MarkerVisualState } from '@/commons/utils/marker/route-marker';
 import type { TmapMarker } from '@/commons/utils/tmap/types';
 
-export function syncRouteMarkerDomVisualState(marker: TmapMarker, state: MarkerVisualState): void {
+export function syncRouteMarkerDomVisualState(
+  marker: TmapMarker,
+  state: MarkerVisualState,
+  routeId?: string,
+): void {
   const root = marker.getElement?.();
   if (!(root instanceof HTMLElement)) return;
   root.setAttribute('data-route-marker-visual', state);
+  if (routeId) {
+    root.setAttribute('data-route-marker-id', routeId);
+  }
 }

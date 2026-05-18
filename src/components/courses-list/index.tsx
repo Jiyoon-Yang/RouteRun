@@ -1,8 +1,10 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 import { Card } from '@/commons/components/card';
+import { ROUTES } from '@/commons/constants/url';
 import type { CourseCardView } from '@/commons/types/routerun';
 
 import { CourseListSortDropdown } from './course-list-sort-dropdown';
@@ -71,7 +73,7 @@ export function CoursesList({
     dragging: styles.dragging,
   });
 
-  const handleCardKeyDown = useCourseCardKeyboardSelect(onCourseSelect);
+  const handleCardKeyDown = useCourseCardKeyboardSelect();
 
   return (
     <div ref={sheetRef} className={sheetRootClassName}>
@@ -95,13 +97,13 @@ export function CoursesList({
       <div ref={cardListRef} className={styles.cardList}>
         {isLoading && cards.length === 0 ? <CoursesListSkeleton /> : null}
         {displayCards.map((card) => (
-          <div
+          <Link
             key={card.courseId}
-            role="button"
-            tabIndex={0}
+            href={ROUTES.COURSES.DETAIL(card.courseId)}
+            className={styles.cardLink}
             aria-label={`${card.title} 코스 선택`}
             onClick={() => onCourseSelect?.(card.courseId)}
-            onKeyDown={(event) => handleCardKeyDown(event, card.courseId)}
+            onKeyDown={handleCardKeyDown}
           >
             <Card
               className={styles.cardWidth}
@@ -115,7 +117,7 @@ export function CoursesList({
               thumbnailUrl={card.thumbnailUrl}
               readonlyLike={true}
             />
-          </div>
+          </Link>
         ))}
       </div>
     </div>

@@ -1,12 +1,11 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Icon } from '@/commons/components/icons';
 import { TabButton } from '@/commons/components/tab';
 import { TAB_ITEMS } from '@/commons/constants/home';
-import { ROUTES } from '@/commons/constants/url';
 import { useCourseLikes } from '@/commons/hooks/useCourseLikes';
 import { Header } from '@/commons/layout/header';
 import { Sidebar } from '@/commons/layout/sidebar';
@@ -143,6 +142,31 @@ export function Home() {
     setOpenPeekFromCollapsedSignal,
   });
 
+  const handleCourseSelect = useCallback(
+    (courseId: string) => {
+      setSelectedCourseId(courseId);
+      snapshotHomeQueryBeforeDetail(courseId);
+    },
+    [snapshotHomeQueryBeforeDetail],
+  );
+
+  const handleSheetPositionChange = useCallback(
+    ({
+      state,
+      visibleHeight,
+      visualVisibleHeight,
+    }: {
+      state: 'collapsed' | 'peek' | 'expanded';
+      visibleHeight: number;
+      visualVisibleHeight: number;
+    }) => {
+      setIsSheetExpanded(state === 'expanded');
+      setSheetVisibleHeight(visibleHeight);
+      setSheetVisualVisibleHeight(visualVisibleHeight);
+    },
+    [],
+  );
+
   return (
     <section className={styles.container}>
       <OnboardingModal />
@@ -224,16 +248,8 @@ export function Home() {
           isCourseLiked={isCourseLiked}
           getCourseLikeCount={getCourseLikeCount}
           openPeekFromCollapsedSignal={openPeekFromCollapsedSignal}
-          onCourseSelect={(courseId) => {
-            setSelectedCourseId(courseId);
-            snapshotHomeQueryBeforeDetail(courseId);
-            router.push(ROUTES.COURSES.DETAIL(courseId));
-          }}
-          onSheetPositionChange={({ state, visibleHeight, visualVisibleHeight }) => {
-            setIsSheetExpanded(state === 'expanded');
-            setSheetVisibleHeight(visibleHeight);
-            setSheetVisualVisibleHeight(visualVisibleHeight);
-          }}
+          onCourseSelect={handleCourseSelect}
+          onSheetPositionChange={handleSheetPositionChange}
         />
       </div>
     </section>

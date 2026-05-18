@@ -2,7 +2,7 @@
  * 홈 지도의 코스 마커/클러스터/선택 상태 동기화를 담당하는 훅.
  */
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import type { Route } from '@/commons/types/routerun';
 import { getDistanceCategory, type DistanceCategory } from '@/commons/utils/distance/category';
@@ -11,7 +11,7 @@ import {
   type MarkerVisualState,
 } from '@/commons/utils/marker/route-marker';
 import { resolveRouteStartForMapMarker } from '@/commons/utils/route-marker-position';
-import { bindSingleEvent } from '@/commons/utils/tmap/events';
+import { bindTmapMarkerListener } from '@/commons/utils/tmap/events';
 import type {
   RouteMarkerEntry,
   TmapLatLng,
@@ -31,6 +31,7 @@ const ROUTE_MARKER_INDIVIDUAL_ZOOM_AT_OR_ABOVE = ROUTE_MARKER_CLUSTER_ZOOM_AT_OR
 const MARKER_VISIBILITY_DEBOUNCE_MS = 140;
 
 type UseRouteMarkersParams = {
+  mapRootRef?: MutableRefObject<HTMLDivElement | null>;
   mapRef: MutableRefObject<TmapMap | null>;
   routesRef: MutableRefObject<Route[]>;
   routeMarkerMapRef: MutableRefObject<Map<string, RouteMarkerEntry>>;
@@ -69,6 +70,7 @@ function getRouteDistanceCategory(route: Route): DistanceCategory {
 }
 
 export function useRouteMarkers({
+  mapRootRef,
   mapRef,
   routesRef,
   routeMarkerMapRef,
@@ -98,6 +100,7 @@ export function useRouteMarkers({
     (courseId: string | null, shouldFocusSelectedCourse: boolean) => void
   >(() => {});
   const routeMarkerOverlaySignatureRef = useRef('');
+  const lastMarkerClickAtRef = useRef<{ routeId: string; at: number } | null>(null);
 
   const isTmapRouteMarkerClusterLoaded = useCallback((): boolean => {
     return typeof getTmapv3()?.extension?.MarkerCluster === 'function';
@@ -371,11 +374,76 @@ export function useRouteMarkers({
     [markerVisibilityTimerRef, syncMarkerVisibilityByViewport],
   );
 
+  const handleRouteMarkerClick = useCallback(
+    (routeId: string) => {
+      const now = Date.now();
+      const last = lastMarkerClickAtRef.current;
+      if (last?.routeId === routeId && now - last.at < 350) return;
+      lastMarkerClickAtRef.current = { routeId, at: now };
+
+      const route = routesRef.current.find((item) => item.id === routeId);
+      if (!route) return;
+      onCourseMarkerClick?.(routeId, route);
+    },
+    [onCourseMarkerClick, routesRef],
+  );
+
+  // SDK click이 안 오는 런타임용 — map_div 밖 오버레이·캡처 간섭 시에도 동작
+  useEffect(() => {
+    const root = mapRootRef?.current;
+    if (!root || !onCourseMarkerClick) return undefined;
+
+    const handleDelegatedClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('button')) return;
+
+      const markerHost = target.closest('[data-route-marker-id]');
+      if (!markerHost) return;
+      const routeId = markerHost.getAttribute('data-route-marker-id');
+      if (!routeId) return;
+
+      event.stopPropagation();
+      handleRouteMarkerClick(routeId);
+    };
+
+    root.addEventListener('click', handleDelegatedClick, true);
+    return () => {
+      root.removeEventListener('click', handleDelegatedClick, true);
+    };
+  }, [handleRouteMarkerClick, mapRootRef, onCourseMarkerClick]);
+
   const addMarkerListener = useCallback(
     (marker: TmapMarker, eventName: 'click' | 'mouseover' | 'mouseout', callback: () => void) => {
-      bindSingleEvent(marker, eventName, callback);
+      bindTmapMarkerListener(marker, getTmapv3, eventName, callback);
     },
-    [],
+    [getTmapv3],
+  );
+
+  const bindMarkerDomClickFallback = useCallback(
+    (marker: TmapMarker, routeId: string) => {
+      const bind = (): void => {
+        const rootElement = marker.getElement?.();
+        if (!(rootElement instanceof HTMLElement)) return;
+
+        rootElement.setAttribute('data-route-marker-id', routeId);
+        if (rootElement.dataset.routeMarkerClickBound === '1') return;
+        rootElement.dataset.routeMarkerClickBound = '1';
+
+        rootElement.addEventListener(
+          'click',
+          (event) => {
+            event.stopPropagation();
+            handleRouteMarkerClick(routeId);
+          },
+          true,
+        );
+      };
+
+      bind();
+      window.requestAnimationFrame(bind);
+    },
+    [handleRouteMarkerClick],
   );
 
   const bindMarkerDomHoverFallback = useCallback(
@@ -442,19 +510,16 @@ export function useRouteMarkers({
         routeVisualStateHandlerRef.current(routeId, 'default');
       });
       addMarkerListener(marker, 'click', () => {
-        const route = routesRef.current.find((item) => item.id === routeId);
-        if (!route) return;
-        // 선택 상태의 단일 소스를 부모 selectedCourseId로 유지해
-        // 클릭 1회당 선택 동기화/폴리라인 렌더가 중복 실행되지 않도록 한다.
-        onCourseMarkerClick?.(routeId, route);
+        handleRouteMarkerClick(routeId);
       });
+      bindMarkerDomClickFallback(marker, routeId);
       bindMarkerDomHoverFallback(marker, routeId);
     },
     [
       addMarkerListener,
+      bindMarkerDomClickFallback,
       bindMarkerDomHoverFallback,
-      onCourseMarkerClick,
-      routesRef,
+      handleRouteMarkerClick,
       selectedRouteIdRef,
       setMarkerHoverCursor,
     ],
@@ -469,7 +534,7 @@ export function useRouteMarkers({
       const icon = getRunningCourseMarkerIconUrlForCategory(markerEntry.category, state);
       if (typeof markerEntry.marker.setIcon === 'function') {
         markerEntry.marker.setIcon(icon);
-        syncRouteMarkerDomVisualState(markerEntry.marker, state);
+        syncRouteMarkerDomVisualState(markerEntry.marker, state, courseId);
         return;
       }
 
@@ -497,7 +562,7 @@ export function useRouteMarkers({
         outOfViewportSinceMs: markerEntry.outOfViewportSinceMs,
       });
       attachRouteMarkerListeners(nextMarker, courseId);
-      syncRouteMarkerDomVisualState(nextMarker, state);
+      syncRouteMarkerDomVisualState(nextMarker, state, courseId);
       routeMarkerClusterGenerationRef.current += 1;
       syncRouteMarkersDisplayForZoom(map);
     },
@@ -588,7 +653,7 @@ export function useRouteMarkers({
         if (stateChanged || categoryChanged) {
           existing.visualState = state;
           existing.marker.setIcon?.(getRunningCourseMarkerIconUrlForCategory(category, state));
-          syncRouteMarkerDomVisualState(existing.marker, state);
+          syncRouteMarkerDomVisualState(existing.marker, state, route.id);
         }
       });
 
@@ -619,7 +684,7 @@ export function useRouteMarkers({
             outOfViewportSinceMs: null,
           });
           attachRouteMarkerListeners(marker, route.id);
-          syncRouteMarkerDomVisualState(marker, state);
+          syncRouteMarkerDomVisualState(marker, state, route.id);
         });
       }
 

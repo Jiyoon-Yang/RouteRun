@@ -24,6 +24,7 @@ import { Button } from '@/commons/components/button';
 import { Icon } from '@/commons/components/icons';
 import Input from '@/commons/components/input';
 import { Label } from '@/commons/components/input/label';
+import { Spinner } from '@/commons/components/spinner';
 import Tooltip from '@/commons/components/tooltip';
 import { Header } from '@/commons/layout/header';
 import { useModal } from '@/commons/providers/modal/modal.provider';
@@ -83,6 +84,7 @@ export default function CourseSubmit({ mode, courseId, initialData }: CourseSubm
     removeImageAt,
     handleSubmit,
     isSubmitEnabled,
+    isSubmitting,
   } = useCourseSubmit({ mode, courseId, initialData });
 
   const totalImageCount = existingImageUrls.length + images.length;
@@ -246,11 +248,11 @@ export default function CourseSubmit({ mode, courseId, initialData }: CourseSubm
             borderRadius="r12"
             size="medium"
             color="dark"
-            disabled={!isSubmitEnabled}
+            disabled={!isSubmitEnabled || isSubmitting}
             className={styles.submitButton}
             onClick={openSubmitConfirmModal}
           >
-            {submitLabel}
+            {isSubmitting ? <Spinner size="sm" /> : submitLabel}
           </Button>
         </div>
       </div>

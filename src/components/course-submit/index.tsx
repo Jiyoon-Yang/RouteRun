@@ -252,10 +252,12 @@ export default function CourseSubmit({ mode, courseId, initialData }: CourseSubm
             className={styles.submitButton}
             onClick={openSubmitConfirmModal}
           >
-            {isSubmitting ? <Spinner size="sm" /> : submitLabel}
+            {submitLabel}
           </Button>
         </div>
       </div>
+
+      {isSubmitting && <Spinner overlay size="lg" />}
     </div>
   );
 }

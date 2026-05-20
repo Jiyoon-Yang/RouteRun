@@ -14,12 +14,10 @@ import {
   dedupeConsecutiveCoordinates,
   extractPathCoordinates,
   extractSavedRoutePoints,
-  type LatLng,
   sanitizeDomIdSegment,
 } from '@/commons/utils/route/path-parser';
 import { bindMapEvents } from '@/commons/utils/tmap/events';
 import { getTmapv3Runtime } from '@/commons/utils/tmap/runtime';
-import { getPedestrianRoute } from '@/repositories/map.repository';
 
 import styles from './styles.module.css';
 
@@ -121,58 +119,15 @@ export function TmapCourseDetail({ course, mapLabel }: TmapCourseDetailProps) {
   /** 스타일 로드 후 폴리라인·마커를 그린다(No style loaded 방지). */
   const [mapReady, setMapReady] = useState(false);
 
-  /** 경유지 2개 이상일 때 Tmap 보행자 API로 받은 라인 (실패·언마운트 시 null) */
-  const [pedestrianLineCoords, setPedestrianLineCoords] = useState<LatLng[] | null>(null);
-
   const savedRoutePoints = useMemo(
     () => extractSavedRoutePoints(course.path_data),
     [course.path_data],
   );
 
-  const pathCoordinates = useMemo(() => {
+  const lineCoordinates = useMemo(() => {
     const parsed = extractPathCoordinates(course.path_data, course.id);
     return dedupeConsecutiveCoordinates(parsed);
   }, [course.id, course.path_data]);
-
-  useEffect(() => {
-    if (savedRoutePoints.length < 2) {
-      setPedestrianLineCoords(null);
-      return;
-    }
-
-    const controller = new AbortController();
-    let cancelled = false;
-
-    const coordsForApi = savedRoutePoints.map((p) => ({ lat: p.lat, lng: p.lng }));
-
-    getPedestrianRoute(coordsForApi, controller.signal)
-      .then((result) => {
-        if (cancelled) return;
-        const next = dedupeConsecutiveCoordinates(
-          result.path
-            .map((c) => ({ lat: Number(c.lat), lng: Number(c.lng) }))
-            .filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng)),
-        );
-        setPedestrianLineCoords(next.length >= 2 ? next : null);
-      })
-      .catch((error) => {
-        if (cancelled || controller.signal.aborted) return;
-        console.warn(`${LOG} 보행자 경로 재계산 실패, 저장 path 사용:`, error);
-        setPedestrianLineCoords(null);
-      });
-
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
-  }, [course.id, savedRoutePoints]);
-
-  const lineCoordinates = useMemo(() => {
-    if (pedestrianLineCoords && pedestrianLineCoords.length >= 2) {
-      return pedestrianLineCoords;
-    }
-    return pathCoordinates;
-  }, [pathCoordinates, pedestrianLineCoords]);
 
   const waypointMarkerModels = useMemo(
     () =>

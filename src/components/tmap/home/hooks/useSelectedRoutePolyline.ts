@@ -1,5 +1,5 @@
 /**
- * 선택 코스 폴리라인의 로드/렌더/중복 요청 취소를 담당하는 훅.
+ * 선택 코스 폴리라인의 로드/렌더/정리를 담당하는 훅.
  */
 
 import { useCallback, useRef } from 'react';
@@ -195,7 +195,12 @@ export function useSelectedRoutePolyline({
 
       const liveMap = mapRef.current;
       const liveTmap = getTmapv3();
-      if (!liveMap || !liveTmap || lineCoordinates.length < 2) return;
+      if (lineCoordinates.length < 2) {
+        selectedRoutePolylineRef.current?.setMap(null);
+        selectedRoutePolylineRef.current = null;
+        return;
+      }
+      if (!liveMap || !liveTmap) return;
 
       const latLngPath = lineCoordinates.map(
         (coordinate) => new liveTmap.LatLng(coordinate.lat, coordinate.lng),

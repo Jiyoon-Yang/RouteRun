@@ -1,5 +1,5 @@
 /**
- * 선택 코스 폴리라인의 로드/렌더/중복 요청 취소를 담당하는 훅.
+ * 선택 코스 폴리라인의 로드/렌더/정리를 담당하는 훅.
  */
 
 import { useCallback, useRef } from 'react';
@@ -8,10 +8,8 @@ import type { Route } from '@/commons/types/routerun';
 import {
   dedupeConsecutiveCoordinates,
   extractPathCoordinates,
-  extractSavedRoutePoints,
 } from '@/commons/utils/route/path-parser';
 import type { TmapMap, TmapPolyline, TmapV3API } from '@/commons/utils/tmap/types';
-import { getPedestrianRoute } from '@/repositories/map.repository';
 
 import type { MutableRefObject } from 'react';
 
@@ -26,17 +24,6 @@ const ROUTE_BOUNDS_INFLATE_RATIO = 1.42;
 const ROUTE_BOUNDS_MIN_SPAN_LAT = 0.0088;
 const ROUTE_BOUNDS_MIN_SPAN_LNG = 0.0112;
 const ROUTE_POLYLINE_FIT_MAX_ZOOM_LEVEL = 15;
-
-function areLineCoordinatesSame(
-  a: Array<{ lat: number; lng: number }>,
-  b: Array<{ lat: number; lng: number }>,
-): boolean {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i += 1) {
-    if (a[i]?.lat !== b[i]?.lat || a[i]?.lng !== b[i]?.lng) return false;
-  }
-  return true;
-}
 
 function padRouteBoundsForHomeFit(
   minLat: number,
@@ -144,13 +131,10 @@ export function useSelectedRoutePolyline({
 }: UseSelectedRoutePolylineParams) {
   const selectedRoutePolylineRef = useRef<TmapPolyline | null>(null);
   const routePolylineGenerationRef = useRef(0);
-  const routePolylineAbortRef = useRef<AbortController | null>(null);
   const selectedPolylineRetryTimerRef = useRef<number | null>(null);
 
   const clearSelectedRoutePolyline = useCallback(() => {
     routePolylineGenerationRef.current += 1;
-    routePolylineAbortRef.current?.abort();
-    routePolylineAbortRef.current = null;
     if (selectedPolylineRetryTimerRef.current !== null) {
       window.clearTimeout(selectedPolylineRetryTimerRef.current);
       selectedPolylineRetryTimerRef.current = null;
@@ -167,9 +151,6 @@ export function useSelectedRoutePolyline({
       }
       routePolylineGenerationRef.current += 1;
       const generation = routePolylineGenerationRef.current;
-
-      routePolylineAbortRef.current?.abort();
-      routePolylineAbortRef.current = null;
 
       if (!courseId) {
         selectedRoutePolylineRef.current?.setMap(null);
@@ -202,90 +183,60 @@ export function useSelectedRoutePolyline({
         return;
       }
 
-      const fallbackLine = dedupeConsecutiveCoordinates(
+      const lineCoordinates = dedupeConsecutiveCoordinates(
         extractPathCoordinates(route.path_data, route.id),
       );
-      const savedPoints = extractSavedRoutePoints(route.path_data);
-
-      const abortController = new AbortController();
-      routePolylineAbortRef.current = abortController;
 
       const isStale = (): boolean =>
         generation !== routePolylineGenerationRef.current ||
         selectedRouteIdRef.current !== courseId;
 
-      const renderSelectedRoutePolyline = (
-        lineCoordinates: Array<{ lat: number; lng: number }>,
-      ): boolean => {
-        if (isStale()) return false;
+      if (isStale()) return;
 
-        const liveMap = mapRef.current;
-        const liveTmap = getTmapv3();
-        if (!liveMap || !liveTmap || lineCoordinates.length < 2) return false;
+      const liveMap = mapRef.current;
+      const liveTmap = getTmapv3();
+      if (lineCoordinates.length < 2) {
+        selectedRoutePolylineRef.current?.setMap(null);
+        selectedRoutePolylineRef.current = null;
+        return;
+      }
+      if (!liveMap || !liveTmap) return;
 
-        const latLngPath = lineCoordinates.map(
-          (coordinate) => new liveTmap.LatLng(coordinate.lat, coordinate.lng),
-        );
-        const previousPolyline = selectedRoutePolylineRef.current;
-        const nextPolyline = new liveTmap.Polyline({
-          map: liveMap,
-          path: latLngPath,
-          strokeColor: '#2F80FF',
-          strokeWeight: 6,
-          strokeOpacity: 0.95,
-        });
-        selectedRoutePolylineRef.current = nextPolyline;
-        previousPolyline?.setMap(null);
+      const latLngPath = lineCoordinates.map(
+        (coordinate) => new liveTmap.LatLng(coordinate.lat, coordinate.lng),
+      );
+      const previousPolyline = selectedRoutePolylineRef.current;
+      const nextPolyline = new liveTmap.Polyline({
+        map: liveMap,
+        path: latLngPath,
+        strokeColor: '#2F80FF',
+        strokeWeight: 6,
+        strokeOpacity: 0.95,
+      });
+      selectedRoutePolylineRef.current = nextPolyline;
+      previousPolyline?.setMap(null);
 
-        if (typeof liveMap.fitBounds !== 'function') return true;
+      if (typeof liveMap.fitBounds !== 'function') return;
 
-        const latValues = lineCoordinates.map((c) => c.lat);
-        const lngValues = lineCoordinates.map((c) => c.lng);
-        const rawMinLat = Math.min(...latValues);
-        const rawMaxLat = Math.max(...latValues);
-        const rawMinLng = Math.min(...lngValues);
-        const rawMaxLng = Math.max(...lngValues);
-        fitRouteInVisibleArea({
-          map: liveMap,
-          Tmapv3: liveTmap,
-          mapContainerId,
-          bottomSheetVisibleHeight: bottomSheetVisibleHeightRef.current,
-          minLat: rawMinLat,
-          maxLat: rawMaxLat,
-          minLng: rawMinLng,
-          maxLng: rawMaxLng,
-        });
+      const latValues = lineCoordinates.map((c) => c.lat);
+      const lngValues = lineCoordinates.map((c) => c.lng);
+      const rawMinLat = Math.min(...latValues);
+      const rawMaxLat = Math.max(...latValues);
+      const rawMinLng = Math.min(...lngValues);
+      const rawMaxLng = Math.max(...lngValues);
+      fitRouteInVisibleArea({
+        map: liveMap,
+        Tmapv3: liveTmap,
+        mapContainerId,
+        bottomSheetVisibleHeight: bottomSheetVisibleHeightRef.current,
+        minLat: rawMinLat,
+        maxLat: rawMaxLat,
+        minLng: rawMinLng,
+        maxLng: rawMaxLng,
+      });
 
-        clampRoutePolylineFitZoom(liveMap);
-        clampHomeMapZoom(liveMap);
-        return true;
-      };
-
-      void (async () => {
-        const initialLineCoordinates = fallbackLine.length >= 2 ? fallbackLine : savedPoints;
-
-        // API 재계산이 늦거나 실패해도 마커 클릭 즉시 코스 전체 bounds를 먼저 맞춘다.
-        renderSelectedRoutePolyline(initialLineCoordinates);
-
-        if (savedPoints.length < 2) return;
-
-        try {
-          const coordsForApi = savedPoints.map((p) => ({ lat: p.lat, lng: p.lng }));
-          const result = await getPedestrianRoute(coordsForApi, abortController.signal);
-          const next = dedupeConsecutiveCoordinates(
-            result.path
-              .map((c) => ({ lat: Number(c.lat), lng: Number(c.lng) }))
-              .filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng)),
-          );
-          if (next.length >= 2 && !areLineCoordinatesSame(next, initialLineCoordinates)) {
-            renderSelectedRoutePolyline(next);
-          }
-        } catch (error) {
-          if (abortController.signal.aborted) return;
-          // eslint-disable-next-line no-console
-          console.warn('[TmapHome] 보행자 경로 재계산 실패, 저장 좌표로 코스 표시:', error);
-        }
-      })();
+      clampRoutePolylineFitZoom(liveMap);
+      clampHomeMapZoom(liveMap);
     },
     [
       bottomSheetVisibleHeightRef,

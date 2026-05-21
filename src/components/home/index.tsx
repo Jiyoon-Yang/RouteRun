@@ -212,7 +212,7 @@ export function Home() {
             bottomSheetVisibleHeight={sheetVisibleHeight}
             bottomSheetVisualVisibleHeight={sheetVisualVisibleHeight}
             isBottomSheetExpanded={isSheetExpanded}
-            routes={filteredRoutes}
+            routes={routesForCourseList}
             initialViewport={restoredInitialViewport}
             selectedCourseId={selectedCourseId}
             markerClickRecenterToken={markerClickRecenterToken}

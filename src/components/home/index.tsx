@@ -178,6 +178,15 @@ export function Home() {
 
     if (isTrackTabOnly) return trackItems;
     if (selectedCategories.size > 0 && !isTrackTabOnly) return courseItems;
+
+    // 트랙이 선택된 경우 코스 목록보다 앞에 배치
+    if (selectedTrackId && trackItems.length > 0) {
+      const first = trackItems[0];
+      if (first.itemType === 'track' && first.data.isSelected) {
+        return [first, ...courseItems, ...trackItems.slice(1)];
+      }
+    }
+
     return [...courseItems, ...trackItems];
   }, [courseCards, tracks, isTrackTabOnly, selectedCategories, selectedTrackId]);
 

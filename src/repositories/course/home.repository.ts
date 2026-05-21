@@ -21,6 +21,9 @@ type RouteRow = {
 const ROUTE_SELECT =
   'id, user_id, title, description, distance_meters, path_data, start_lat, start_lng, start_address_region, image_urls, likes_count, is_round_trip, created_at';
 
+// 화면 모서리·바텀시트 인접 코스를 미리 받아오기 위한 가시 뷰포트 확장 비율
+const VIEWPORT_PADDING_RATIO = 0.3;
+
 function toRoute(row: RouteRow): Route | null {
   if (
     !row.id ||
@@ -68,10 +71,18 @@ export async function getHomeRoutes(): Promise<Route[]> {
 
 export async function getHomeRoutesByViewport(viewport: RouteViewport): Promise<Route[]> {
   const supabase = createClient();
-  const minLat = Math.min(viewport.northEastLat, viewport.southWestLat);
-  const maxLat = Math.max(viewport.northEastLat, viewport.southWestLat);
-  const minLng = Math.min(viewport.northEastLng, viewport.southWestLng);
-  const maxLng = Math.max(viewport.northEastLng, viewport.southWestLng);
+  const rawMinLat = Math.min(viewport.northEastLat, viewport.southWestLat);
+  const rawMaxLat = Math.max(viewport.northEastLat, viewport.southWestLat);
+  const rawMinLng = Math.min(viewport.northEastLng, viewport.southWestLng);
+  const rawMaxLng = Math.max(viewport.northEastLng, viewport.southWestLng);
+
+  const latPadding = (rawMaxLat - rawMinLat) * VIEWPORT_PADDING_RATIO;
+  const lngPadding = (rawMaxLng - rawMinLng) * VIEWPORT_PADDING_RATIO;
+
+  const minLat = rawMinLat - latPadding;
+  const maxLat = rawMaxLat + latPadding;
+  const minLng = rawMinLng - lngPadding;
+  const maxLng = rawMaxLng + lngPadding;
 
   const { data, error } = await supabase
     .from('routes')

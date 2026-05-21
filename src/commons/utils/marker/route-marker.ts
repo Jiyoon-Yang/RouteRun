@@ -13,6 +13,7 @@ const CATEGORY_TO_ICON_PATH: Record<DistanceCategory, string> = {
   BETWEEN_3_AND_5: '/assets/icons/courses-marker/marker_green.png',
   BETWEEN_5_AND_10: '/assets/icons/courses-marker/marker_red.png',
   OVER_10: '/assets/icons/courses-marker/marker_orange.png',
+  TRACK: '/assets/icons/courses-marker/marker_gray.png',
 };
 
 /** 원본 PNG(144×200) 알파 픽셀 기준 핀 꼭짓점 좌표 */

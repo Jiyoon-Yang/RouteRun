@@ -1,0 +1,196 @@
+.root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+}
+
+.map canvas {
+  cursor: default !important;
+}
+
+/* ── 우측 상단 컨트롤 버튼 그룹 ── */
+
+.topRightControls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 5;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.controlButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #f3f3f3;
+  border: none;
+  cursor: pointer;
+  color: #0a0a0a;
+  transition: background 120ms;
+}
+
+.controlButton:hover:not(:disabled) {
+  background: #e8e8e8;
+}
+
+.controlButton:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.controlButtonLabel {
+  font-size: 10px;
+  line-height: 1;
+  color: #0a0a0a;
+  white-space: nowrap;
+}
+
+.locationButton {
+  position: absolute;
+  left: 12px;
+  bottom: calc(76px + 12px);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.75);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  color: #0a0a0a;
+  transition: background 120ms;
+}
+
+.locationButton:hover {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* ── 하단 바 ── */
+
+.bottomBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  display: flex;
+  align-items: stretch;
+  background: #fafafa;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.08);
+  z-index: 5;
+}
+
+.section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 17px 4px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #7d7d7d;
+  white-space: nowrap;
+}
+
+.divider {
+  width: 1px;
+  height: 48px;
+  align-self: center;
+  background: #e4e4e4;
+  flex-shrink: 0;
+}
+
+/* ── 거리 입력 ── */
+
+.distanceInput {
+  width: 80px;
+  border: none;
+  border-bottom: 1px solid #d1d5db;
+  background: transparent;
+  font-size: 16px;
+  font-weight: 600;
+  color: #696969;
+  text-align: center;
+  outline: none;
+  padding: 0 4px;
+}
+
+.distanceInput::placeholder {
+  color: #c4c4c4;
+}
+
+.distanceInput::-webkit-outer-spin-button,
+.distanceInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ── 트랙 저장 버튼 ── */
+
+.saveSection {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.saveButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  height: 36px;
+  border-radius: 7px;
+  border: 1px solid #b2b2b2;
+  background: #e4e4e4;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b2b2b2;
+  cursor: default;
+  white-space: nowrap;
+  transition:
+    background 120ms,
+    border-color 120ms,
+    color 120ms;
+}
+
+.saveButtonActive {
+  border-color: #147738;
+  background: #16833d;
+  color: #fafafa;
+  cursor: pointer;
+}
+
+.saveButtonActive:hover {
+  background: #147738;
+}

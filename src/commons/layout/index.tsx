@@ -23,8 +23,8 @@ import type { ReactNode } from 'react';
 
 type LayoutProps = {
   children: ReactNode;
-  /** 서버 레이아웃에서 조회한 게스트 코스 작성 여부(1건 이상). 비게스트·미로그인은 false로 두면 된다. */
-  hasWrittenCourse?: boolean;
+  /** 서버 레이아웃에서 조회한 게스트 코스·트랙 작성 여부(합산 1건 이상). 비게스트·미로그인은 false로 두면 된다. */
+  hasWrittenItem?: boolean;
 };
 
 function navigationActiveHref(pathname: string): string {
@@ -32,7 +32,7 @@ function navigationActiveHref(pathname: string): string {
   return pathname;
 }
 
-export function Layout({ children, hasWrittenCourse = false }: LayoutProps) {
+export function Layout({ children, hasWrittenItem = false }: LayoutProps) {
   const pathname = usePathname();
   const showNavigationBar =
     (NAVIGATION_BAR_ROUTES as readonly string[]).includes(pathname) ||
@@ -46,7 +46,7 @@ export function Layout({ children, hasWrittenCourse = false }: LayoutProps) {
           <div className={styles.bottom}>
             <NavigationBar
               activeHref={navigationActiveHref(pathname)}
-              hasWrittenCourse={hasWrittenCourse}
+              hasWrittenItem={hasWrittenItem}
             />
           </div>
         )}

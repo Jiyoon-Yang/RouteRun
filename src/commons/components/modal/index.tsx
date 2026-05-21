@@ -131,9 +131,9 @@ export function Modal(props: ModalProps) {
               size="medium"
               color="dark"
               className={styles.actionButton}
-              onClick={onSecondary}
+              onClick={onPrimary}
             >
-              {secondaryText}
+              {primaryText}
             </Button>
             <Button
               variant="outline"
@@ -141,9 +141,9 @@ export function Modal(props: ModalProps) {
               size="medium"
               color="dark"
               className={styles.actionButton}
-              onClick={onPrimary}
+              onClick={onSecondary}
             >
-              {primaryText}
+              {secondaryText}
             </Button>
           </>
         ) : (

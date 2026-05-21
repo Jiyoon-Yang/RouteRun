@@ -45,16 +45,16 @@ export function useGuestGuard() {
   );
 
   /**
-   * 코스 작성/등록 진입용 가드.
-   * - 게스트이면서 이미 코스를 작성한 경우: 제한 모달
+   * 코스/트랙 등록 진입용 가드.
+   * - 게스트이면서 이미 코스·트랙을 1개 이상 작성한 경우: 제한 모달
    * - 그 외(정식 회원이거나, 게스트이지만 아직 미작성): `onPass` 실행
    */
-  const requireFullAccountForCourse = useCallback(
-    (hasWrittenCourse: boolean, onPass: () => void) => {
+  const requireFullAccountForItem = useCallback(
+    (hasWrittenItem: boolean, onPass: () => void) => {
       if (isLoading) {
         return;
       }
-      if (isAnonymous && hasWrittenCourse) {
+      if (isAnonymous && hasWrittenItem) {
         openModal({
           type: 'alert',
           title: MODAL_TITLE_COURSE_ONCE,
@@ -69,6 +69,6 @@ export function useGuestGuard() {
 
   return {
     requireFullAccountForProfile,
-    requireFullAccountForCourse,
+    requireFullAccountForItem,
   };
 }

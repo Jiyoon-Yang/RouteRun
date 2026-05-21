@@ -5,6 +5,7 @@ import type { MypagePagePayload } from '@/commons/types/mypage';
 import { createClient } from '@/lib/supabase/server';
 import * as userRepository from '@/repositories/user.repository';
 import * as courseService from '@/services/course/courseService';
+import * as trackService from '@/services/track/trackService';
 
 import { validateNickname } from './userValidation';
 
@@ -22,9 +23,10 @@ export async function getMypagePageData(
 ): Promise<MypagePagePayload> {
   const supabase = createClient();
 
-  const [profileResult, routeLists] = await Promise.all([
+  const [profileResult, routeLists, trackLists] = await Promise.all([
     userRepository.getUserProfileById(supabase, userId),
     courseService.fetchMypageRouteLists(supabase, userId),
+    trackService.fetchMypageTrackLists(supabase, userId),
   ]);
 
   if (profileResult.error) {
@@ -40,6 +42,8 @@ export async function getMypagePageData(
     },
     myRoutes: routeLists.myRoutes,
     likedRoutes: routeLists.likedRoutes,
+    myTracks: trackLists.myTracks,
+    likedTracks: trackLists.likedTracks,
   };
 }
 

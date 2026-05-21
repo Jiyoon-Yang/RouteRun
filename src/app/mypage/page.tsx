@@ -21,13 +21,22 @@ export default async function MypagePage() {
   const shortName = typeof meta?.name === 'string' ? meta.name : null;
   const fallbackDisplayName = fullName ?? shortName ?? user.email ?? '러너';
 
-  const { profile, myRoutes, likedRoutes } = await getMypagePageData(user.id, {
-    fallbackDisplayName,
-  });
+  const { profile, myRoutes, likedRoutes, myTracks, likedTracks } = await getMypagePageData(
+    user.id,
+    {
+      fallbackDisplayName,
+    },
+  );
 
   return (
     <Suspense>
-      <Mypage profile={profile} myRoutes={myRoutes} likedRoutes={likedRoutes} />
+      <Mypage
+        profile={profile}
+        myRoutes={myRoutes}
+        likedRoutes={likedRoutes}
+        myTracks={myTracks}
+        likedTracks={likedTracks}
+      />
     </Suspense>
   );
 }

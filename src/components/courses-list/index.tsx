@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 import { Card } from '@/commons/components/card';
 import { ROUTES } from '@/commons/constants/url';
-import type { CourseCardView } from '@/commons/types/routerun';
+import type { HomeListItem } from '@/commons/types/routerun';
 
 import { CourseListSortDropdown } from './course-list-sort-dropdown';
 import { CoursesListSkeleton } from './courses-list-skeleton';
@@ -20,12 +20,14 @@ import styles from './styles.module.css';
 import { buildCoursesListSheetRootClassName } from './utils/sheet-root-class-name';
 
 type CoursesListProps = {
-  cards?: CourseCardView[];
+  cards?: HomeListItem[];
   isLoading?: boolean;
   /** false면 아직 조회 뷰포트 없음 — 빈 목록으로 시트 접힘 고정하지 않음 */
   isRouteQueryViewportReady?: boolean;
   isCourseLiked?: (courseId: string) => boolean;
   getCourseLikeCount?: (courseId: string) => number;
+  isTrackLiked?: (trackId: string) => boolean;
+  getTrackLikeCount?: (trackId: string) => number;
   openPeekFromCollapsedSignal?: number;
   onSheetPositionChange?: (payload: SheetPositionPayload) => void;
   onCourseSelect?: (courseId: string) => void;
@@ -37,11 +39,17 @@ export function CoursesList({
   isRouteQueryViewportReady = true,
   isCourseLiked,
   getCourseLikeCount,
+  isTrackLiked,
+  getTrackLikeCount,
   openPeekFromCollapsedSignal,
   onSheetPositionChange,
   onCourseSelect,
 }: CoursesListProps) {
-  const { sortMode, displayCards, selectSortMode } = useCourseListSort(cards, getCourseLikeCount);
+  const { sortMode, displayCards, selectSortMode } = useCourseListSort(
+    cards,
+    getCourseLikeCount,
+    getTrackLikeCount,
+  );
 
   const { isEmpty } = useCoursesListEmptySheetState({
     listLength: displayCards.length,
@@ -96,29 +104,58 @@ export function CoursesList({
       </div>
       <div ref={cardListRef} className={styles.cardList}>
         {isLoading && cards.length === 0 ? <CoursesListSkeleton /> : null}
-        {displayCards.map((card) => (
-          <Link
-            key={card.courseId}
-            href={ROUTES.COURSES.DETAIL(card.courseId)}
-            className={styles.cardLink}
-            aria-label={`${card.title} 코스 선택`}
-            onClick={() => onCourseSelect?.(card.courseId)}
-            onKeyDown={handleCardKeyDown}
-          >
-            <Card
-              className={styles.cardWidth}
-              type="default"
-              isLiked={isCourseLiked?.(card.courseId) ?? false}
-              isSelected={card.isPinnedTop}
-              title={card.title}
-              location={card.location}
-              distanceText={card.distanceText}
-              likeCount={getCourseLikeCount?.(card.courseId) ?? card.likeCount}
-              thumbnailUrl={card.thumbnailUrl}
-              readonlyLike={true}
-            />
-          </Link>
-        ))}
+        {displayCards.map((item) => {
+          if (item.itemType === 'course') {
+            const card = item.data;
+            return (
+              <Link
+                key={`course-${card.courseId}`}
+                href={ROUTES.COURSES.DETAIL(card.courseId)}
+                className={styles.cardLink}
+                aria-label={`${card.title} 코스 선택`}
+                onClick={() => onCourseSelect?.(card.courseId)}
+                onKeyDown={handleCardKeyDown}
+              >
+                <Card
+                  className={styles.cardWidth}
+                  type="default"
+                  isLiked={isCourseLiked?.(card.courseId) ?? false}
+                  isSelected={card.isPinnedTop}
+                  title={card.title}
+                  location={card.location}
+                  distanceText={card.distanceText}
+                  likeCount={getCourseLikeCount?.(card.courseId) ?? card.likeCount}
+                  thumbnailUrl={card.thumbnailUrl}
+                  readonlyLike={true}
+                />
+              </Link>
+            );
+          }
+
+          const track = item.data;
+          return (
+            <Link
+              key={`track-${track.trackId}`}
+              href={ROUTES.TRACKS.DETAIL(track.trackId)}
+              className={styles.cardLink}
+              aria-label={`${track.title} 트랙 선택`}
+              onKeyDown={handleCardKeyDown}
+            >
+              <Card
+                className={styles.cardWidth}
+                type="default"
+                isLiked={isTrackLiked?.(track.trackId) ?? false}
+                isSelected={track.isSelected}
+                title={track.title}
+                location={track.location}
+                distanceText={`${track.distanceMeters}m`}
+                likeCount={getTrackLikeCount?.(track.trackId) ?? track.likeCount}
+                thumbnailUrl={track.thumbnailUrl}
+                readonlyLike={true}
+              />
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

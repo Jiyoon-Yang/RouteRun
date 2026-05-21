@@ -38,9 +38,7 @@ export function isRouteStartInRouteViewport(route: Route, viewport: RouteViewpor
   const minLng = Math.min(northEastLng, southWestLng);
   const maxLng = Math.max(northEastLng, southWestLng);
 
-  return (
-    start.lat >= minLat && start.lat <= maxLat && start.lng >= minLng && start.lng <= maxLng
-  );
+  return start.lat >= minLat && start.lat <= maxLat && start.lng >= minLng && start.lng <= maxLng;
 }
 
 /** 목록 등 UI 표시용 — 바텀시트 상단 등에 실제 보이는 영역만 노출할 때 사용 */
@@ -112,8 +110,7 @@ export function buildCourseCardViews(
   const baseCards = dedupeRoutesById(routes)
     .map((route) => ({ route, start: resolveRouteStartForMapMarker(route) }))
     .filter(
-      (item): item is { route: Route; start: { lat: number; lng: number } } =>
-        item.start !== null,
+      (item): item is { route: Route; start: { lat: number; lng: number } } => item.start !== null,
     )
     .map(({ route, start }) => {
       const distanceFromReference = calculateLinearDistanceMeters(referenceLocation, start);

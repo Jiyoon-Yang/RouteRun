@@ -7,16 +7,20 @@ import type {
 import { type DistanceCategory, getDistanceCategory } from '@/commons/utils/distance/category';
 import {
   calculateLinearDistanceMeters,
-  hasValidRouteStartCoordinate,
   SEOUL_CITY_HALL_REFERENCE as DEFAULT_REFERENCE,
 } from '@/commons/utils/geo';
 import { dedupeRoutesById } from '@/commons/utils/route/dedup';
+import { resolveRouteStartForMapMarker } from '@/commons/utils/route-marker-position';
 
 export type { DistanceCategory };
 export { getDistanceCategory, dedupeRoutesById };
 export const SEOUL_CITY_HALL_REFERENCE = DEFAULT_REFERENCE;
 
-/** 시작점이 주어진 RouteViewport 안에 있는지 (useRoutes 클라이언트 필터와 동일 규칙). */
+/**
+ * 시작점이 주어진 RouteViewport 안에 있는지 판정.
+ * 마커가 실제로 찍히는 좌표(resolveRouteStartForMapMarker)와 동일 기준을 사용해
+ * "목록에는 있는데 마커는 화면 밖" / "마커는 보이는데 목록에는 없음" 비대칭을 막는다.
+ */
 export function isRouteStartInRouteViewport(route: Route, viewport: RouteViewport | null): boolean {
   if (!viewport) return true;
 
@@ -26,16 +30,16 @@ export function isRouteStartInRouteViewport(route: Route, viewport: RouteViewpor
     return true;
   }
 
+  const start = resolveRouteStartForMapMarker(route);
+  if (!start) return false;
+
   const minLat = Math.min(northEastLat, southWestLat);
   const maxLat = Math.max(northEastLat, southWestLat);
   const minLng = Math.min(northEastLng, southWestLng);
   const maxLng = Math.max(northEastLng, southWestLng);
 
   return (
-    route.start_lat >= minLat &&
-    route.start_lat <= maxLat &&
-    route.start_lng >= minLng &&
-    route.start_lng <= maxLng
+    start.lat >= minLat && start.lat <= maxLat && start.lng >= minLng && start.lng <= maxLng
   );
 }
 
@@ -99,18 +103,20 @@ export function pinToTopIfVisible(
 }
 
 // [변환] 코스 데이터를 카드 뷰 모델로 변환
+// 거리 계산도 마커 좌표 기준(resolveRouteStartForMapMarker)을 사용해 정렬·표시 정합성을 맞춘다.
 export function buildCourseCardViews(
   routes: Route[],
   referenceLocation: ReferenceLocation,
   selectedCourseId: string | null,
 ): CourseCardView[] {
   const baseCards = dedupeRoutesById(routes)
-    .filter(hasValidRouteStartCoordinate)
-    .map((route) => {
-      const distanceFromReference = calculateLinearDistanceMeters(referenceLocation, {
-        lat: route.start_lat,
-        lng: route.start_lng,
-      });
+    .map((route) => ({ route, start: resolveRouteStartForMapMarker(route) }))
+    .filter(
+      (item): item is { route: Route; start: { lat: number; lng: number } } =>
+        item.start !== null,
+    )
+    .map(({ route, start }) => {
+      const distanceFromReference = calculateLinearDistanceMeters(referenceLocation, start);
 
       return {
         courseId: route.id,

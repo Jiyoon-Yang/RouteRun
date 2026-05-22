@@ -20,6 +20,10 @@ repositories/
 │   ├── course.repository.ts   # routes CRUD (create, update, delete, getByUser, getLiked, getCount)
 │   ├── detail.repository.ts   # 코스 단건 조회 (getRouteById) — 상세 페이지 전용
 │   └── home.repository.ts     # 홈 지도용 목록·뷰포트 조회 (클라이언트 Supabase 사용)
+├── track/
+│   ├── track.repository.ts    # tracks CRUD + track_likes (create, update, delete, getLiked, getCount)
+│   ├── detail.repository.ts   # 트랙 단건 조회 — 상세 페이지 전용
+│   └── home.repository.ts     # 홈 지도용 트랙 목록 (클라이언트 Supabase 사용)
 ├── map.repository.ts          # TMap API 호출 (역지오코딩, 보행자 경로)
 └── user.repository.ts         # users 테이블 CRUD (프로필 조회, 닉네임 중복·수정)
 ```

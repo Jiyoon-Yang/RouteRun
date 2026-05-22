@@ -1,25 +1,20 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
-import type { MypageRouteCardData, MypageTab } from '@/commons/types/mypage';
+import type { MypageTab } from '@/commons/types/mypage';
 
-const TAB_VALUES: MypageTab[] = ['my-course', 'liked-course'];
+const TAB_VALUES: MypageTab[] = ['my-posts', 'liked-posts'];
 
-export function useMyPageTabs(myRoutes: MypageRouteCardData[], likedRoutes: MypageRouteCardData[]) {
+export function useMyPageTabs() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const rawTab = searchParams.get('tab');
   const activeTab: MypageTab = TAB_VALUES.includes(rawTab as MypageTab)
     ? (rawTab as MypageTab)
-    : 'my-course';
-
-  const courses = useMemo(
-    () => (activeTab === 'my-course' ? myRoutes : likedRoutes),
-    [activeTab, likedRoutes, myRoutes],
-  );
+    : 'my-posts';
 
   const setTab = useCallback(
     (tab: MypageTab) => {
@@ -30,5 +25,5 @@ export function useMyPageTabs(myRoutes: MypageRouteCardData[], likedRoutes: Mypa
     [router, searchParams],
   );
 
-  return { activeTab, setTab, courses };
+  return { activeTab, setTab };
 }

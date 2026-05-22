@@ -40,6 +40,7 @@ type UseRouteMarkersParams = {
   routesSyncSigRef: MutableRefObject<string | null>;
   selectedRouteIdRef: MutableRefObject<string | null>;
   markerVisibilityTimerRef: MutableRefObject<number | null>;
+  trackMarkersRef: MutableRefObject<TmapMarker[]>;
   getTmapv3: () => TmapV3API | undefined;
   tryReadMarkerAttachedMap: (marker: unknown) => unknown;
   tryReadSdkLatLngFromMarker: (marker: TmapMarker) => { lat: number; lng: number } | null;

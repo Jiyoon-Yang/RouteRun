@@ -4,6 +4,7 @@ import { ModalProvider } from '@/commons/providers/modal/modal.provider';
 import { ToastProvider } from '@/commons/providers/toast/toast.provider';
 import { createClient } from '@/lib/supabase/server';
 import { getUserRouteWriteCount } from '@/services/course/courseService';
+import { getUserTrackWriteCount } from '@/services/track/trackService';
 
 import type { Metadata, Viewport } from 'next';
 
@@ -40,7 +41,6 @@ export async function generateMetadata(): Promise<Metadata> {
       apple: [{ url: '/assets/logo/apple-icon.png', sizes: '180x180', type: 'image/png' }],
     },
     appleWebApp: {
-      capable: true,
       title: '루트런',
       statusBarStyle: 'default',
     },
@@ -59,7 +59,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  let hasWrittenCourse = false;
+  let hasWrittenItem = false;
 
   try {
     const supabase = createClient();
@@ -73,20 +73,26 @@ export default async function RootLayout({
     }
 
     if (user?.is_anonymous === true) {
-      const { count, error: countError } = await getUserRouteWriteCount(user.id);
-      if (countError !== null || count === null) {
-        if (countError) {
-          console.error('[RootLayout] 게스트 코스 작성 횟수 조회 실패:', countError.message);
-        }
-        hasWrittenCourse = false;
-      } else {
-        hasWrittenCourse = count >= 1;
+      const [courseResult, trackResult] = await Promise.all([
+        getUserRouteWriteCount(user.id),
+        getUserTrackWriteCount(user.id),
+      ]);
+
+      if (courseResult.error) {
+        console.error('[RootLayout] 게스트 코스 작성 횟수 조회 실패:', courseResult.error.message);
       }
+      if (trackResult.error) {
+        console.error('[RootLayout] 게스트 트랙 작성 횟수 조회 실패:', trackResult.error.message);
+      }
+
+      const courseCount = courseResult.count ?? 0;
+      const trackCount = trackResult.count ?? 0;
+      hasWrittenItem = courseCount + trackCount >= 1;
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error('[RootLayout] 세션·코스 집계 초기화 중 오류:', message);
-    hasWrittenCourse = false;
+    console.error('[RootLayout] 세션·작성 집계 초기화 중 오류:', message);
+    hasWrittenItem = false;
   }
 
   return (
@@ -103,7 +109,7 @@ export default async function RootLayout({
         <AuthProvider>
           <ModalProvider>
             <ToastProvider>
-              <Layout hasWrittenCourse={hasWrittenCourse}>{children}</Layout>
+              <Layout hasWrittenItem={hasWrittenItem}>{children}</Layout>
             </ToastProvider>
           </ModalProvider>
         </AuthProvider>

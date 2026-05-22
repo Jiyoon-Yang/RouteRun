@@ -25,10 +25,15 @@ import { Icon } from '@/commons/components/icons';
 import { Modal } from '@/commons/components/modal';
 import { useCourseLikes } from '@/commons/hooks/useCourseLikes';
 import { useGuestGuard } from '@/commons/hooks/useGuestGuard';
+import { useTrackLikes } from '@/commons/hooks/useTrackLikes';
 import { Header } from '@/commons/layout/header';
 import { useAuth } from '@/commons/providers/auth/auth.provider';
 import modalBackdropStyles from '@/commons/providers/modal/modal.provider.module.css';
-import type { MypageProfileProps, MypageRouteCardData } from '@/commons/types/mypage';
+import type {
+  MypageProfileProps,
+  MypageRouteCardData,
+  MypageTrackCardData,
+} from '@/commons/types/mypage';
 
 import { useLinkGoogle } from './hooks/useLinkGoogle';
 import { useLogout } from './hooks/useLogout';
@@ -37,14 +42,15 @@ import { useMyPageTabs } from './hooks/useMyPageTabs';
 import { useProfileModal } from './hooks/useProfileModal';
 import { RouteCard } from './RouteCard';
 import styles from './styles.module.css';
+import { TrackCard } from './TrackCard';
 
 const TEXTS = {
   TITLE: '마이페이지',
   EDIT_PROFILE: '프로필 수정',
-  TAB_MY_COURSE: '내가 작성한 코스',
-  TAB_LIKED_COURSE: '좋아요한 코스',
-  EMPTY_MY: '작성한 코스가 없습니다.',
-  EMPTY_LIKED: '좋아요한 코스가 없습니다.',
+  TAB_MY_POSTS: '내가 작성한 게시글',
+  TAB_LIKED_POSTS: '좋아요한 게시글',
+  EMPTY_MY: '작성한 게시글이 없습니다.',
+  EMPTY_LIKED: '좋아요한 게시글이 없습니다.',
   GOOGLE_CONTINUE: 'Google로 계속하기',
   GOOGLE_LINKING: '연동 중...',
 } as const;
@@ -84,21 +90,40 @@ export type MypageProps = {
   profile: MypageProfileProps;
   myRoutes: MypageRouteCardData[];
   likedRoutes: MypageRouteCardData[];
+  myTracks: MypageTrackCardData[];
+  likedTracks: MypageTrackCardData[];
 };
 
-export default function Mypage({ profile, myRoutes, likedRoutes }: MypageProps) {
+export default function Mypage({
+  profile,
+  myRoutes,
+  likedRoutes,
+  myTracks,
+  likedTracks,
+}: MypageProps) {
   const { linkGoogle, isPending: isLinkGooglePending } = useLinkGoogle({ returnTo: '/mypage' });
-  const { activeTab, setTab, courses } = useMyPageTabs(myRoutes, likedRoutes);
-  const likedRouteLikeCounts = useMemo(
+  const { activeTab, setTab } = useMyPageTabs();
+  const allRouteLikeCounts = useMemo(
     () =>
-      likedRoutes.reduce<Record<string, number>>((acc, route) => {
+      [...myRoutes, ...likedRoutes].reduce<Record<string, number>>((acc, route) => {
         acc[route.id] = route.likeCount;
         return acc;
       }, {}),
-    [likedRoutes],
+    [myRoutes, likedRoutes],
   );
   const { isCourseLiked, getCourseLikeCount, toggleCourseLike } =
-    useCourseLikes(likedRouteLikeCounts);
+    useCourseLikes(allRouteLikeCounts);
+
+  const allTrackLikeCounts = useMemo(
+    () =>
+      [...myTracks, ...likedTracks].reduce<Record<string, number>>((acc, track) => {
+        acc[track.id] = track.likeCount;
+        return acc;
+      }, {}),
+    [myTracks, likedTracks],
+  );
+  const { isTrackLiked, getTrackLikeCount, toggleTrackLike } = useTrackLikes(allTrackLikeCounts);
+
   const { isAnonymous } = useAuth();
   const { executeLogoutOrDelete, isPending: isLogoutPending, isError } = useLogout();
   const { isOpen, openModal, closeModal, handleConfirm, modalData } = useLogoutModal(
@@ -112,7 +137,31 @@ export default function Mypage({ profile, myRoutes, likedRoutes }: MypageProps) 
     }
   }, [isError]);
 
-  const emptyMessage = activeTab === 'my-course' ? TEXTS.EMPTY_MY : TEXTS.EMPTY_LIKED;
+  const activeItems = useMemo(() => {
+    const routes = (activeTab === 'my-posts' ? myRoutes : likedRoutes).map((r) => ({
+      kind: 'route' as const,
+      data: r,
+    }));
+    const tracks = (activeTab === 'my-posts' ? myTracks : likedTracks).map((t) => ({
+      kind: 'track' as const,
+      data: t,
+    }));
+    return [...routes, ...tracks].sort((a, b) => b.data.createdAt.localeCompare(a.data.createdAt));
+  }, [activeTab, myRoutes, likedRoutes, myTracks, likedTracks]);
+
+  const isEmpty = activeItems.length === 0;
+
+  const emptyMessages = {
+    'my-posts': TEXTS.EMPTY_MY,
+    'liked-posts': TEXTS.EMPTY_LIKED,
+  } as const;
+  const emptyMessage = emptyMessages[activeTab];
+
+  const tabPanelLabels = {
+    'my-posts': TEXTS.TAB_MY_POSTS,
+    'liked-posts': TEXTS.TAB_LIKED_POSTS,
+  } as const;
+
   const { open } = useProfileModal({
     initialNickname: profile.nickname,
   });
@@ -146,45 +195,56 @@ export default function Mypage({ profile, myRoutes, likedRoutes }: MypageProps) 
         </Button>
       </section>
 
-      <div className={styles.tabSection} role="tablist" aria-label="코스 목록 탭">
+      <div className={styles.tabSection} role="tablist" aria-label="목록 탭">
         <button
           type="button"
           role="tab"
-          aria-selected={activeTab === 'my-course'}
-          className={`${styles.tabButton} ${activeTab === 'my-course' ? styles.tabButtonActive : styles.tabButtonInactive}`}
-          onClick={() => setTab('my-course')}
+          aria-selected={activeTab === 'my-posts'}
+          className={`${styles.tabButton} ${activeTab === 'my-posts' ? styles.tabButtonActive : styles.tabButtonInactive}`}
+          onClick={() => setTab('my-posts')}
         >
-          {TEXTS.TAB_MY_COURSE}
+          {TEXTS.TAB_MY_POSTS}
         </button>
         <button
           type="button"
           role="tab"
-          aria-selected={activeTab === 'liked-course'}
-          className={`${styles.tabButton} ${activeTab === 'liked-course' ? styles.tabButtonActive : styles.tabButtonInactive}`}
-          onClick={() => setTab('liked-course')}
+          aria-selected={activeTab === 'liked-posts'}
+          className={`${styles.tabButton} ${activeTab === 'liked-posts' ? styles.tabButtonActive : styles.tabButtonInactive}`}
+          onClick={() => setTab('liked-posts')}
         >
-          {TEXTS.TAB_LIKED_COURSE}
+          {TEXTS.TAB_LIKED_POSTS}
         </button>
       </div>
 
       <section
         className={`${styles.cardList} ${isAnonymous ? styles.cardListWithGuestCta : ''}`}
         role="tabpanel"
-        aria-label={activeTab === 'my-course' ? TEXTS.TAB_MY_COURSE : TEXTS.TAB_LIKED_COURSE}
+        aria-label={tabPanelLabels[activeTab]}
       >
-        {courses.length === 0 ? (
+        {isEmpty ? (
           <p className={styles.emptyState}>{emptyMessage}</p>
         ) : (
-          courses.map((route) => (
-            <RouteCard
-              key={route.id}
-              tab={activeTab}
-              route={route}
-              isCourseLiked={isCourseLiked}
-              getCourseLikeCount={getCourseLikeCount}
-              toggleCourseLike={toggleCourseLike}
-            />
-          ))
+          activeItems.map((item) =>
+            item.kind === 'route' ? (
+              <RouteCard
+                key={item.data.id}
+                tab={activeTab}
+                route={item.data}
+                isCourseLiked={isCourseLiked}
+                getCourseLikeCount={getCourseLikeCount}
+                toggleCourseLike={toggleCourseLike}
+              />
+            ) : (
+              <TrackCard
+                key={item.data.id}
+                tab={activeTab}
+                track={item.data}
+                isTrackLiked={isTrackLiked}
+                getTrackLikeCount={getTrackLikeCount}
+                toggleTrackLike={toggleTrackLike}
+              />
+            ),
+          )
         )}
       </section>
 

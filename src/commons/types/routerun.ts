@@ -49,3 +49,31 @@ export type RouteViewport = {
   southWestLat: number;
   southWestLng: number;
 };
+
+export interface Track {
+  id: string;
+  user_id: string;
+  title: string;
+  description?: string;
+  distance_meters: number;
+  start_lat: number;
+  start_lng: number;
+  start_address_region?: string | null;
+  image_urls: string[];
+  likes_count: number;
+  created_at: string;
+}
+
+export interface TrackCardView {
+  trackId: string;
+  title: string;
+  location: string;
+  distanceMeters: number;
+  likeCount: number;
+  isSelected: boolean;
+  thumbnailUrl?: string;
+}
+
+export type HomeListItem =
+  | { itemType: 'course'; data: CourseCardView }
+  | { itemType: 'track'; data: TrackCardView };

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { createCourseAction, updateCourseAction } from '@/actions/course.action';
 import { useToast } from '@/commons/providers/toast/toast.provider';
@@ -67,6 +67,8 @@ export function useCourseSubmit({ mode, courseId, initialData }: UseCourseSubmit
   /** `images`와 동기화된 blob 미리보기 URL — 언마운트·의존성 변경 시 revoke */
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [routeData, setRouteData] = useState<RouteData | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     if (!initialData?.course) {
@@ -145,11 +147,15 @@ export function useCourseSubmit({ mode, courseId, initialData }: UseCourseSubmit
       : courseName.trim().length > 0 && isRouteDataCompleteForSubmit(routeData);
 
   const handleSubmit = useCallback(async () => {
+    if (submittingRef.current) return;
+
     const title = courseName.trim();
 
     if (mode === 'edit') {
       if (!title || !courseId?.trim()) return;
 
+      submittingRef.current = true;
+      setIsSubmitting(true);
       try {
         const uploadedUrls = await uploadCourseImages(images);
         const image_urls = [...existingImageUrls, ...uploadedUrls];
@@ -171,12 +177,17 @@ export function useCourseSubmit({ mode, courseId, initialData }: UseCourseSubmit
         const message =
           error instanceof Error ? error.message : '코스 수정 중 오류가 발생했습니다.';
         showToast(message, 'failed');
+      } finally {
+        setIsSubmitting(false);
+        submittingRef.current = false;
       }
       return;
     }
 
     if (!title || !isRouteDataCompleteForSubmit(routeData)) return;
 
+    submittingRef.current = true;
+    setIsSubmitting(true);
     try {
       const imageUrls = await uploadCourseImages(images);
       const result = await createCourseAction({
@@ -203,6 +214,9 @@ export function useCourseSubmit({ mode, courseId, initialData }: UseCourseSubmit
     } catch (error) {
       const message = error instanceof Error ? error.message : '코스 등록 중 오류가 발생했습니다.';
       showToast(message, 'failed');
+    } finally {
+      setIsSubmitting(false);
+      submittingRef.current = false;
     }
   }, [
     courseName,
@@ -231,5 +245,6 @@ export function useCourseSubmit({ mode, courseId, initialData }: UseCourseSubmit
     removeImageAt,
     handleSubmit,
     isSubmitEnabled,
+    isSubmitting,
   };
 }

@@ -12,6 +12,7 @@ export type CardType = 'default' | 'my-course' | 'liked-course';
 type CardBaseProps = {
   className?: string;
   type: CardType;
+  itemKind?: 'course' | 'track';
   isLiked: boolean;
   title?: string;
   location?: string;
@@ -43,6 +44,7 @@ const CARD_THUMBNAIL_LOGO_SIZE = LOGO_SIZE_PRESETS.cardThumbnail;
 export function Card({
   className,
   type,
+  itemKind,
   isLiked,
   isSelected,
   title = '한강 러닝 코스',
@@ -97,6 +99,13 @@ export function Card({
                 width={CARD_THUMBNAIL_LOGO_SIZE.width}
                 height={CARD_THUMBNAIL_LOGO_SIZE.height}
               />
+            </span>
+          )}
+          {itemKind && (
+            <span
+              className={`${styles.itemKindBadge} ${itemKind === 'course' ? styles.itemKindBadgeCourse : styles.itemKindBadgeTrack}`}
+            >
+              {itemKind === 'course' ? '코스' : '트랙'}
             </span>
           )}
         </div>

@@ -2,7 +2,7 @@ import { TabButton } from './index';
 
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 
-const variantOptions = ['green', 'blue', 'orange', 'red'] as const;
+const variantOptions = ['green', 'blue', 'orange', 'red', 'gray'] as const;
 
 const meta = {
   title: 'Commons/Tab',

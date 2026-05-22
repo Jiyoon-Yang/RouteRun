@@ -118,6 +118,30 @@
   text-align: center;
 }
 
+.gray {
+  border-radius: 9999px;
+  border: 2px solid var(--color-grey-100);
+  background: var(--color-white-500);
+  color: var(--color-black-400);
+  text-align: center;
+}
+
+.gray:active {
+  border-radius: 9999px;
+  border: 2px solid var(--color-black-400);
+  background: var(--color-black-400);
+  color: var(--color-white-500);
+  text-align: center;
+}
+
+.gray.active {
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background: var(--color-black-400);
+  color: var(--color-white-500);
+  text-align: center;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .green:hover {
     border: 2px solid var(--color-green-500);
@@ -133,5 +157,9 @@
 
   .red:hover {
     border: 2px solid var(--color-red-500);
+  }
+
+  .gray:hover {
+    border: 2px solid var(--color-black-400);
   }
 }

@@ -20,6 +20,11 @@ services/
 │   ├── courseDetailService.ts  # 상세 페이지용 데이터 조합 (코스 + 작성자 + 위치)
 │   ├── courseLikeService.ts    # 좋아요 상태 조회 전용 (클라이언트 전용, createClient 사용)
 │   └── homeCourseService.ts    # 홈 지도용 코스 목록 (Repository 얇은 래퍼)
+├── track/
+│   ├── trackService.ts         # 트랙 CRUD 비즈니스 로직 (등록·수정·삭제·마이페이지 목록)
+│   ├── trackDetailService.ts   # 상세 페이지용 데이터 조합 (트랙 + 작성자 + 위치)
+│   ├── trackLikeService.ts     # 좋아요 상태 조회 전용 (클라이언트 전용, createClient 사용)
+│   └── homeTrackService.ts     # 홈 지도용 트랙 목록 (Repository 얇은 래퍼)
 ├── map/
 │   └── mapService.ts           # 역지오코딩 등 지도 관련 로직 (Repository 얇은 래퍼)
 └── user/

@@ -7,9 +7,11 @@ import { Icon } from '@/commons/components/icons';
 import { TabButton } from '@/commons/components/tab';
 import { TAB_ITEMS } from '@/commons/constants/home';
 import { useCourseLikes } from '@/commons/hooks/useCourseLikes';
+import { useTrackLikes } from '@/commons/hooks/useTrackLikes';
 import { Header } from '@/commons/layout/header';
 import { Sidebar } from '@/commons/layout/sidebar';
-import type { Route, RouteViewport } from '@/commons/types/routerun';
+import type { HomeListItem, Route, RouteViewport } from '@/commons/types/routerun';
+import { calculateLinearDistanceMeters } from '@/commons/utils/geo';
 import { CoursesList } from '@/components/courses-list';
 import { TmapHome } from '@/components/tmap/home';
 
@@ -22,6 +24,7 @@ import { useHomeToast } from './hooks/use-home-toast';
 import { useHomeUrlSync } from './hooks/use-home-url-sync';
 import { useHomeVisibleRouteViewport } from './hooks/use-home-visible-viewport';
 import { useReferenceLocation } from './hooks/use-reference-location';
+import { useTracks } from './hooks/use-tracks';
 import { OnboardingModal } from './onboarding-modal';
 import styles from './styles.module.css';
 import { buildCourseCardViews } from './utils/course-filter';
@@ -42,6 +45,7 @@ export function Home() {
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
   const { selectedCategories, setSelectedCategories, toggleCategory } = useHomeDistanceCategories();
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
   /** 뷰포트 밖으로 이동해도 선택 코스를 목록·지도에 유지 (조회 결과 우선, 없을 때만 사용) */
   const [selectedRouteSnapshot, setSelectedRouteSnapshot] = useState<Route | null>(null);
   const [visibleRouteViewport, setVisibleRouteViewport] = useState<RouteViewport | null>(null);
@@ -57,6 +61,7 @@ export function Home() {
     ? (frozenVisibleRouteViewport ?? visibleRouteViewport)
     : visibleRouteViewport;
   const { routes, allRoutes, isLoading, errorMessage } = useRoutes(effectiveQueryViewport);
+  const { tracks } = useTracks(effectiveQueryViewport);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -122,6 +127,14 @@ export function Home() {
     [allRoutes, effectiveQueryViewport, filteredRoutes, selectedCourseId, selectedRouteSnapshot],
   );
 
+  const isTrackTabOnly = selectedCategories.has('TRACK') && selectedCategories.size === 1;
+
+  const filteredTracks = useMemo(() => {
+    const hasDistanceFilter = Array.from(selectedCategories).some((c) => c !== 'TRACK');
+    if (hasDistanceFilter) return [];
+    return tracks;
+  }, [tracks, selectedCategories]);
+
   const courseCards = useMemo(
     () => buildCourseCardViews(routesForCourseList, referenceLocation, selectedCourseId),
     [routesForCourseList, referenceLocation, selectedCourseId],
@@ -131,16 +144,112 @@ export function Home() {
     () => buildCourseLikeCountsLookup(allRoutes, selectedCourseId, selectedRouteSnapshot),
     [allRoutes, selectedCourseId, selectedRouteSnapshot],
   );
-  const { isCourseLiked, getCourseLikeCount } = useCourseLikes(courseLikeCounts);
+  const { isCourseLiked, getCourseLikeCount, toggleCourseLike } = useCourseLikes(courseLikeCounts);
+
+  const trackLikeCounts = useMemo(
+    () =>
+      tracks.reduce<Record<string, number>>((acc, t) => {
+        acc[t.id] = t.likes_count;
+        return acc;
+      }, {}),
+    [tracks],
+  );
+  const { isTrackLiked, getTrackLikeCount, toggleTrackLike } = useTrackLikes(trackLikeCounts);
+
+  const combinedCards = useMemo<HomeListItem[]>(() => {
+    if (isTrackTabOnly) {
+      return tracks.map((t) => ({
+        itemType: 'track' as const,
+        data: {
+          trackId: t.id,
+          title: t.title,
+          location:
+            t.start_address_region ?? `${t.start_lat.toFixed(4)}, ${t.start_lng.toFixed(4)}`,
+          distanceMeters: t.distance_meters,
+          likeCount: t.likes_count,
+          isSelected: t.id === selectedTrackId,
+          thumbnailUrl: t.image_urls[0],
+        },
+      }));
+    }
+    if (selectedCategories.size > 0 && !isTrackTabOnly) {
+      return courseCards.map((card) => ({ itemType: 'course' as const, data: card }));
+    }
+
+    const sortableCourseItems = courseCards.map((card) => ({
+      item: { itemType: 'course' as const, data: card } satisfies HomeListItem,
+      distanceFromReference: card.distanceFromReference,
+    }));
+
+    const sortableTrackItems = tracks.map((t) => ({
+      item: {
+        itemType: 'track' as const,
+        data: {
+          trackId: t.id,
+          title: t.title,
+          location:
+            t.start_address_region ?? `${t.start_lat.toFixed(4)}, ${t.start_lng.toFixed(4)}`,
+          distanceMeters: t.distance_meters,
+          likeCount: t.likes_count,
+          isSelected: t.id === selectedTrackId,
+          thumbnailUrl: t.image_urls[0],
+        },
+      } satisfies HomeListItem,
+      distanceFromReference: calculateLinearDistanceMeters(referenceLocation, {
+        lat: t.start_lat,
+        lng: t.start_lng,
+      }),
+    }));
+
+    const merged = [...sortableCourseItems, ...sortableTrackItems].sort(
+      (a, b) => a.distanceFromReference - b.distanceFromReference,
+    );
+
+    // 선택된 항목을 최상단으로 고정
+    const selectedId = selectedCourseId ?? selectedTrackId;
+    if (selectedId) {
+      const selectedIdx = merged.findIndex(({ item }) =>
+        item.itemType === 'course'
+          ? item.data.courseId === selectedId
+          : item.data.trackId === selectedId,
+      );
+      if (selectedIdx > 0) {
+        const [selected] = merged.splice(selectedIdx, 1);
+        merged.unshift(selected);
+      }
+    }
+
+    return merged.map(({ item }) => item);
+  }, [
+    courseCards,
+    tracks,
+    isTrackTabOnly,
+    selectedCategories,
+    selectedTrackId,
+    selectedCourseId,
+    referenceLocation,
+  ]);
 
   const handleCourseMarkerClick = useHomeCourseMarkerClick({
     collapsedPeekHeightThreshold: 24,
     sheetVisibleHeightRef,
     setSelectedCourseId,
+    setSelectedTrackId,
     setSelectedRouteSnapshot,
     setMarkerClickRecenterToken,
     setOpenPeekFromCollapsedSignal,
   });
+
+  const handleTrackMarkerClick = useCallback(
+    (trackId: string) => {
+      setSelectedTrackId(trackId);
+      setSelectedCourseId(null);
+      if (sheetVisibleHeightRef.current <= 24) {
+        setOpenPeekFromCollapsedSignal((prev) => prev + 1);
+      }
+    },
+    [sheetVisibleHeightRef],
+  );
 
   const handleCourseSelect = useCallback(
     (courseId: string) => {
@@ -212,11 +321,13 @@ export function Home() {
             bottomSheetVisibleHeight={sheetVisibleHeight}
             bottomSheetVisualVisibleHeight={sheetVisualVisibleHeight}
             isBottomSheetExpanded={isSheetExpanded}
-            routes={routesForCourseList}
+            routes={isTrackTabOnly ? [] : filteredRoutes}
+            tracks={filteredTracks}
             initialViewport={restoredInitialViewport}
             selectedCourseId={selectedCourseId}
             markerClickRecenterToken={markerClickRecenterToken}
             onCourseMarkerClick={handleCourseMarkerClick}
+            onTrackMarkerClick={handleTrackMarkerClick}
             onVisibleViewportChanged={handleVisibleRouteViewportChanged}
             onZoomLimitReached={handleZoomLimitReached}
             onZoomLimitCleared={handleZoomLimitCleared}
@@ -242,11 +353,15 @@ export function Home() {
           </div>
         ) : null}
         <CoursesList
-          cards={courseCards}
+          cards={combinedCards}
           isLoading={isLoading}
           isRouteQueryViewportReady={effectiveQueryViewport !== null}
           isCourseLiked={isCourseLiked}
           getCourseLikeCount={getCourseLikeCount}
+          toggleCourseLike={toggleCourseLike}
+          isTrackLiked={isTrackLiked}
+          getTrackLikeCount={getTrackLikeCount}
+          toggleTrackLike={toggleTrackLike}
           openPeekFromCollapsedSignal={openPeekFromCollapsedSignal}
           onCourseSelect={handleCourseSelect}
           onSheetPositionChange={handleSheetPositionChange}

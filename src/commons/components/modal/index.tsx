@@ -3,7 +3,7 @@ import { Input, type AddtionalTextState, type LabelType } from '@/commons/compon
 
 import styles from './styles.module.css';
 
-type ModalType = 'confirm' | 'form' | 'alert';
+type ModalType = 'confirm' | 'form' | 'alert' | 'dual';
 
 type ModalBaseProps = {
   className?: string;
@@ -44,7 +44,15 @@ type AlertModalProps = ModalBaseProps & {
   type: 'alert';
 };
 
-export type ModalProps = ConfirmModalProps | FormModalProps | AlertModalProps;
+type DualModalProps = ModalBaseProps & {
+  type: 'dual';
+  primaryText?: string;
+  onPrimary?: () => void;
+  secondaryText?: string;
+  onSecondary?: () => void;
+};
+
+export type ModalProps = ConfirmModalProps | FormModalProps | AlertModalProps | DualModalProps;
 
 export function Modal(props: ModalProps) {
   const {
@@ -63,6 +71,11 @@ export function Modal(props: ModalProps) {
     type === 'confirm' || type === 'form' ? (props.cancelText ?? '취소') : undefined;
   const onCancel =
     type === 'confirm' || type === 'form' ? (props.onCancel ?? props.onClose) : undefined;
+
+  const primaryText = type === 'dual' ? (props.primaryText ?? '확인') : undefined;
+  const secondaryText = type === 'dual' ? (props.secondaryText ?? '취소') : undefined;
+  const onPrimary = type === 'dual' ? props.onPrimary : undefined;
+  const onSecondary = type === 'dual' ? props.onSecondary : undefined;
 
   const stopEventPropagation = (
     event:
@@ -110,30 +123,57 @@ export function Modal(props: ModalProps) {
       ) : null}
 
       <div className={styles.actions}>
-        {cancelText !== undefined && (
-          <Button
-            variant="outline"
-            borderRadius="r16"
-            size="medium"
-            color="dark"
-            className={styles.actionButton}
-            onClick={() => onCancel?.()}
-          >
-            {cancelText}
-          </Button>
-        )}
+        {type === 'dual' ? (
+          <>
+            <Button
+              variant="outline"
+              borderRadius="r16"
+              size="medium"
+              color="dark"
+              className={styles.actionButton}
+              onClick={onPrimary}
+            >
+              {primaryText}
+            </Button>
+            <Button
+              variant="outline"
+              borderRadius="r16"
+              size="medium"
+              color="dark"
+              className={styles.actionButton}
+              onClick={onSecondary}
+            >
+              {secondaryText}
+            </Button>
+          </>
+        ) : (
+          <>
+            {cancelText !== undefined && (
+              <Button
+                variant="outline"
+                borderRadius="r16"
+                size="medium"
+                color="dark"
+                className={styles.actionButton}
+                onClick={() => onCancel?.()}
+              >
+                {cancelText}
+              </Button>
+            )}
 
-        <Button
-          variant="fill"
-          borderRadius="r16"
-          size="medium"
-          color="dark"
-          className={styles.actionButton}
-          onClick={onConfirm}
-          disabled={confirmDisabled}
-        >
-          {resolvedConfirmText}
-        </Button>
+            <Button
+              variant="fill"
+              borderRadius="r16"
+              size="medium"
+              color="dark"
+              className={styles.actionButton}
+              onClick={onConfirm}
+              disabled={confirmDisabled}
+            >
+              {resolvedConfirmText}
+            </Button>
+          </>
+        )}
       </div>
     </section>
   );

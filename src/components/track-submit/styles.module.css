@@ -1,0 +1,230 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-white-500);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.container::-webkit-scrollbar {
+  display: none;
+}
+
+.mapArea {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-start;
+  flex-shrink: 0;
+  width: 100%;
+  height: 42dvh;
+  background-color: var(--color-white_grey-100);
+  border-bottom: 1px solid var(--color-card_outline-100);
+}
+
+.mapSlot {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.formSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 16px 24px;
+  background-color: var(--color-white-500);
+  flex: 1;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.fieldGroupNoGap {
+  gap: 0;
+}
+
+.infoLabelRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+}
+
+.infoButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-grey-600);
+  cursor: pointer;
+}
+
+.textarea {
+  width: 100%;
+  height: 104px;
+  padding: 12px 16px;
+  border: 1px solid var(--color-grey-200);
+  border-radius: 12px;
+  background: transparent;
+  resize: none;
+  font-family: var(--typography-body-lg-ko-desktop-font-family);
+  font-size: var(--typography-body-lg-ko-desktop-font-size);
+  font-weight: var(--typography-body-lg-ko-desktop-font-weight);
+  line-height: var(--typography-body-lg-ko-desktop-line-height);
+  letter-spacing: var(--typography-body-lg-ko-desktop-letter-spacing);
+  color: var(--color-black-500);
+  outline: none;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.textarea:hover:not(:focus) {
+  border-color: var(--color-grey-500);
+  background-color: var(--color-white_grey-50);
+}
+
+.textarea::placeholder {
+  color: var(--color-light_black-200);
+}
+
+.textarea:focus {
+  border-color: var(--color-black-500);
+}
+
+.imageList {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.imageAddColumn {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.imageListScroll {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  padding-top: 8px;
+  padding-right: 10px;
+  min-height: 92px;
+  box-sizing: border-box;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.imageListScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.addImageButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  background-color: var(--color-white-500);
+  border: 1.5px dashed var(--color-grey-200);
+  border-radius: 12px;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.addImageButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.addImageCircle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--color-grey-300);
+}
+
+.addImageCount {
+  font-family: var(--typography-caption-1-ko-desktop-font-family);
+  font-size: var(--typography-caption-1-ko-desktop-font-size);
+  font-weight: var(--typography-caption-1-ko-desktop-font-weight);
+  line-height: var(--typography-caption-1-ko-desktop-line-height);
+  color: var(--color-grey-300);
+}
+
+.fileInput {
+  display: none;
+}
+
+.imageItem {
+  position: relative;
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+}
+
+.imageThumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid var(--color-card_outline-100);
+  display: block;
+}
+
+.deleteImageButton {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--color-card_outline-500);
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  min-width: 20px;
+  min-height: 20px;
+}
+
+.submitArea {
+  display: flex;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.submitButton {
+  flex: 1;
+  width: 100%;
+}

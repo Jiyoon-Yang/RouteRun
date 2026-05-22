@@ -126,7 +126,7 @@ export function Courses({ course, authorNickname, location, canEdit = false }: C
             </div>
 
             <div className={styles.metaRow}>
-              <span className={styles.distance}>{distanceText}</span>
+              <span className={styles.distance}>코스 거리: {distanceText}</span>
               <span className={styles.separator} aria-hidden>
                 |
               </span>

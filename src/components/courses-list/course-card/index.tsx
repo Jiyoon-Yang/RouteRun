@@ -26,6 +26,7 @@ export function CourseCard({
     <Card
       className={className}
       type="default"
+      itemKind="course"
       title={course.title}
       location={course.location}
       distanceText={course.distanceText}

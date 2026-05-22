@@ -110,6 +110,13 @@ export async function createCourseAction(
     return { success: false, message: '로그인이 필요합니다.' };
   }
 
+  if (user.is_anonymous === true) {
+    const { count, error } = await courseService.getUserRouteWriteCount(user.id);
+    if (error !== null || count === null || count >= 1) {
+      return { success: false, message: '게스트는 코스를 1개까지만 등록할 수 있습니다.' };
+    }
+  }
+
   const start_lat = input.routeData?.startPoint?.lat;
   const start_lng = input.routeData?.startPoint?.lng;
 

@@ -276,6 +276,8 @@ export function TmapHome({
     clampHomeMapZoom,
   });
 
+  const trackMarkersRef = useRef<TmapMarker[]>([]);
+
   const {
     syncRouteMarkersDisplayForZoom: syncRouteMarkersDisplayForZoomByHook,
     scheduleMarkerVisibilitySync: scheduleMarkerVisibilitySyncByHook,
@@ -302,6 +304,7 @@ export function TmapHome({
     setMarkerHoverCursor,
     syncSelectedRoutePolyline,
     clearSelectedRoutePolyline,
+    trackMarkersRef,
   });
 
   const registerMapListeners = useCallback(
@@ -540,8 +543,6 @@ export function TmapHome({
   useEffect(() => {
     routesRef.current = routes;
   }, [routes]);
-
-  const trackMarkersRef = useRef<TmapMarker[]>([]);
 
   useEffect(() => {
     type TrackMarkerRuntime = {

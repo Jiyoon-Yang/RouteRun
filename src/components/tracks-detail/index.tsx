@@ -118,7 +118,7 @@ export function TracksDetail({
             </div>
 
             <div className={styles.metaRow}>
-              <span className={styles.distance}>{track.distance_meters}m</span>
+              <span className={styles.distance}>트랙 거리: {track.distance_meters}m</span>
               <span className={styles.separator} aria-hidden>
                 |
               </span>

@@ -98,7 +98,9 @@ export default function TmapTrackSubmit({ onSaveTrack }: TrackSubmitMapProps) {
           <div className={styles.sectionHeader}>
             <Icon name="ruler" size={15} color="#7d7d7d" />
             <span>트랙 거리 (m)</span>
-            <span className={styles.requiredMark} aria-hidden="true">*</span>
+            <span className={styles.requiredMark} aria-hidden="true">
+              *
+            </span>
           </div>
           <input
             type="number"

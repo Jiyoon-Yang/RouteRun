@@ -89,7 +89,10 @@ export function sortHomeListCardsForDisplay(
       const item = result[idx];
       const pinned: HomeListItem = {
         itemType: 'course',
-        data: { ...(item.data as Extract<HomeListItem, { itemType: 'course' }>['data']), isPinnedTop: true },
+        data: {
+          ...(item.data as Extract<HomeListItem, { itemType: 'course' }>['data']),
+          isPinnedTop: true,
+        },
       };
       result = [pinned, ...result.filter((_, i) => i !== idx)];
     }
@@ -104,7 +107,10 @@ export function sortHomeListCardsForDisplay(
       const item = result[idx];
       const pinned: HomeListItem = {
         itemType: 'track',
-        data: { ...(item.data as Extract<HomeListItem, { itemType: 'track' }>['data']), isSelected: true },
+        data: {
+          ...(item.data as Extract<HomeListItem, { itemType: 'track' }>['data']),
+          isSelected: true,
+        },
       };
       const without = result.filter((_, i) => i !== idx);
       result = [...without.slice(0, insertAt), pinned, ...without.slice(insertAt)];

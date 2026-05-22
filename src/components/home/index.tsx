@@ -128,6 +128,12 @@ export function Home() {
 
   const isTrackTabOnly = selectedCategories.has('TRACK') && selectedCategories.size === 1;
 
+  const filteredTracks = useMemo(() => {
+    const hasDistanceFilter = Array.from(selectedCategories).some((c) => c !== 'TRACK');
+    if (hasDistanceFilter) return [];
+    return tracks;
+  }, [tracks, selectedCategories]);
+
   const courseCards = useMemo(
     () => buildCourseCardViews(routesForCourseList, referenceLocation, selectedCourseId),
     [routesForCourseList, referenceLocation, selectedCourseId],
@@ -137,7 +143,7 @@ export function Home() {
     () => buildCourseLikeCountsLookup(allRoutes, selectedCourseId, selectedRouteSnapshot),
     [allRoutes, selectedCourseId, selectedRouteSnapshot],
   );
-  const { isCourseLiked, getCourseLikeCount } = useCourseLikes(courseLikeCounts);
+  const { isCourseLiked, getCourseLikeCount, toggleCourseLike } = useCourseLikes(courseLikeCounts);
 
   const trackLikeCounts = useMemo(
     () =>
@@ -147,7 +153,7 @@ export function Home() {
       }, {}),
     [tracks],
   );
-  const { isTrackLiked, getTrackLikeCount } = useTrackLikes(trackLikeCounts);
+  const { isTrackLiked, getTrackLikeCount, toggleTrackLike } = useTrackLikes(trackLikeCounts);
 
   const combinedCards = useMemo<HomeListItem[]>(() => {
     const courseItems: HomeListItem[] = courseCards.map((card) => ({
@@ -282,7 +288,7 @@ export function Home() {
             bottomSheetVisualVisibleHeight={sheetVisualVisibleHeight}
             isBottomSheetExpanded={isSheetExpanded}
             routes={isTrackTabOnly ? [] : filteredRoutes}
-            tracks={tracks}
+            tracks={filteredTracks}
             initialViewport={restoredInitialViewport}
             selectedCourseId={selectedCourseId}
             markerClickRecenterToken={markerClickRecenterToken}
@@ -318,8 +324,10 @@ export function Home() {
           isRouteQueryViewportReady={effectiveQueryViewport !== null}
           isCourseLiked={isCourseLiked}
           getCourseLikeCount={getCourseLikeCount}
+          toggleCourseLike={toggleCourseLike}
           isTrackLiked={isTrackLiked}
           getTrackLikeCount={getTrackLikeCount}
+          toggleTrackLike={toggleTrackLike}
           openPeekFromCollapsedSignal={openPeekFromCollapsedSignal}
           onCourseSelect={handleCourseSelect}
           onSheetPositionChange={handleSheetPositionChange}

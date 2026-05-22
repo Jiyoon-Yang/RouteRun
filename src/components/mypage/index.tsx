@@ -103,26 +103,26 @@ export default function Mypage({
 }: MypageProps) {
   const { linkGoogle, isPending: isLinkGooglePending } = useLinkGoogle({ returnTo: '/mypage' });
   const { activeTab, setTab } = useMyPageTabs();
-  const likedRouteLikeCounts = useMemo(
+  const allRouteLikeCounts = useMemo(
     () =>
-      likedRoutes.reduce<Record<string, number>>((acc, route) => {
+      [...myRoutes, ...likedRoutes].reduce<Record<string, number>>((acc, route) => {
         acc[route.id] = route.likeCount;
         return acc;
       }, {}),
-    [likedRoutes],
+    [myRoutes, likedRoutes],
   );
   const { isCourseLiked, getCourseLikeCount, toggleCourseLike } =
-    useCourseLikes(likedRouteLikeCounts);
+    useCourseLikes(allRouteLikeCounts);
 
-  const likedTrackLikeCounts = useMemo(
+  const allTrackLikeCounts = useMemo(
     () =>
-      likedTracks.reduce<Record<string, number>>((acc, track) => {
+      [...myTracks, ...likedTracks].reduce<Record<string, number>>((acc, track) => {
         acc[track.id] = track.likeCount;
         return acc;
       }, {}),
-    [likedTracks],
+    [myTracks, likedTracks],
   );
-  const { isTrackLiked, getTrackLikeCount, toggleTrackLike } = useTrackLikes(likedTrackLikeCounts);
+  const { isTrackLiked, getTrackLikeCount, toggleTrackLike } = useTrackLikes(allTrackLikeCounts);
 
   const { isAnonymous } = useAuth();
   const { executeLogoutOrDelete, isPending: isLogoutPending, isError } = useLogout();

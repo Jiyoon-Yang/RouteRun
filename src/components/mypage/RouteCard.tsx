@@ -27,7 +27,7 @@ export function RouteCard({
   const { isDeleting, deleteCourse } = useDeleteCourse();
   const isMyCourse = tab === 'my-posts';
   const locationText = route.start_address_region ?? '위치 정보 없음';
-  const isLiked = !isMyCourse && (isCourseLiked?.(route.id) ?? true);
+  const isLiked = isCourseLiked?.(route.id) ?? false;
   const likeCount = getCourseLikeCount?.(route.id) ?? route.likeCount;
 
   const secondaryActionLabel = isMyCourse ? undefined : isLiked ? '좋아요 취소' : '좋아요';
@@ -36,7 +36,7 @@ export function RouteCard({
     <Card
       type={isMyCourse ? 'my-course' : 'liked-course'}
       isLiked={isLiked}
-      readonlyLike={true}
+      onLikeClick={() => toggleCourseLike?.(route.id)}
       title={route.title}
       location={locationText}
       distanceText={route.distanceText}

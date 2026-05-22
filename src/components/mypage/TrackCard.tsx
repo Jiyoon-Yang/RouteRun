@@ -27,7 +27,7 @@ export function TrackCard({
   const { isDeleting, deleteTrack } = useDeleteTrack();
   const isMyTrack = tab === 'my-posts';
   const locationText = track.start_address_region ?? '위치 정보 없음';
-  const isLiked = !isMyTrack && (isTrackLiked?.(track.id) ?? true);
+  const isLiked = isTrackLiked?.(track.id) ?? false;
   const likeCount = getTrackLikeCount?.(track.id) ?? track.likeCount;
 
   const secondaryActionLabel = isMyTrack ? undefined : isLiked ? '좋아요 취소' : '좋아요';
@@ -36,7 +36,7 @@ export function TrackCard({
     <Card
       type={isMyTrack ? 'my-course' : 'liked-course'}
       isLiked={isLiked}
-      readonlyLike={true}
+      onLikeClick={() => toggleTrackLike?.(track.id)}
       title={track.title}
       location={locationText}
       distanceText={track.distanceText}

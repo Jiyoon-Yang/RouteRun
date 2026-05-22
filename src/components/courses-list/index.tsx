@@ -26,8 +26,10 @@ type CoursesListProps = {
   isRouteQueryViewportReady?: boolean;
   isCourseLiked?: (courseId: string) => boolean;
   getCourseLikeCount?: (courseId: string) => number;
+  toggleCourseLike?: (courseId: string) => void;
   isTrackLiked?: (trackId: string) => boolean;
   getTrackLikeCount?: (trackId: string) => number;
+  toggleTrackLike?: (trackId: string) => void;
   openPeekFromCollapsedSignal?: number;
   onSheetPositionChange?: (payload: SheetPositionPayload) => void;
   onCourseSelect?: (courseId: string) => void;
@@ -39,8 +41,10 @@ export function CoursesList({
   isRouteQueryViewportReady = true,
   isCourseLiked,
   getCourseLikeCount,
+  toggleCourseLike,
   isTrackLiked,
   getTrackLikeCount,
+  toggleTrackLike,
   openPeekFromCollapsedSignal,
   onSheetPositionChange,
   onCourseSelect,
@@ -126,7 +130,7 @@ export function CoursesList({
                   distanceText={card.distanceText}
                   likeCount={getCourseLikeCount?.(card.courseId) ?? card.likeCount}
                   thumbnailUrl={card.thumbnailUrl}
-                  readonlyLike={true}
+                  onLikeClick={() => toggleCourseLike?.(card.courseId)}
                 />
               </Link>
             );
@@ -151,7 +155,7 @@ export function CoursesList({
                 distanceText={`${track.distanceMeters}m`}
                 likeCount={getTrackLikeCount?.(track.trackId) ?? track.likeCount}
                 thumbnailUrl={track.thumbnailUrl}
-                readonlyLike={true}
+                onLikeClick={() => toggleTrackLike?.(track.trackId)}
               />
             </Link>
           );

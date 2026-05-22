@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Icon } from '@/commons/components/icons';
-import type { Route, RouteViewport } from '@/commons/types/routerun';
-import { bindMapEvents } from '@/commons/utils/tmap/events';
+import type { Route, RouteViewport, Track } from '@/commons/types/routerun';
+import { bindMapEvents, bindTmapMarkerListener } from '@/commons/utils/tmap/events';
 import { getTmapv3Runtime } from '@/commons/utils/tmap/runtime';
 import type {
   RouteMarkerEntry,
@@ -66,17 +66,21 @@ function roundCoordForLog(n: number): number {
   return Math.round(n * 1e8) / 1e8;
 }
 
+const TRACK_MARKER_ICON = '/assets/icons/courses-marker/marker_gray.png';
+
 type TmapHomeProps = {
   bottomSheetVisibleHeight?: number;
   /** 실제 보이는 시트 높이(플로팅 컨트롤 bottom). 미지정 시 bottomSheetVisibleHeight와 동일 */
   bottomSheetVisualVisibleHeight?: number;
   isBottomSheetExpanded?: boolean;
   routes?: Route[];
+  tracks?: Track[];
   initialViewport?: RouteViewport | null;
   selectedCourseId?: string | null;
   /** 마커 클릭 시마다 증가 — 보이는 지도 영역 기준 1회 중앙 정렬에만 사용 */
   markerClickRecenterToken?: number;
   onCourseMarkerClick?: (courseId: string, route: Route) => void;
+  onTrackMarkerClick?: (trackId: string, track: Track) => void;
   /** 데이터 필터용 — 전체 지도 bounds(getBounds), 바텀시트 오버레이 미반영 */
   onViewportChanged?: (viewport: RouteViewport) => void;
   /** UI용 — 바텀시트가 가리지 않는 영역 근사 bounds */
@@ -103,10 +107,12 @@ export function TmapHome({
   bottomSheetVisualVisibleHeight,
   isBottomSheetExpanded = false,
   routes = [],
+  tracks = [],
   initialViewport = null,
   selectedCourseId = null,
   markerClickRecenterToken = 0,
   onCourseMarkerClick,
+  onTrackMarkerClick,
   onViewportChanged,
   onVisibleViewportChanged,
   onZoomLimitReached,
@@ -270,6 +276,8 @@ export function TmapHome({
     clampHomeMapZoom,
   });
 
+  const trackMarkersRef = useRef<TmapMarker[]>([]);
+
   const {
     syncRouteMarkersDisplayForZoom: syncRouteMarkersDisplayForZoomByHook,
     scheduleMarkerVisibilitySync: scheduleMarkerVisibilitySyncByHook,
@@ -296,6 +304,7 @@ export function TmapHome({
     setMarkerHoverCursor,
     syncSelectedRoutePolyline,
     clearSelectedRoutePolyline,
+    trackMarkersRef,
   });
 
   const registerMapListeners = useCallback(
@@ -534,6 +543,49 @@ export function TmapHome({
   useEffect(() => {
     routesRef.current = routes;
   }, [routes]);
+
+  useEffect(() => {
+    type TrackMarkerRuntime = {
+      LatLng: new (lat: number, lng: number) => unknown;
+      Marker: new (opts: Record<string, unknown>) => TmapMarker;
+    };
+
+    const map = mapInstance.current;
+    const Tmapv3 = getTmapv3Runtime() as TrackMarkerRuntime | undefined;
+
+    const clearTrackMarkers = () => {
+      trackMarkersRef.current.forEach((m) => {
+        try {
+          m.setMap(null);
+        } catch {
+          /* no-op */
+        }
+      });
+      trackMarkersRef.current = [];
+    };
+
+    clearTrackMarkers();
+
+    if (!map || !Tmapv3 || tracks.length === 0) return;
+
+    trackMarkersRef.current = tracks
+      .filter((t) => Number.isFinite(t.start_lat) && Number.isFinite(t.start_lng))
+      .map((t) => {
+        const marker = new Tmapv3.Marker({
+          position: new Tmapv3.LatLng(t.start_lat, t.start_lng),
+          icon: TRACK_MARKER_ICON,
+          map,
+        });
+        if (onTrackMarkerClick) {
+          bindTmapMarkerListener(marker, getTmapv3Runtime, 'click', () => {
+            onTrackMarkerClick(t.id, t);
+          });
+        }
+        return marker;
+      });
+
+    return clearTrackMarkers;
+  }, [mapReadyToken, tracks, onTrackMarkerClick]);
 
   useEffect(() => {
     if (!selectedCourseId) {

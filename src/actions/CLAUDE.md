@@ -16,7 +16,8 @@ Next.js **Server Actions** (`'use server'`)로, 클라이언트 컴포넌트의 
 ```
 actions/
 ├── auth.action.ts    # 인증 (Google OAuth, 익명 로그인, 로그아웃, 게스트 계정 삭제)
-├── course.action.ts  # 코스 CRUD (등록, 수정, 삭제)
+├── course.action.ts  # 코스 CRUD (등록, 수정, 삭제) + 좋아요
+├── track.action.ts   # 트랙 CRUD (등록, 수정, 삭제) + 좋아요
 └── user.action.ts    # 유저 (닉네임 중복 확인, 닉네임 변경)
 ```
 
@@ -34,6 +35,12 @@ actions/
 - `deleteCourseAction(routeId)` — 본인 코스 삭제. `/mypage`, `/` 캐시 무효화
 - `updateCourseAction(input)` — 제목·설명·이미지 수정. 상세·목록 캐시 무효화
 - `toggleCourseLikeAction(courseId, shouldLike, revalidateMypage?)` — 좋아요 추가/제거 후 likes_count 갱신. Service 레이어 없이 Repository를 직접 호출한다.
+
+**track.action.ts**
+- `createTrackAction(input)` — 트랙 등록, 역지오코딩 포함. 성공 시 `{ success: true, trackId }` 반환
+- `deleteTrackAction(trackId)` — 본인 트랙 삭제. `/mypage`, `/` 캐시 무효화
+- `updateTrackAction(input)` — 제목·설명·이미지 수정. `/tracks/[id]`, `/tracks` 캐시 무효화
+- `toggleTrackLikeAction(trackId, shouldLike, revalidateMypage?)` — 좋아요 추가/제거 후 likes_count 갱신. `toggleCourseLikeAction`과 동일 패턴으로 Repository를 직접 호출한다.
 
 **user.action.ts**
 - `checkNicknameAction(nickname)` — 닉네임 형식 검사 + 중복 확인

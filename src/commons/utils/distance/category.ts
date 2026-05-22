@@ -1,4 +1,9 @@
-export type DistanceCategory = 'UNDER_3' | 'BETWEEN_3_AND_5' | 'BETWEEN_5_AND_10' | 'OVER_10';
+export type DistanceCategory =
+  | 'UNDER_3'
+  | 'BETWEEN_3_AND_5'
+  | 'BETWEEN_5_AND_10'
+  | 'OVER_10'
+  | 'TRACK';
 
 // ~3km → UNDER_3 · 3~5km → BETWEEN_3_AND_5 · 5~10km → BETWEEN_5_AND_10 · 10km~ → OVER_10
 export function getDistanceCategory(distanceMeters: number): DistanceCategory {

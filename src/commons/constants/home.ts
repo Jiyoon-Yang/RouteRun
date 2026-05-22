@@ -5,9 +5,10 @@ export const TAB_ITEMS = [
   { label: '3~5km', variant: 'green' as const, category: 'BETWEEN_3_AND_5' as const },
   { label: '5~10km', variant: 'red' as const, category: 'BETWEEN_5_AND_10' as const },
   { label: '10km~', variant: 'orange' as const, category: 'OVER_10' as const },
+  { label: '트랙', variant: 'gray' as const, category: 'TRACK' as const },
 ] as const satisfies ReadonlyArray<{
   label: string;
-  variant: 'blue' | 'green' | 'red' | 'orange';
+  variant: 'blue' | 'green' | 'red' | 'orange' | 'gray';
   category: DistanceCategory;
 }>;
 

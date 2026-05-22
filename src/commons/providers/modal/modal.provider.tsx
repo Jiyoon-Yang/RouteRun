@@ -85,7 +85,7 @@ export function ModalProvider({ children }: ModalProviderProps) {
             aria-modal="true"
             onPointerDown={(event) => event.stopPropagation()}
             onTouchStart={(event) => event.stopPropagation()}
-            onClick={(event) => event.stopPropagation()}
+            onClick={closeModal}
           >
             {modalOptions.renderContent ? (
               modalOptions.renderContent({ closeModal })

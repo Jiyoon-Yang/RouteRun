@@ -9,6 +9,7 @@ type Params = {
   collapsedPeekHeightThreshold: number;
   sheetVisibleHeightRef: MutableRefObject<number>;
   setSelectedCourseId: Dispatch<SetStateAction<string | null>>;
+  setSelectedTrackId: Dispatch<SetStateAction<string | null>>;
   setSelectedRouteSnapshot: Dispatch<SetStateAction<Route | null>>;
   setMarkerClickRecenterToken: Dispatch<SetStateAction<number>>;
   setOpenPeekFromCollapsedSignal: Dispatch<SetStateAction<number>>;
@@ -21,6 +22,7 @@ export function useHomeCourseMarkerClick({
   collapsedPeekHeightThreshold,
   sheetVisibleHeightRef,
   setSelectedCourseId,
+  setSelectedTrackId,
   setSelectedRouteSnapshot,
   setMarkerClickRecenterToken,
   setOpenPeekFromCollapsedSignal,
@@ -28,6 +30,7 @@ export function useHomeCourseMarkerClick({
   return useCallback(
     (courseId: string, route: Route) => {
       setSelectedCourseId(courseId);
+      setSelectedTrackId(null);
       setSelectedRouteSnapshot(route);
       setMarkerClickRecenterToken((previous) => previous + 1);
       if (sheetVisibleHeightRef.current <= collapsedPeekHeightThreshold) {
@@ -38,6 +41,7 @@ export function useHomeCourseMarkerClick({
       collapsedPeekHeightThreshold,
       sheetVisibleHeightRef,
       setSelectedCourseId,
+      setSelectedTrackId,
       setSelectedRouteSnapshot,
       setMarkerClickRecenterToken,
       setOpenPeekFromCollapsedSignal,

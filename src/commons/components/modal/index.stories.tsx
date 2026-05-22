@@ -34,7 +34,7 @@ const meta = {
   argTypes: {
     type: {
       control: 'inline-radio',
-      options: ['confirm', 'form', 'alert'],
+      options: ['confirm', 'form', 'alert', 'dual'],
     },
     onCancel: { action: 'cancel' },
     onConfirm: { action: 'confirm' },
@@ -98,5 +98,15 @@ export const Alert: Story = {
     type: 'alert',
     title: '저장되었습니다.',
     confirmText: '확인',
+  },
+};
+
+/** 아웃라인 버튼 두 개 — 동일한 스타일의 선택지 두 개를 제공할 때 */
+export const Dual: Story = {
+  args: {
+    type: 'dual',
+    title: '어떻게 하시겠습니까?',
+    primaryText: '확인',
+    secondaryText: '취소',
   },
 };

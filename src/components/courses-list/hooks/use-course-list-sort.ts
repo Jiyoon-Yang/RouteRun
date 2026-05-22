@@ -2,19 +2,20 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import type { CourseCardView } from '@/commons/types/routerun';
+import type { HomeListItem } from '@/commons/types/routerun';
 
-import { sortCourseCardsForDisplay, type CourseListSortMode } from '../utils/sort-course-cards';
+import { sortHomeListCardsForDisplay, type CourseListSortMode } from '../utils/sort-course-cards';
 
 export function useCourseListSort(
-  cards: CourseCardView[],
+  cards: HomeListItem[],
   getCourseLikeCount?: (courseId: string) => number,
+  getTrackLikeCount?: (trackId: string) => number,
 ) {
   const [sortMode, setSortMode] = useState<CourseListSortMode>('distance');
 
   const displayCards = useMemo(
-    () => sortCourseCardsForDisplay(cards, sortMode, getCourseLikeCount),
-    [cards, getCourseLikeCount, sortMode],
+    () => sortHomeListCardsForDisplay(cards, sortMode, getCourseLikeCount, getTrackLikeCount),
+    [cards, getCourseLikeCount, getTrackLikeCount, sortMode],
   );
 
   const selectSortMode = useCallback((mode: CourseListSortMode) => {

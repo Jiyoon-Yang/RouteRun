@@ -35,6 +35,7 @@ export function TrackCard({
   return (
     <Card
       type={isMyTrack ? 'my-course' : 'liked-course'}
+      itemKind="track"
       isLiked={isLiked}
       onLikeClick={() => toggleTrackLike?.(track.id)}
       title={track.title}

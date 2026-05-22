@@ -20,6 +20,7 @@ export function TrackCard({
     <Card
       className={className}
       type="default"
+      itemKind="track"
       title={track.title}
       location={track.location}
       distanceText={`${track.distanceMeters}m`}

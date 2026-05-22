@@ -123,6 +123,7 @@ export function CoursesList({
                 <Card
                   className={styles.cardWidth}
                   type="default"
+                  itemKind="course"
                   isLiked={isCourseLiked?.(card.courseId) ?? false}
                   isSelected={card.isPinnedTop}
                   title={card.title}
@@ -148,6 +149,7 @@ export function CoursesList({
               <Card
                 className={styles.cardWidth}
                 type="default"
+                itemKind="track"
                 isLiked={isTrackLiked?.(track.trackId) ?? false}
                 isSelected={track.isSelected}
                 title={track.title}

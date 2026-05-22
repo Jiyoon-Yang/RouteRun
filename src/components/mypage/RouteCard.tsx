@@ -35,6 +35,7 @@ export function RouteCard({
   return (
     <Card
       type={isMyCourse ? 'my-course' : 'liked-course'}
+      itemKind="course"
       isLiked={isLiked}
       onLikeClick={() => toggleCourseLike?.(route.id)}
       title={route.title}

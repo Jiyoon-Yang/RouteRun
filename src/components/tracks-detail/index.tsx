@@ -51,8 +51,12 @@ export function TracksDetail({
   }, []);
 
   const handleShare = async () => {
-    await navigator.clipboard.writeText(window.location.href);
-    showToast('링크가 복사되었습니다', 'success');
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      showToast('링크가 복사되었습니다', 'success');
+    } catch {
+      showToast('링크 복사에 실패했습니다', 'error');
+    }
   };
 
   const descriptionText = getCourseDescriptionDisplay(track.description, COPY.emptyDescription);

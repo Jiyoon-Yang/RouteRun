@@ -1,0 +1,20 @@
+.badge {
+  display: inline-block;
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-family: var(--typography-caption-1-ko-desktop-font-family);
+  font-size: var(--typography-caption-1-ko-desktop-font-size);
+  font-weight: var(--typography-caption-1-ko-desktop-font-weight);
+  color: var(--color-white-500);
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.course {
+  background: var(--color-blue-500);
+}
+
+.track {
+  background: var(--color-dark_grey-500);
+}

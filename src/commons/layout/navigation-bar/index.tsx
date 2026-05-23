@@ -54,7 +54,7 @@ export function NavigationBar({
   hasWrittenItem = false,
 }: NavigationBarProps) {
   const router = useRouter();
-  const { requireAuth, isPrivateRoute } = useRequireAuthModal();
+  const { requireAuth } = useRequireAuthModal();
   const { requireFullAccountForItem } = useGuestGuard();
   const { openModal, closeModal } = useModal();
   const rootClass = [styles.root, className].filter(Boolean).join(' ');
@@ -81,14 +81,14 @@ export function NavigationBar({
                     openModal({
                       type: 'dual',
                       title: '등록 유형',
-                      primaryText: '코스 등록',
+                      primaryText: '코스',
                       onPrimary: () => {
                         closeModal();
                         requireFullAccountForItem(hasWrittenItem, () => {
                           router.push(ROUTES.COURSES.NEW);
                         });
                       },
-                      secondaryText: '트랙 등록',
+                      secondaryText: '트랙',
                       onSecondary: () => {
                         closeModal();
                         requireFullAccountForItem(hasWrittenItem, () => {
@@ -97,15 +97,6 @@ export function NavigationBar({
                       },
                     });
                     return;
-                  }
-
-                  if (!isPrivateRoute(item.href)) {
-                    return;
-                  }
-
-                  const canNavigate = requireAuth({ redirectTo: item.href });
-                  if (!canNavigate) {
-                    event.preventDefault();
                   }
                 }}
               />

@@ -9,7 +9,6 @@ import { useEffect } from 'react';
 
 import { Icon } from '@/commons/components/icons';
 import { ROUTES } from '@/commons/constants/url';
-import { useNoticeUnread } from '@/commons/hooks/useNoticeUnread';
 
 import styles from './styles.module.css';
 
@@ -27,7 +26,6 @@ export type SidebarProps = {
 };
 
 export function Sidebar({ open, onClose }: SidebarProps) {
-  const hasNoticeUnread = useNoticeUnread();
 
   useEffect(() => {
     if (!open) {
@@ -95,15 +93,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               href={ROUTES.NOTICE}
               className={styles.navLink}
               tabIndex={open ? 0 : -1}
-              aria-label={hasNoticeUnread ? `${COPY.notices}, 새 공지` : COPY.notices}
+              aria-label={COPY.notices}
               onClick={onClose}
             >
-              <span className={styles.navLinkLabel}>{COPY.notices}</span>
-              {hasNoticeUnread ? (
-                <span className={styles.noticeNewBadge} aria-hidden="true">
-                  N
-                </span>
-              ) : null}
+              {COPY.notices}
             </Link>
             <Link
               href={ROUTES.REPORT}

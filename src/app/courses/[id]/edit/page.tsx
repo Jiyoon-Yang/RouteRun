@@ -20,7 +20,11 @@ export default async function CourseEditPage({ params }: CourseEditPageProps) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user?.id !== fetchedData.course.user_id) {
+  if (!user) {
+    redirect(`/login?redirect_to=/courses/${params.id}/edit`);
+  }
+
+  if (user.id !== fetchedData.course.user_id) {
     redirect(`/courses/${params.id}`);
   }
 

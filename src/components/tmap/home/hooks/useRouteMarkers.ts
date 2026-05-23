@@ -80,6 +80,7 @@ export function useRouteMarkers({
   routesSyncSigRef,
   selectedRouteIdRef,
   markerVisibilityTimerRef,
+  trackMarkersRef,
   getTmapv3,
   tryReadMarkerAttachedMap,
   tryReadSdkLatLngFromMarker,
@@ -269,6 +270,7 @@ export function useRouteMarkers({
           entry.isVisible = true;
           entry.outOfViewportSinceMs = null;
         });
+        trackMarkersRef.current.forEach((m) => m.setMap(map));
         return;
       }
 
@@ -278,10 +280,11 @@ export function useRouteMarkers({
           entry.marker.setMap(map);
           entry.isVisible = true;
         });
+        trackMarkersRef.current.forEach((m) => m.setMap(map));
         return;
       }
 
-      if (markerCount === 0) {
+      if (markerCount === 0 && trackMarkersRef.current.length === 0) {
         tearDownRouteMarkerCluster();
         routeMarkerRouteDisplayModeRef.current = 'individual';
         routeMarkerClusterAttachGenerationRef.current = -1;
@@ -302,6 +305,7 @@ export function useRouteMarkers({
           entry.isVisible = true;
           entry.outOfViewportSinceMs = null;
         });
+        trackMarkersRef.current.forEach((m) => m.setMap(map));
         return;
       }
 
@@ -321,14 +325,19 @@ export function useRouteMarkers({
           entry.isVisible = true;
           entry.outOfViewportSinceMs = null;
         });
+        trackMarkersRef.current.forEach((m) => m.setMap(null));
         const MarkerCluster = getTmapv3()?.extension?.MarkerCluster;
         if (!MarkerCluster) {
           routeMarkerRouteDisplayModeRef.current = 'individual';
           routeMarkerClusterAttachGenerationRef.current = -1;
           routeMarkerMapRef.current.forEach((entry) => entry.marker.setMap(map));
+          trackMarkersRef.current.forEach((m) => m.setMap(map));
           return;
         }
-        const markers = Array.from(routeMarkerMapRef.current.values(), (e) => e.marker);
+        const markers = [
+          ...Array.from(routeMarkerMapRef.current.values(), (e) => e.marker),
+          ...trackMarkersRef.current,
+        ];
         if (markers.length > 0) {
           try {
             routeMarkerClusterRef.current = new MarkerCluster({ markers, map });
@@ -338,6 +347,7 @@ export function useRouteMarkers({
             routeMarkerRouteDisplayModeRef.current = 'individual';
             routeMarkerClusterAttachGenerationRef.current = -1;
             routeMarkerMapRef.current.forEach((entry) => entry.marker.setMap(map));
+            trackMarkersRef.current.forEach((m) => m.setMap(map));
             return;
           }
         }
@@ -351,6 +361,7 @@ export function useRouteMarkers({
       routeMarkerClusterRef,
       routeMarkerMapRef,
       tearDownRouteMarkerCluster,
+      trackMarkersRef,
     ],
   );
 

@@ -566,7 +566,11 @@ export function TmapHome({
 
     clearTrackMarkers();
 
-    if (!map || !Tmapv3 || tracks.length === 0) return;
+    if (!map || !Tmapv3 || tracks.length === 0) {
+      routeMarkerClusterGenerationRef.current += 1;
+      if (map) syncRouteMarkersDisplayForZoomByHook(map);
+      return;
+    }
 
     trackMarkersRef.current = tracks
       .filter((t) => Number.isFinite(t.start_lat) && Number.isFinite(t.start_lng))
@@ -584,8 +588,11 @@ export function TmapHome({
         return marker;
       });
 
+    routeMarkerClusterGenerationRef.current += 1;
+    syncRouteMarkersDisplayForZoomByHook(map);
+
     return clearTrackMarkers;
-  }, [mapReadyToken, tracks, onTrackMarkerClick]);
+  }, [mapReadyToken, tracks, onTrackMarkerClick, syncRouteMarkersDisplayForZoomByHook]);
 
   useEffect(() => {
     if (!selectedCourseId) {

@@ -20,6 +20,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 
+import { Badge } from '@/commons/components/badge';
 import { Icon } from '@/commons/components/icons';
 import { ROUTES } from '@/commons/constants/url';
 import { Header } from '@/commons/layout/header';
@@ -106,7 +107,10 @@ export function Courses({ course, authorNickname, location, canEdit = false }: C
 
           <section className={styles.summarySection} aria-label="코스 요약 정보">
             <div className={styles.titleRow}>
-              <h2 className={styles.courseTitle}>{course.title}</h2>
+              <div className={styles.titleGroup}>
+                <Badge kind="course" />
+                <h2 className={styles.courseTitle}>{course.title}</h2>
+              </div>
               <div className={styles.actionsGroup}>
                 <button
                   type="button"
@@ -130,7 +134,7 @@ export function Courses({ course, authorNickname, location, canEdit = false }: C
             </div>
 
             <div className={styles.metaRow}>
-              <span className={styles.distance}>코스 거리: {distanceText}</span>
+              <span className={styles.distance}>거리: {distanceText}</span>
               <span className={styles.separator} aria-hidden>
                 |
               </span>

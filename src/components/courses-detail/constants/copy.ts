@@ -2,8 +2,8 @@
 
 export const COURSES_DETAIL_COPY = {
   mapPreview: '[MAP PREVIEW]',
-  descriptionTitle: '코스 설명',
-  imageTitle: '코스 이미지',
+  descriptionTitle: '설명',
+  imageTitle: '이미지',
   imageAltPrefix: '코스 이미지',
   emptyImageTitle: '등록된 이미지가 없습니다',
   previousImage: '이전 이미지',

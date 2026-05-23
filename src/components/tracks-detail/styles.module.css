@@ -99,6 +99,15 @@
   width: 100%;
 }
 
+.titleGroup {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+
 .trackTitle {
   margin: 0;
   flex: 1;

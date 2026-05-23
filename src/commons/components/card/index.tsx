@@ -1,5 +1,6 @@
 import Image from 'next/image';
 
+import { Badge } from '@/commons/components/badge';
 import { Button } from '@/commons/components/button';
 import { Icon } from '@/commons/components/icons';
 import { LogoIcon } from '@/commons/components/logo';
@@ -101,13 +102,7 @@ export function Card({
               />
             </span>
           )}
-          {itemKind && (
-            <span
-              className={`${styles.itemKindBadge} ${itemKind === 'course' ? styles.itemKindBadgeCourse : styles.itemKindBadgeTrack}`}
-            >
-              {itemKind === 'course' ? '코스' : '트랙'}
-            </span>
-          )}
+          {itemKind && <Badge kind={itemKind} className={styles.badgeOverlay} />}
         </div>
 
         <div className={styles.content}>
@@ -121,6 +116,7 @@ export function Card({
                   aria-label={likeLabel}
                   aria-pressed={isLiked}
                   onClick={(event) => {
+                    event.preventDefault();
                     event.stopPropagation();
                     onLikeClick();
                   }}

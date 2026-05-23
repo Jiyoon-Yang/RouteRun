@@ -8,6 +8,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 
+import { Badge } from '@/commons/components/badge';
 import { Icon } from '@/commons/components/icons';
 import { ROUTES } from '@/commons/constants/url';
 import { Header } from '@/commons/layout/header';
@@ -98,7 +99,10 @@ export function TracksDetail({
 
           <section className={styles.summarySection} aria-label="트랙 요약 정보">
             <div className={styles.titleRow}>
-              <h2 className={styles.trackTitle}>{track.title}</h2>
+              <div className={styles.titleGroup}>
+                <Badge kind="track" />
+                <h2 className={styles.trackTitle}>{track.title}</h2>
+              </div>
               <div className={styles.actionsGroup}>
                 <button
                   type="button"
@@ -122,7 +126,7 @@ export function TracksDetail({
             </div>
 
             <div className={styles.metaRow}>
-              <span className={styles.distance}>트랙 거리: {track.distance_meters}m</span>
+              <span className={styles.distance}>거리: {track.distance_meters}m</span>
               <span className={styles.separator} aria-hidden>
                 |
               </span>

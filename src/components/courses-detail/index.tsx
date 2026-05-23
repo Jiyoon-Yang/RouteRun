@@ -108,7 +108,7 @@ export function Courses({ course, authorNickname, location, canEdit = false }: C
           <section className={styles.summarySection} aria-label="코스 요약 정보">
             <div className={styles.titleRow}>
               <div className={styles.titleGroup}>
-                <Badge kind="course" />
+                <Badge kind="course" size="m" />
                 <h2 className={styles.courseTitle}>{course.title}</h2>
               </div>
               <div className={styles.actionsGroup}>

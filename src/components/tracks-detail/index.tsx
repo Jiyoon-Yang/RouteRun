@@ -100,7 +100,7 @@ export function TracksDetail({
           <section className={styles.summarySection} aria-label="트랙 요약 정보">
             <div className={styles.titleRow}>
               <div className={styles.titleGroup}>
-                <Badge kind="track" />
+                <Badge kind="track" size="m" />
                 <h2 className={styles.trackTitle}>{track.title}</h2>
               </div>
               <div className={styles.actionsGroup}>

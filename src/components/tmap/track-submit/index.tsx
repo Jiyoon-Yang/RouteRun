@@ -109,7 +109,7 @@ export default function TmapTrackSubmit({ onSaveTrack }: TrackSubmitMapProps) {
             min={1}
             step={1}
             value={distanceMeters === 0 ? '' : distanceMeters}
-            placeholder={isDistanceFocused ? '' : '직접 입력'}
+            placeholder={isDistanceFocused ? '' : '거리 입력'}
             onFocus={() => setIsDistanceFocused(true)}
             onBlur={() => setIsDistanceFocused(false)}
             onChange={(e) => {

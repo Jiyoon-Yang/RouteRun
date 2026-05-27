@@ -240,6 +240,11 @@ export function useHomeMapLifecycle({
       routeMarkerMap.clear();
 
       clearSelectedRoutePolyline();
+      try {
+        (mapRef.current as { destroy?: () => void } | null)?.destroy?.();
+      } catch {
+        /* no-op */
+      }
       mapRef.current = null;
       currentLocationMarkerRef.current = null;
       currentLocationCoordinateRef.current = null;

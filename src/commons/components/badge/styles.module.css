@@ -1,0 +1,30 @@
+.badge {
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 99px;
+  color: var(--color-white-500);
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.s {
+  padding: 2px 4px;
+  font-family: var(--typography-caption-1-ko-desktop-font-family);
+  font-size: 8px;
+  font-weight: var(--typography-caption-1-ko-desktop-font-weight);
+}
+
+.m {
+  padding: 4px 8px;
+  font-family: var(--typography-body-2-ko-desktop-font-family);
+  font-size: 12px;
+  font-weight: var(--typography-body-2-ko-desktop-font-weight);
+}
+
+.course {
+  background: var(--color-blue-500);
+}
+
+.track {
+  background: var(--color-dark_grey-500);
+}

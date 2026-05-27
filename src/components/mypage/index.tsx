@@ -51,7 +51,7 @@ const TEXTS = {
   TAB_LIKED_POSTS: '좋아요한 게시글',
   EMPTY_MY: '작성한 게시글이 없습니다.',
   EMPTY_LIKED: '좋아요한 게시글이 없습니다.',
-  GOOGLE_CONTINUE: 'Google로 계속하기',
+  GOOGLE_CONTINUE: '내 Google 계정과 연동하기',
   GOOGLE_LINKING: '연동 중...',
 } as const;
 

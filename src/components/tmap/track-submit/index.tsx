@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useId, useRef } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import { Icon } from '@/commons/components/icons';
 import { getCurrentPositionWithFallback } from '@/commons/utils/geo/geolocation';
@@ -18,6 +18,7 @@ type TrackSubmitMapProps = {
 export default function TmapTrackSubmit({ onSaveTrack }: TrackSubmitMapProps) {
   const mapContainerId = useId().replace(/:/g, '-');
   const mapContainerIdRef = useRef(`tmap-track-submit-${mapContainerId}`);
+  const [isDistanceFocused, setIsDistanceFocused] = useState(false);
 
   const { createCurrentLocationMarker } = useCurrentLocationMarker();
   const {
@@ -108,7 +109,9 @@ export default function TmapTrackSubmit({ onSaveTrack }: TrackSubmitMapProps) {
             min={1}
             step={1}
             value={distanceMeters === 0 ? '' : distanceMeters}
-            placeholder="0"
+            placeholder={isDistanceFocused ? '' : '거리 입력'}
+            onFocus={() => setIsDistanceFocused(true)}
+            onBlur={() => setIsDistanceFocused(false)}
             onChange={(e) => {
               const val = parseInt(e.target.value, 10);
               setDistanceMeters(Number.isFinite(val) && val > 0 ? val : 0);

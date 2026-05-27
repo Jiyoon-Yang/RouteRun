@@ -80,7 +80,7 @@ export function NavigationBar({
 
                     openModal({
                       type: 'dual',
-                      title: '등록 유형',
+                      title: '루트 유형',
                       primaryText: '코스',
                       onPrimary: () => {
                         closeModal();

@@ -5,7 +5,7 @@
 ## 프로젝트 개요
 
 **RunningCourse**는 위치 기반 러닝 코스 커뮤니티 웹앱입니다.
-주요 기능: 지도 기반 코스 탐색 (TMap SDK), 폴리라인으로 코스 생성, 사용자 인증 (Google OAuth + 익명 세션), 좋아요 기능.
+주요 기능: 지도 기반 코스·트랙 탐색 (TMap SDK), 폴리라인으로 코스/트랙 생성, 사용자 인증 (Google OAuth + 익명 세션), 좋아요 기능.
 
 ## 주요 명령어
 
@@ -38,7 +38,7 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
 
 - `src/app/` — Next.js App Router 페이지 & 레이아웃
 - `src/actions/` — 인증, 코스, 유저 관련 Server Actions
-- `src/components/` — 기능별 컴포넌트 (`home/`, `courses-detail/`, `courses-list/`, `mypage/`, `course-submit/`, `tmap/` 등)
+- `src/components/` — 기능별 컴포넌트 (`home/`, `courses-detail/`, `courses-list/`, `mypage/`, `course-submit/`, `track-submit/`, `tracks-detail/`, `tmap/` 등)
 - `src/commons/` — 공통 UI 컴포넌트, 훅, 상수, 프로바이더, 타입, 유틸
 - `src/repositories/` — 데이터 접근 (course, user, map 레포지토리)
 - `src/services/` — 비즈니스 로직 (course, user, map 서비스)
@@ -54,13 +54,15 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
 
 미들웨어 (`middleware.ts`)는 모든 요청에서 세션을 갱신하고 비공개 라우트를 보호합니다. 세션이 없는 경우(완전 미로그인)만 차단하고 `/login`으로 리다이렉트합니다. 익명(게스트) 세션은 라우트를 통과하나, 코스 생성·수정·좋아요 등 mutation은 Action 레벨에서 `isAnonymous` 여부로 별도 차단됩니다.
 
-**비공개 라우트:** `/courses/new`, `/courses/[id]/edit`, `/mypage`
+**비공개 라우트:** `/courses/new`, `/courses/[id]/edit`, `/tracks/new`, `/tracks/[id]/edit`, `/mypage`
 
 ## DB 스키마 (Supabase Postgres)
 
 - `users`: `id, nickname, profile_image_url, is_anonymous`
 - `routes`: `id, user_id, title, description, distance_meters, path_data (JSON), start_lat, start_lng, start_address_region, image_urls, likes_count, created_at, updated_at`
 - `route_likes`: 복합키 `(user_id, route_id)`
+- `tracks`: `id, user_id, title, description, distance_meters, start_lat, start_lng, start_address_region, image_urls, likes_count, created_at` (routes와 달리 `path_data` 없음)
+- `track_likes`: 복합키 `(user_id, track_id)`
 - 스토리지 버킷: `course_images` (공개)
 
 ## 환경 변수

@@ -56,7 +56,7 @@ export function TracksDetail({
       await navigator.clipboard.writeText(window.location.href);
       showToast('링크가 복사되었습니다', 'success');
     } catch {
-      showToast('링크 복사에 실패했습니다', 'error');
+      showToast('링크 복사에 실패했습니다', 'failed');
     }
   };
 
@@ -100,7 +100,7 @@ export function TracksDetail({
           <section className={styles.summarySection} aria-label="트랙 요약 정보">
             <div className={styles.titleRow}>
               <div className={styles.titleGroup}>
-                <Badge kind="track" />
+                <Badge kind="track" size="m" />
                 <h2 className={styles.trackTitle}>{track.title}</h2>
               </div>
               <div className={styles.actionsGroup}>

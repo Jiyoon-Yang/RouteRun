@@ -26,7 +26,6 @@ export type SidebarProps = {
 };
 
 export function Sidebar({ open, onClose }: SidebarProps) {
-
   useEffect(() => {
     if (!open) {
       return;

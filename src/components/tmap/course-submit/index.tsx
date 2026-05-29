@@ -58,6 +58,12 @@ export default function TmapCourseSubmit({ onSaveRoute }: CourseSubmitMapProps) 
     initialize();
     return () => {
       cancelled = true;
+      try {
+        (mapRef.current as { destroy?: () => void } | null)?.destroy?.();
+      } catch {
+        /* no-op */
+      }
+      mapRef.current = null;
     };
   }, [createCurrentLocationMarker, initializeMap, mapRef]);
 

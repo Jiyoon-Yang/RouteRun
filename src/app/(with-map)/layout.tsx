@@ -1,22 +1,40 @@
-import { AppBody } from '@/commons/layout/app-body';
-import { dynamic, generateMetadata, viewport } from '@/commons/layout/shared-metadata';
+import Script from 'next/script';
 
-import '../globals.css';
+const tmapLoaderScript = `(function(){
+  var orig=document.write.bind(document);
+  document.write=function(markup){
+    var div=document.createElement('div');
+    div.innerHTML=markup;
+    Array.prototype.forEach.call(div.children,function(node){
+      if(node.tagName==='SCRIPT'){
+        var s=document.createElement('script');
+        var src=node.getAttribute('src');
+        if(src){s.src=src;}else{s.textContent=node.textContent;}
+        document.head.appendChild(s);
+      }else{
+        document.head.appendChild(node.cloneNode(true));
+      }
+    });
+  };
+  setTimeout(function(){document.write=orig;},5000);
+  var s=document.createElement('script');
+  s.src='https://apis.openapi.sk.com/tmap/vectorjs?version=1&appKey=${process.env.NEXT_PUBLIC_TMAP_API_KEY}';
+  document.head.appendChild(s);
+})();`;
 
-export { dynamic, generateMetadata, viewport };
-
-export default function MapRootLayout({ children }: { children: React.ReactNode }) {
+export default function MapLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko">
-      <head>
-        {/* TMap SDK가 내부적으로 document.write를 사용해 동기 로드가 필요하다. */}
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-        <script
-          id="tmap-vector-sdk"
-          src={`https://apis.openapi.sk.com/tmap/vectorjs?version=1&appKey=${process.env.NEXT_PUBLIC_TMAP_API_KEY}`}
-        />
-      </head>
-      <AppBody>{children}</AppBody>
-    </html>
+    <>
+      <link rel="preconnect" href="https://apis.openapi.sk.com" />
+      <link rel="preconnect" href="https://toptmaptile3.tmap.co.kr" crossOrigin="anonymous" />
+      <link rel="dns-prefetch" href="https://apis.openapi.sk.com" />
+      <link rel="dns-prefetch" href="https://toptmaptile3.tmap.co.kr" />
+      <Script
+        id="tmap-sdk-loader"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{ __html: tmapLoaderScript }}
+      />
+      {children}
+    </>
   );
 }

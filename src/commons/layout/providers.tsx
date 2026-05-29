@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getUserRouteWriteCount } from '@/services/course/courseService';
 import { getUserTrackWriteCount } from '@/services/track/trackService';
 
-export async function AppBody({ children }: { children: React.ReactNode }) {
+export async function Providers({ children }: { children: React.ReactNode }) {
   let hasWrittenItem = false;
 
   try {

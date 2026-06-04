@@ -1,5 +1,5 @@
-import { StaticInfoPage } from '@/components/report';
+import { ReportPage } from '@/components/report';
 
-export default function ReportPage() {
-  return <StaticInfoPage title="제보하기" description="제보 채널은 준비 중입니다." />;
+export default function Page() {
+  return <ReportPage />;
 }

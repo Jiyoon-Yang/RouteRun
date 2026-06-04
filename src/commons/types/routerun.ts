@@ -77,3 +77,13 @@ export interface TrackCardView {
 export type HomeListItem =
   | { itemType: 'course'; data: CourseCardView }
   | { itemType: 'track'; data: TrackCardView };
+
+export type ReportType = 'bug' | 'inconvenience' | 'suggestion';
+
+export interface Report {
+  id: string;
+  user_id: string;
+  type: ReportType;
+  content: string;
+  created_at: string;
+}

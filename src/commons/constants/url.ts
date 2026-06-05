@@ -46,7 +46,7 @@ export const ROUTE_CONFIG: Record<string, RouteConfig> = {
   },
   REPORT: {
     path: ROUTES.REPORT,
-    access: 'public',
+    access: 'private',
     header: true,
     navigationBar: true,
   },
@@ -95,7 +95,12 @@ export const HEADER_ROUTES = [
   ROUTES.MYPAGE,
 ] as const;
 
-export const PRIVATE_ROUTES = [ROUTES.COURSES.NEW, ROUTES.TRACKS.NEW, ROUTES.MYPAGE] as const;
+export const PRIVATE_ROUTES = [
+  ROUTES.COURSES.NEW,
+  ROUTES.TRACKS.NEW,
+  ROUTES.MYPAGE,
+  ROUTES.REPORT,
+] as const;
 
 /** 동적 라우트 패턴 — header O */
 export const HEADER_DYNAMIC_PATTERNS: RegExp[] = [

@@ -1,4 +1,4 @@
-import type { ReferenceLocation, Route } from '@/commons/types/routerun';
+import type { ReferenceLocation } from '@/commons/types/routerun';
 
 type Coordinate = {
   lat: number;
@@ -26,13 +26,6 @@ export function isValidCoordinate(lat: number, lng: number): boolean {
   return (
     Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180
   );
-}
-
-// [검증] 코스 시작 좌표 유효성 검증
-export function hasValidRouteStartCoordinate(
-  route: Pick<Route, 'start_lat' | 'start_lng'>,
-): boolean {
-  return isValidCoordinate(route.start_lat, route.start_lng);
 }
 
 // [계산] Haversine 기반 직선거리 계산

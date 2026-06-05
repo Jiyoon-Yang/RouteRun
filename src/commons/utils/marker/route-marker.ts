@@ -16,22 +16,6 @@ const CATEGORY_TO_ICON_PATH: Record<DistanceCategory, string> = {
   TRACK: '/assets/icons/courses-marker/marker_gray.png',
 };
 
-/** 원본 PNG(144×200) 알파 픽셀 기준 핀 꼭짓점 좌표 */
-const ROUTE_MARKER_SOURCE_SIZE = { width: 144, height: 200 } as const;
-const ROUTE_MARKER_SOURCE_TIP = { x: 67.5, y: 149 } as const;
-
-/** 표시 크기에 맞춘 핀 꼭짓점 앵커. 소수점 앵커로 꼭짓점을 정확히 맞춘다. */
-export function getRouteMarkerAnchorForDisplay(): { x: number; y: number } {
-  return {
-    x:
-      (ROUTE_MARKER_SOURCE_TIP.x / ROUTE_MARKER_SOURCE_SIZE.width) *
-      ROUTE_MARKER_ICON_DISPLAY_SIZE.width,
-    y:
-      (ROUTE_MARKER_SOURCE_TIP.y / ROUTE_MARKER_SOURCE_SIZE.height) *
-      ROUTE_MARKER_ICON_DISPLAY_SIZE.height,
-  };
-}
-
 /**
  * 거리 카테고리별 마커 PNG.
  * `visualState`는 호출부 시그니처 호환용이며, 아이콘 경로는 카테고리만으로 결정된다.

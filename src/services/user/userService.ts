@@ -9,7 +9,7 @@ import * as trackService from '@/services/track/trackService';
 
 import { validateNickname } from './userValidation';
 
-export type MypageAuthFallback = {
+type MypageAuthFallback = {
   fallbackDisplayName: string;
 };
 

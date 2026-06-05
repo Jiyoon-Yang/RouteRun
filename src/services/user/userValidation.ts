@@ -2,7 +2,7 @@ const NICKNAME_MIN_LENGTH = 2;
 const NICKNAME_MAX_LENGTH = 10;
 const NICKNAME_REGEX = /^[가-힣a-zA-Z0-9]+$/;
 
-export type NicknameValidation = {
+type NicknameValidation = {
   isValid: boolean;
   message: string | null;
 };

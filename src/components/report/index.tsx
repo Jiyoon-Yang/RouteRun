@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react';
 
 import { submitReportAction } from '@/actions/report.action';
 import { Button } from '@/commons/components/button';
+import { Spinner } from '@/commons/components/spinner';
 import { Header } from '@/commons/layout/header';
 import { useToast } from '@/commons/providers/toast/toast.provider';
 import type { ReportType } from '@/commons/types/routerun';
@@ -72,9 +73,8 @@ export function ReportPage() {
         setError(result.message);
         return;
       }
-      setSelectedType(null);
-      setContent('');
       showToast('제보가 접수됐습니다.', 'success');
+      router.push('/');
     });
   }
 
@@ -87,9 +87,6 @@ export function ReportPage() {
         onLeftIconClick={() => router.back()}
       />
       <div className={styles.body}>
-        <p className={styles.guide}>서비스를 이용하면서 불편했던 점이나 개선 의견을 알려주세요.</p>
-        <div className={styles.divider} />
-
         <div className={styles.formSection}>
           <p className={styles.fieldLabel}>제보 유형</p>
           <div className={styles.typeChips}>
@@ -139,14 +136,15 @@ export function ReportPage() {
             color="dark"
             size="Xlarge"
             borderRadius="r16"
-            className={styles.submitButton}
+            style={{ width: '100%' }}
             disabled={isPending}
             onClick={handleSubmit}
           >
-            {isPending ? '제출 중...' : '제출하기'}
+            제출하기
           </Button>
         </div>
       </div>
+      {isPending && <Spinner overlay size="lg" />}
     </section>
   );
 }

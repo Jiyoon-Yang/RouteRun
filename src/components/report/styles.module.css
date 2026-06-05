@@ -18,25 +18,6 @@
   gap: 0;
 }
 
-/* ── 안내 문구 ── */
-
-.guide {
-  margin: 0 0 20px;
-  font-family: var(--typography-body-2-ko-desktop-regular-font-family);
-  font-size: var(--typography-body-2-ko-desktop-regular-font-size);
-  font-weight: var(--typography-body-2-ko-desktop-regular-font-weight);
-  line-height: var(--typography-body-2-ko-desktop-regular-line-height);
-  letter-spacing: var(--typography-body-2-ko-desktop-regular-letter-spacing);
-  color: var(--color-grey-700);
-}
-
-.divider {
-  width: 100%;
-  height: 1px;
-  background: var(--color-card_outline-100);
-  margin-bottom: 24px;
-}
-
 /* ── 폼 섹션 ── */
 
 .formSection {
@@ -107,7 +88,7 @@
   border: 1px solid var(--color-card_outline-100);
   border-radius: 12px;
   background: transparent;
-  resize: vertical;
+  resize: none;
   font-family: var(--typography-body-2-ko-desktop-regular-font-family);
   font-size: var(--typography-body-2-ko-desktop-regular-font-size);
   font-weight: var(--typography-body-2-ko-desktop-regular-font-weight);
@@ -157,8 +138,4 @@
 .submitWrapper {
   margin-top: auto;
   padding-top: 8px;
-}
-
-.submitButton {
-  width: 100%;
 }

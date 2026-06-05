@@ -60,7 +60,10 @@ export async function submitReportAction(
     try {
       await fetch(edgeFunctionUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+        },
         body: JSON.stringify({
           userId: data.user_id,
           type: data.type,

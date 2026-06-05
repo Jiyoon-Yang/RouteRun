@@ -47,7 +47,7 @@ serve(async (req: Request) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'RunningCourse <noreply@runningcourse.app>',
+      from: 'RouteRun <noreply@routerun.co.kr>',
       to: [REPORT_EMAIL_TO],
       subject: `[제보] ${typeLabel}`,
       html,

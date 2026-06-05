@@ -51,7 +51,14 @@ export async function submitReportAction(
   });
 
   if (error || !data) {
-    console.error('[report] DB 저장 실패 code:', error?.code, 'message:', error?.message, 'details:', error?.details);
+    console.error(
+      '[report] DB 저장 실패 code:',
+      error?.code,
+      'message:',
+      error?.message,
+      'details:',
+      error?.details,
+    );
     return { success: false, message: '제보 접수에 실패했습니다. 다시 시도해주세요.' };
   }
 

@@ -134,10 +134,10 @@ export function ReportPage() {
           <Button
             variant="fill"
             color="dark"
-            size="Xlarge"
+            size="medium"
             borderRadius="r16"
             style={{ width: '100%' }}
-            disabled={isPending}
+            disabled={isPending || !selectedType || content.trim().length < 10}
             onClick={handleSubmit}
           >
             제출하기

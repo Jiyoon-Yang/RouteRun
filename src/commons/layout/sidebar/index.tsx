@@ -5,10 +5,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { Icon } from '@/commons/components/icons';
 import { ROUTES } from '@/commons/constants/url';
+import { useRequireAuthModal } from '@/commons/hooks/useRequireAuthModal';
 
 import styles from './styles.module.css';
 
@@ -26,6 +28,9 @@ export type SidebarProps = {
 };
 
 export function Sidebar({ open, onClose }: SidebarProps) {
+  const router = useRouter();
+  const { requireAuth } = useRequireAuthModal();
+
   useEffect(() => {
     if (!open) {
       return;
@@ -97,14 +102,18 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             >
               {COPY.notices}
             </Link>
-            <Link
-              href={ROUTES.REPORT}
+            <button
+              type="button"
               className={styles.navLink}
               tabIndex={open ? 0 : -1}
-              onClick={onClose}
+              onClick={() => {
+                onClose();
+                const canNavigate = requireAuth({ redirectTo: ROUTES.REPORT });
+                if (canNavigate) router.push(ROUTES.REPORT);
+              }}
             >
               {COPY.report}
-            </Link>
+            </button>
           </nav>
         </aside>
       </div>

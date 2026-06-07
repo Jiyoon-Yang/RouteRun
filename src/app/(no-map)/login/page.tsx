@@ -11,9 +11,7 @@ function safeReturnPath(target: string | string[] | undefined): string {
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams: { next?: string | string[]; redirect_to?: string | string[] };
+  searchParams: { next?: string | string[] };
 }) {
-  // 구버전 next 파라미터와 신규 redirect_to 파라미터를 모두 지원한다.
-  const returnTo = searchParams.redirect_to ?? searchParams.next;
-  return <Login returnTo={safeReturnPath(returnTo)} />;
+  return <Login returnTo={safeReturnPath(searchParams.next)} />;
 }

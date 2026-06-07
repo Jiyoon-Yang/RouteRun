@@ -33,6 +33,7 @@ type CoursesListProps = {
   openPeekFromCollapsedSignal?: number;
   onSheetPositionChange?: (payload: SheetPositionPayload) => void;
   onCourseSelect?: (courseId: string) => void;
+  onTrackSelect?: (trackId: string) => void;
 };
 
 export function CoursesList({
@@ -48,6 +49,7 @@ export function CoursesList({
   openPeekFromCollapsedSignal,
   onSheetPositionChange,
   onCourseSelect,
+  onTrackSelect,
 }: CoursesListProps) {
   const { sortMode, displayCards, selectSortMode } = useCourseListSort(
     cards,
@@ -144,6 +146,7 @@ export function CoursesList({
               href={ROUTES.TRACKS.DETAIL(track.trackId)}
               className={styles.cardLink}
               aria-label={`${track.title} 트랙 선택`}
+              onClick={() => onTrackSelect?.(track.trackId)}
               onKeyDown={handleCardKeyDown}
             >
               <Card

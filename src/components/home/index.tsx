@@ -21,7 +21,7 @@ import { useHomeCourseMarkerClick } from './hooks/use-home-course-marker-click';
 import { useHomeDistanceCategories } from './hooks/use-home-distance-categories';
 import { useHomeFrozenViewportSync } from './hooks/use-home-frozen-viewport';
 import { useHomeToast } from './hooks/use-home-toast';
-import { useHomeUrlSync } from './hooks/use-home-url-sync';
+import { useHomeStateSync } from './hooks/use-home-state-sync';
 import { useHomeVisibleRouteViewport } from './hooks/use-home-visible-viewport';
 import { useReferenceLocation } from './hooks/use-reference-location';
 import { useTracks } from './hooks/use-tracks';
@@ -84,14 +84,14 @@ export function Home() {
 
   useClearSelectedRouteSnapshotOnDeselect(selectedCourseId, setSelectedRouteSnapshot);
 
-  const { snapshotHomeQueryBeforeDetail } = useHomeUrlSync({
+  const { snapshotBeforeDetail } = useHomeStateSync({
     searchParams,
     pathname: pathname ?? '',
     router,
-    selectedCourseId,
     selectedCategories,
     isSheetExpanded,
     setSelectedCourseId,
+    setSelectedTrackId,
     setSelectedCategories,
     setIsSheetExpanded,
     setVisibleRouteViewport,
@@ -254,9 +254,16 @@ export function Home() {
   const handleCourseSelect = useCallback(
     (courseId: string) => {
       setSelectedCourseId(courseId);
-      snapshotHomeQueryBeforeDetail(courseId);
+      snapshotBeforeDetail('course', courseId);
     },
-    [snapshotHomeQueryBeforeDetail],
+    [snapshotBeforeDetail],
+  );
+
+  const handleTrackSelect = useCallback(
+    (trackId: string) => {
+      snapshotBeforeDetail('track', trackId);
+    },
+    [snapshotBeforeDetail],
   );
 
   const handleSheetPositionChange = useCallback(
@@ -364,6 +371,7 @@ export function Home() {
           toggleTrackLike={toggleTrackLike}
           openPeekFromCollapsedSignal={openPeekFromCollapsedSignal}
           onCourseSelect={handleCourseSelect}
+          onTrackSelect={handleTrackSelect}
           onSheetPositionChange={handleSheetPositionChange}
         />
       </div>

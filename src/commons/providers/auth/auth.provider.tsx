@@ -28,6 +28,17 @@ interface AuthState {
 
 export type AuthContextValue = AuthState;
 
+function buildAuthState(user: User | null): AuthState {
+  const isAnonymous = extractIsAnonymous(user);
+  return {
+    user,
+    isLoggedIn: !!user,
+    isAuthenticated: !!user && !isAnonymous,
+    isAnonymous,
+    isLoading: false,
+  };
+}
+
 // ─── Context ───────────────────────────────────────────────────────────────────
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -36,35 +47,25 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 interface AuthProviderProps {
   children: React.ReactNode;
+  initialUser?: User | null;
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    isLoggedIn: false,
-    isAuthenticated: false,
-    isAnonymous: false,
-    isLoading: true,
-  });
+export function AuthProvider({ children, initialUser }: AuthProviderProps) {
+  const [authState, setAuthState] = useState<AuthState>(() =>
+    initialUser !== undefined
+      ? buildAuthState(initialUser)
+      : { user: null, isLoggedIn: false, isAuthenticated: false, isAnonymous: false, isLoading: true },
+  );
 
   useEffect(() => {
     const supabase = createClient();
 
-    const buildAuthState = (user: User | null): AuthState => {
-      const isAnonymous = extractIsAnonymous(user);
-      return {
-        user,
-        isLoggedIn: !!user,
-        isAuthenticated: !!user && !isAnonymous,
-        isAnonymous,
-        isLoading: false,
-      };
-    };
-
-    // 앱 마운트 시 쿠키 기반 세션 초기 확인
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setAuthState(buildAuthState(user));
-    });
+    // 서버에서 initialUser를 받은 경우 클라이언트 초기 조회 생략
+    if (initialUser === undefined) {
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        setAuthState(buildAuthState(user));
+      });
+    }
 
     // 쿠키 기반 세션 변화(로그인·로그아웃·토큰 갱신) 감지
     const {

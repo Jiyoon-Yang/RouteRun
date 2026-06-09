@@ -6,14 +6,16 @@
 // - https://apis.openapi.sk.com: TMap SDK 및 API 호출
 // - https://*.tmap.co.kr: TMap 벡터 타일 CDN
 // - wss://*.supabase.co: Supabase Realtime 웹소켓
+// - 'unsafe-eval': 개발 환경에서만 허용 (Next.js Fast Refresh가 eval() 사용)
+const isDev = process.env.NODE_ENV === 'development';
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://apis.openapi.sk.com",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://apis.openapi.sk.com https://*.tmap.co.kr",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://apis.openapi.sk.com https://*.tmap.co.kr`,
+  "style-src 'self' 'unsafe-inline' https://*.tmap.co.kr",
+  "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://*.tmap.co.kr",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://apis.openapi.sk.com https://*.tmap.co.kr https://*.tmapmp.com https://*.onestore.co.kr",
   "font-src 'self' data:",
-  "worker-src 'self' blob:",
+  "worker-src 'self' blob: https://*.tmap.co.kr",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -23,7 +25,7 @@ const securityHeaders = [
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self)' },
   { key: 'Content-Security-Policy', value: CSP },
 ];
 

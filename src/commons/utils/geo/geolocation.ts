@@ -6,6 +6,13 @@ export const DEFAULT_GEOLOCATION_OPTIONS: PositionOptions = {
   maximumAge: 15000,
 };
 
+// 권한 다이얼로그 응답 전에 타임아웃이 터지지 않도록 timeout을 두지 않는다.
+// 지도가 이미 기본 위치로 표시된 상태에서 위치를 수동 보정할 때 사용한다.
+export const PASSIVE_GEOLOCATION_OPTIONS: PositionOptions = {
+  enableHighAccuracy: false,
+  maximumAge: 0,
+};
+
 export const PRECISE_GEOLOCATION_OPTIONS: PositionOptions = {
   enableHighAccuracy: true,
   timeout: 10000,

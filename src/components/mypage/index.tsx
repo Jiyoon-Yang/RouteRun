@@ -17,19 +17,17 @@
 
 'use client';
 
-import { useEffect, useMemo } from 'react';
-import { createPortal } from 'react-dom';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import { toggleCourseLikeAction } from '@/actions/course.action';
 import { toggleTrackLikeAction } from '@/actions/track.action';
 import { Button } from '@/commons/components/button';
 import { Icon } from '@/commons/components/icons';
-import { Modal } from '@/commons/components/modal';
 import { useGuestGuard } from '@/commons/hooks/useGuestGuard';
 import { useLikes } from '@/commons/hooks/useLikes';
 import { Header } from '@/commons/layout/header';
 import { useAuth } from '@/commons/providers/auth/auth.provider';
-import modalBackdropStyles from '@/commons/providers/modal/modal.provider.module.css';
+import { useModal } from '@/commons/providers/modal/modal.provider';
 import type {
   MypageProfileProps,
   MypageRouteCardData,
@@ -40,7 +38,6 @@ import { fetchLikedTrackIds } from '@/services/track/trackLikeService';
 
 import { useLinkGoogle } from './hooks/useLinkGoogle';
 import { useLogout } from './hooks/useLogout';
-import { useLogoutModal } from './hooks/useLogoutModal';
 import { useMyPageTabs } from './hooks/useMyPageTabs';
 import { useProfileModal } from './hooks/useProfileModal';
 import { RouteCard } from './route-card';
@@ -143,11 +140,19 @@ export default function Mypage({
   });
 
   const { isAnonymous } = useAuth();
+  const { openModal } = useModal();
   const { executeLogoutOrDelete, isPending: isLogoutPending, isError } = useLogout();
-  const { isOpen, openModal, closeModal, handleConfirm, modalData } = useLogoutModal(
-    isAnonymous,
-    executeLogoutOrDelete,
-  );
+
+  const openLogoutModal = useCallback(() => {
+    openModal({
+      type: 'confirm',
+      title: '로그아웃',
+      content: isAnonymous
+        ? '게스트 로그아웃 시 계정이 삭제됩니다.\n진행하시겠습니까?'
+        : '로그아웃 하시겠습니까?',
+      onConfirm: () => void executeLogoutOrDelete(isAnonymous),
+    });
+  }, [openModal, isAnonymous, executeLogoutOrDelete]);
 
   useEffect(() => {
     if (isError) {
@@ -192,7 +197,7 @@ export default function Mypage({
         showLeftIcon={false}
         showRightIcon={true}
         rightIconName="logOut"
-        onRightIconClick={isLogoutPending ? undefined : openModal}
+        onRightIconClick={isLogoutPending ? undefined : openLogoutModal}
       />
 
       <section className={styles.profileSection} aria-label="프로필">
@@ -282,27 +287,6 @@ export default function Mypage({
         </Button>
       )}
 
-      {typeof window !== 'undefined' &&
-        isOpen &&
-        createPortal(
-          <div
-            className={modalBackdropStyles.backdrop}
-            role="dialog"
-            aria-modal="true"
-            onPointerDown={(event) => event.stopPropagation()}
-            onTouchStart={(event) => event.stopPropagation()}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <Modal
-              type="confirm"
-              title={modalData.title}
-              content={modalData.content}
-              onConfirm={handleConfirm}
-              onClose={closeModal}
-            />
-          </div>,
-          document.body,
-        )}
     </div>
   );
 }

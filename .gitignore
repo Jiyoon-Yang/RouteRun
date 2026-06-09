@@ -78,3 +78,6 @@ specs/**/.spec-context.json
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Supabase
+supabase/.temp/

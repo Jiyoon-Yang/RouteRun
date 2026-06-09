@@ -6,7 +6,16 @@ import { Card } from '@/commons/components/card';
 import { ROUTES } from '@/commons/constants/url';
 import type { MypageRouteCardData, MypageTab } from '@/commons/types/mypage';
 
-import { useDeleteCourse } from './hooks/useDeleteCourse';
+import { deleteCourseAction } from '@/actions/course.action';
+
+import { useDeleteItem } from './hooks/useDeleteItem';
+
+const COURSE_DELETE_CONFIG = {
+  confirmTitle: '코스를 삭제하시겠습니까?',
+  successTitle: '코스가 삭제되었습니다.',
+  errorMessage: '코스 삭제에 실패했습니다. 다시 시도해 주세요.',
+  deleteAction: deleteCourseAction,
+} as const;
 
 export type RouteCardProps = {
   tab: MypageTab;
@@ -24,7 +33,7 @@ export function RouteCard({
   toggleCourseLike,
 }: RouteCardProps) {
   const router = useRouter();
-  const { isDeleting, deleteCourse } = useDeleteCourse();
+  const { isDeleting, deleteItem: deleteCourse } = useDeleteItem(COURSE_DELETE_CONFIG);
   const isMyCourse = tab === 'my-posts';
   const locationText = route.start_address_region ?? '위치 정보 없음';
   const isLiked = isCourseLiked?.(route.id) ?? false;

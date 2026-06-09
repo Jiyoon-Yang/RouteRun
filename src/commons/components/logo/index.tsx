@@ -14,6 +14,7 @@ export function LogoIcon({ width = 44, height = 38, className }: LogoIconProps) 
       width={width}
       height={height}
       className={className}
+      style={{ height: 'auto' }}
       draggable={false}
       unoptimized
     />

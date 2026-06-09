@@ -5,8 +5,8 @@ import { useCallback, useEffect, useId, useRef } from 'react';
 import { Icon } from '@/commons/components/icons';
 import { SEOUL_CITY_HALL_COORDINATE } from '@/commons/utils/geo';
 import {
-  DEFAULT_GEOLOCATION_OPTIONS,
   getCurrentPositionWithFallback,
+  PASSIVE_GEOLOCATION_OPTIONS,
 } from '@/commons/utils/geo/geolocation';
 import { getTmapv3Runtime } from '@/commons/utils/tmap/runtime';
 import type { TmapMap } from '@/commons/utils/tmap/types';
@@ -74,7 +74,7 @@ export default function TmapCourseSubmit({ onSaveRoute }: CourseSubmitMapProps) 
           () => {
             // 거부/에러: 서울시청 그대로 유지
           },
-          DEFAULT_GEOLOCATION_OPTIONS,
+          PASSIVE_GEOLOCATION_OPTIONS,
         );
       }
     };

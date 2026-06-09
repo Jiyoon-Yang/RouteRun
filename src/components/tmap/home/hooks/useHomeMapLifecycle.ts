@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Route, RouteViewport } from '@/commons/types/routerun';
 import { SEOUL_CITY_HALL_COORDINATE } from '@/commons/utils/geo';
 import {
-  DEFAULT_GEOLOCATION_OPTIONS,
+  PASSIVE_GEOLOCATION_OPTIONS,
   PRECISE_GEOLOCATION_OPTIONS,
 } from '@/commons/utils/geo/geolocation';
 import type {
@@ -213,7 +213,7 @@ export function useHomeMapLifecycle({
             () => {
               // 거부/에러: 서울시청 그대로 유지
             },
-            DEFAULT_GEOLOCATION_OPTIONS,
+            PASSIVE_GEOLOCATION_OPTIONS,
           );
         }
       } else {

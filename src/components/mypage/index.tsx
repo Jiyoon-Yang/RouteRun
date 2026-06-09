@@ -286,7 +286,6 @@ export default function Mypage({
           {isLinkGooglePending ? TEXTS.GOOGLE_LINKING : TEXTS.GOOGLE_CONTINUE}
         </Button>
       )}
-
     </div>
   );
 }

@@ -2,14 +2,26 @@
 
 import { useMemo } from 'react';
 
-import { useCourseLikes } from '@/commons/hooks/useCourseLikes';
+import { toggleCourseLikeAction } from '@/actions/course.action';
+import { useLikes } from '@/commons/hooks/useLikes';
 import type { Route } from '@/commons/types/routerun';
+import { fetchLikedCourseIds } from '@/services/course/courseLikeService';
 
-/** 단일 코스 상세의 찜 수·토글을 `useCourseLikes`에 맞게 래핑 */
+const COURSE_LIKE_CONFIG = {
+  entityLabel: '코스',
+  fetchLikedIds: fetchLikedCourseIds,
+  toggleAction: toggleCourseLikeAction,
+} as const;
+
 export function useCourseDetailLikes(course: Route) {
   const courseLikeCounts = useMemo(
     () => ({ [course.id]: course.likes_count ?? 0 }),
     [course.id, course.likes_count],
   );
-  return useCourseLikes(courseLikeCounts);
+  const { isLiked, getLikeCount, toggleLike } = useLikes(courseLikeCounts, COURSE_LIKE_CONFIG);
+  return {
+    isCourseLiked: isLiked,
+    getCourseLikeCount: getLikeCount,
+    toggleCourseLike: toggleLike,
+  };
 }

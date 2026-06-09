@@ -23,9 +23,12 @@ import { createPortal } from 'react-dom';
 import { Button } from '@/commons/components/button';
 import { Icon } from '@/commons/components/icons';
 import { Modal } from '@/commons/components/modal';
-import { useCourseLikes } from '@/commons/hooks/useCourseLikes';
+import { toggleCourseLikeAction } from '@/actions/course.action';
+import { toggleTrackLikeAction } from '@/actions/track.action';
 import { useGuestGuard } from '@/commons/hooks/useGuestGuard';
-import { useTrackLikes } from '@/commons/hooks/useTrackLikes';
+import { useLikes } from '@/commons/hooks/useLikes';
+import { fetchLikedCourseIds } from '@/services/course/courseLikeService';
+import { fetchLikedTrackIds } from '@/services/track/trackLikeService';
 import { Header } from '@/commons/layout/header';
 import { useAuth } from '@/commons/providers/auth/auth.provider';
 import modalBackdropStyles from '@/commons/providers/modal/modal.provider.module.css';
@@ -40,9 +43,9 @@ import { useLogout } from './hooks/useLogout';
 import { useLogoutModal } from './hooks/useLogoutModal';
 import { useMyPageTabs } from './hooks/useMyPageTabs';
 import { useProfileModal } from './hooks/useProfileModal';
-import { RouteCard } from './RouteCard';
+import { RouteCard } from './route-card';
 import styles from './styles.module.css';
-import { TrackCard } from './TrackCard';
+import { TrackCard } from './track-card';
 
 const TEXTS = {
   TITLE: '마이페이지',
@@ -111,8 +114,8 @@ export default function Mypage({
       }, {}),
     [myRoutes, likedRoutes],
   );
-  const { isCourseLiked, getCourseLikeCount, toggleCourseLike } =
-    useCourseLikes(allRouteLikeCounts);
+  const { isLiked: isCourseLiked, getLikeCount: getCourseLikeCount, toggleLike: toggleCourseLike } =
+    useLikes(allRouteLikeCounts, { entityLabel: '코스', fetchLikedIds: fetchLikedCourseIds, toggleAction: toggleCourseLikeAction });
 
   const allTrackLikeCounts = useMemo(
     () =>
@@ -122,7 +125,8 @@ export default function Mypage({
       }, {}),
     [myTracks, likedTracks],
   );
-  const { isTrackLiked, getTrackLikeCount, toggleTrackLike } = useTrackLikes(allTrackLikeCounts);
+  const { isLiked: isTrackLiked, getLikeCount: getTrackLikeCount, toggleLike: toggleTrackLike } =
+    useLikes(allTrackLikeCounts, { entityLabel: '트랙', fetchLikedIds: fetchLikedTrackIds, toggleAction: toggleTrackLikeAction });
 
   const { isAnonymous } = useAuth();
   const { executeLogoutOrDelete, isPending: isLogoutPending, isError } = useLogout();

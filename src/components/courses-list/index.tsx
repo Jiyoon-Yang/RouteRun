@@ -9,13 +9,13 @@ import type { HomeListItem } from '@/commons/types/routerun';
 
 import { CourseListSortDropdown } from './course-list-sort-dropdown';
 import { CoursesListSkeleton } from './courses-list-skeleton';
-import { useCourseCardKeyboardSelect } from './hooks/use-course-card-keyboard-select';
-import { useCourseListSort } from './hooks/use-course-list-sort';
+import { useCourseCardKeyboardSelect } from './hooks/useCourseCardKeyboardSelect';
+import { useCourseListSort } from './hooks/useCourseListSort';
 import {
   useCoursesListBottomSheet,
   type SheetPositionPayload,
-} from './hooks/use-courses-list-bottom-sheet';
-import { useCoursesListEmptySheetState } from './hooks/use-courses-list-empty-sheet-state';
+} from './hooks/useCoursesListBottomSheet';
+import { useCoursesListEmptySheetState } from './hooks/useCoursesListEmptySheetState';
 import styles from './styles.module.css';
 import { buildCoursesListSheetRootClassName } from './utils/sheet-root-class-name';
 

@@ -6,7 +6,7 @@ import { getTmapv3Runtime } from '@/commons/utils/tmap/runtime';
 import {
   extractLatLngFromVectorEvent,
   toCoordinate,
-} from '@/components/tmap/course-submit/hooks/courseMap.utils';
+} from '@/components/tmap/courses-submit/utils/courseMap';
 
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 

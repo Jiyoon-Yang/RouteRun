@@ -10,7 +10,7 @@ import {
   getRunningCourseMarkerIconUrlForCategory,
   type MarkerVisualState,
 } from '@/commons/utils/marker/route-marker';
-import { resolveRouteStartForMapMarker } from '@/commons/utils/route-marker-position';
+import { resolveRouteStartForMapMarker } from '@/commons/utils/marker/route-marker-position';
 import { bindTmapMarkerListener } from '@/commons/utils/tmap/events';
 import type {
   RouteMarkerEntry,

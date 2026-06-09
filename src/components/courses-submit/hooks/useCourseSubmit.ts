@@ -5,8 +5,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { createCourseAction, updateCourseAction } from '@/actions/course.action';
 import { useToast } from '@/commons/providers/toast/toast.provider';
-import { uploadCourseImages } from '@/commons/utils/storage.util';
-import type { SaveRoutePayload } from '@/components/tmap/course-submit/hooks/useCourseMap';
+import { uploadCourseImages } from '@/commons/utils/storage';
+import type { SaveRoutePayload } from '@/components/tmap/courses-submit/hooks/useCourseMap';
 import type { CourseDetailPayload } from '@/services/course/courseDetailService';
 
 import type { ChangeEvent } from 'react';

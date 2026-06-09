@@ -5,8 +5,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { createTrackAction, updateTrackAction } from '@/actions/track.action';
 import { useToast } from '@/commons/providers/toast/toast.provider';
-import { uploadCourseImages } from '@/commons/utils/storage.util';
-import type { SaveTrackPayload } from '@/components/tmap/track-submit/hooks/useTrackMap';
+import { uploadCourseImages } from '@/commons/utils/storage';
+import type { SaveTrackPayload } from '@/components/tmap/tracks-submit/hooks/useTrackMap';
 import type { TrackDetailPayload } from '@/services/track/trackDetailService';
 
 import type { ChangeEvent } from 'react';

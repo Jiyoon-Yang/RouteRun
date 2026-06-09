@@ -10,7 +10,7 @@ import {
   SEOUL_CITY_HALL_REFERENCE as DEFAULT_REFERENCE,
 } from '@/commons/utils/geo';
 import { dedupeRoutesById } from '@/commons/utils/route/dedup';
-import { resolveRouteStartForMapMarker } from '@/commons/utils/route-marker-position';
+import { resolveRouteStartForMapMarker } from '@/commons/utils/marker/route-marker-position';
 
 export type { DistanceCategory };
 export { getDistanceCategory, dedupeRoutesById };

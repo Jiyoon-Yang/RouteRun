@@ -29,7 +29,7 @@ import Tooltip from '@/commons/components/tooltip';
 import { Header } from '@/commons/layout/header';
 import { useModal } from '@/commons/providers/modal/modal.provider';
 import { TmapCourseDetail } from '@/components/tmap/course-detail';
-import TmapCourseSubmit from '@/components/tmap/course-submit';
+import TmapCourseSubmit from '@/components/tmap/courses-submit';
 import type { CourseDetailPayload } from '@/services/course/courseDetailService';
 
 import { MAX_COURSE_SUBMIT_IMAGES, useCourseSubmit } from './hooks/useCourseSubmit';

@@ -3,9 +3,9 @@
 import { Icon } from '@/commons/components/icons';
 
 import { useOnboarding } from './hooks/useOnboarding';
-import { Step1 } from './steps/Step1';
-import { Step2 } from './steps/Step2';
-import { Step3 } from './steps/Step3';
+import { Step1 } from './steps/step-1';
+import { Step2 } from './steps/step-2';
+import { Step3 } from './steps/step-3';
 import styles from './styles.module.css';
 
 export function OnboardingModal() {

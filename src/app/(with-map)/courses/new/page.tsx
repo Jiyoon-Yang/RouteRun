@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import CourseSubmit from '@/components/course-submit';
+import CourseSubmit from '@/components/courses-submit';
 import { createClient } from '@/lib/supabase/server';
 import { getUserRouteWriteCount } from '@/services/course/courseService';
 

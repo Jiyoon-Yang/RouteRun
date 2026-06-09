@@ -13,7 +13,7 @@ import Tooltip from '@/commons/components/tooltip';
 import { Header } from '@/commons/layout/header';
 import { useModal } from '@/commons/providers/modal/modal.provider';
 import TmapTrackDetail from '@/components/tmap/track-detail';
-import TmapTrackSubmit from '@/components/tmap/track-submit';
+import TmapTrackSubmit from '@/components/tmap/tracks-submit';
 import type { TrackDetailPayload } from '@/services/track/trackDetailService';
 
 import { MAX_TRACK_SUBMIT_IMAGES, useTrackSubmit } from './hooks/useTrackSubmit';

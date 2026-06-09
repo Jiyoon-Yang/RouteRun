@@ -4,7 +4,7 @@ import { createElement, useCallback } from 'react';
 
 import { useModal } from '@/commons/providers/modal/modal.provider';
 
-import { ProfileEditModal } from '../ProfileEditModal';
+import { ProfileEditModal } from '../profile-edit-modal';
 
 type ProfileModalOptions = {
   initialNickname: string;

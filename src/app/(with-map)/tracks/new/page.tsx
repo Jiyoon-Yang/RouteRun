@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import TrackSubmit from '@/components/track-submit';
+import TrackSubmit from '@/components/tracks-submit';
 import { createClient } from '@/lib/supabase/server';
 import { getUserRouteWriteCount } from '@/services/course/courseService';
 import { getUserTrackWriteCount } from '@/services/track/trackService';

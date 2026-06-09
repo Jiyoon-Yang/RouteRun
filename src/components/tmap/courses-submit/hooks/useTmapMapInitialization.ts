@@ -4,7 +4,7 @@ import type { TmapCoordinate, TmapLatLngLike, TmapMapLike, TmapV3 } from '@/comm
 import { bindMapEvents } from '@/commons/utils/tmap/events';
 import { getTmapv3Runtime } from '@/commons/utils/tmap/runtime';
 
-import { extractLatLngFromVectorEvent, MAX_POINT_LENGTH, toCoordinate } from './courseMap.utils';
+import { extractLatLngFromVectorEvent, MAX_POINT_LENGTH, toCoordinate } from '../utils/courseMap';
 
 import type { Dispatch, SetStateAction } from 'react';
 

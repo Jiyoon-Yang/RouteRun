@@ -31,18 +31,18 @@ export type SheetPositionPayload = {
   visualVisibleHeight: number;
 };
 
-type UseCoursesListBottomSheetParams = {
+type UseHomeListBottomSheetParams = {
   openPeekFromCollapsedSignal?: number;
   isEmpty?: boolean;
   onSheetPositionChange?: (payload: SheetPositionPayload) => void;
 };
 
 /** 바텀시트 높이·드래그·부모 동기화 로직 */
-export function useCoursesListBottomSheet({
+export function useHomeListBottomSheet({
   openPeekFromCollapsedSignal,
   isEmpty = false,
   onSheetPositionChange,
-}: UseCoursesListBottomSheetParams) {
+}: UseHomeListBottomSheetParams) {
   const [sheetState, setSheetState] = useState<BottomSheetState>('peek');
   const [sheetHeight, setSheetHeight] = useState(0);
   const [dragOffsetY, setDragOffsetY] = useState(0);

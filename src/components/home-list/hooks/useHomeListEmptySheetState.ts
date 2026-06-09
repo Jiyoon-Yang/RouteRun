@@ -14,7 +14,7 @@ type Params = {
  * 한 번 빈 목록이 확정되면 코스가 생길 때까지 재로딩 중에도 바텀시트 접힘을 유지한다.
  * `isEmpty`는 바텀시트 훅에 전달한다.
  */
-export function useCoursesListEmptySheetState({
+export function useHomeListEmptySheetState({
   listLength,
   isLoading,
   isRouteQueryViewportReady,

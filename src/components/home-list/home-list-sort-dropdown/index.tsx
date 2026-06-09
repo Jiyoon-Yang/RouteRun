@@ -1,4 +1,4 @@
-// 코스 목록 정렬용 커스텀 드롭다운 — 네이티브 select는 모바일에서 옵션 패널이 위로 열릴 수 있어 하향 배치를 보장한다.
+// 목록 정렬용 커스텀 드롭다운 — 네이티브 select는 모바일에서 옵션 패널이 위로 열릴 수 있어 하향 배치를 보장한다.
 'use client';
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
@@ -7,19 +7,19 @@ import { Icon } from '@/commons/components/icons';
 
 import styles from '../styles.module.css';
 
-import type { CourseListSortMode } from '../utils/sort-course-cards';
+import type { HomeListSortMode } from '../utils/sort-home-list';
 
-const SORT_OPTIONS: { value: CourseListSortMode; label: string }[] = [
+const SORT_OPTIONS: { value: HomeListSortMode; label: string }[] = [
   { value: 'distance', label: '가까운 순' },
   { value: 'likes', label: '좋아요 순' },
 ];
 
-type CourseListSortDropdownProps = {
-  sortMode: CourseListSortMode;
-  onSelect: (mode: CourseListSortMode) => void;
+type HomeListSortDropdownProps = {
+  sortMode: HomeListSortMode;
+  onSelect: (mode: HomeListSortMode) => void;
 };
 
-export function CourseListSortDropdown({ sortMode, onSelect }: CourseListSortDropdownProps) {
+export function HomeListSortDropdown({ sortMode, onSelect }: HomeListSortDropdownProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -55,7 +55,7 @@ export function CourseListSortDropdown({ sortMode, onSelect }: CourseListSortDro
 
   const currentLabel = SORT_OPTIONS.find((option) => option.value === sortMode)?.label ?? '';
 
-  const handleSelect = (mode: CourseListSortMode) => {
+  const handleSelect = (mode: HomeListSortMode) => {
     onSelect(mode);
     close();
     queueMicrotask(() => {
@@ -72,7 +72,7 @@ export function CourseListSortDropdown({ sortMode, onSelect }: CourseListSortDro
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-controls={listboxId}
-        aria-label="코스 목록 정렬"
+        aria-label="목록 정렬"
         onClick={() => {
           setOpen((previous) => !previous);
         }}

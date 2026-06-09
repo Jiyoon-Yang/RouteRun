@@ -13,20 +13,20 @@ import { Header } from '@/commons/layout/header';
 import { Sidebar } from '@/commons/layout/sidebar';
 import type { HomeListItem, Route, RouteViewport } from '@/commons/types/routerun';
 import { calculateLinearDistanceMeters } from '@/commons/utils/geo';
+import { HomeList } from '@/components/home-list';
+import { TmapHome } from '@/components/tmap/home';
 import { fetchLikedCourseIds } from '@/services/course/courseLikeService';
 import { fetchLikedTrackIds } from '@/services/track/trackLikeService';
-import { CoursesList } from '@/components/courses-list';
-import { TmapHome } from '@/components/tmap/home';
 
-import { useRoutes } from './hooks/useRoutes';
 import { useClearSelectedRouteSnapshotOnDeselect } from './hooks/useClearSelectedRouteSnapshot';
 import { useHomeCourseMarkerClick } from './hooks/useHomeCourseMarkerClick';
 import { useHomeDistanceCategories } from './hooks/useHomeDistanceCategories';
 import { useHomeFrozenViewportSync } from './hooks/useHomeFrozenViewport';
-import { useHomeToast } from './hooks/useHomeToast';
 import { useHomeStateSync } from './hooks/useHomeStateSync';
+import { useHomeToast } from './hooks/useHomeToast';
 import { useHomeVisibleRouteViewport } from './hooks/useHomeVisibleViewport';
 import { useReferenceLocation } from './hooks/useReferenceLocation';
+import { useRoutes } from './hooks/useRoutes';
 import { useTracks } from './hooks/useTracks';
 import { OnboardingModal } from './onboarding-modal';
 import styles from './styles.module.css';
@@ -147,7 +147,15 @@ export function Home() {
     () => buildCourseLikeCountsLookup(allRoutes, selectedCourseId, selectedRouteSnapshot),
     [allRoutes, selectedCourseId, selectedRouteSnapshot],
   );
-  const { isLiked: isCourseLiked, getLikeCount: getCourseLikeCount, toggleLike: toggleCourseLike } = useLikes(courseLikeCounts, { entityLabel: '코스', fetchLikedIds: fetchLikedCourseIds, toggleAction: toggleCourseLikeAction });
+  const {
+    isLiked: isCourseLiked,
+    getLikeCount: getCourseLikeCount,
+    toggleLike: toggleCourseLike,
+  } = useLikes(courseLikeCounts, {
+    entityLabel: '코스',
+    fetchLikedIds: fetchLikedCourseIds,
+    toggleAction: toggleCourseLikeAction,
+  });
 
   const trackLikeCounts = useMemo(
     () =>
@@ -157,7 +165,15 @@ export function Home() {
       }, {}),
     [tracks],
   );
-  const { isLiked: isTrackLiked, getLikeCount: getTrackLikeCount, toggleLike: toggleTrackLike } = useLikes(trackLikeCounts, { entityLabel: '트랙', fetchLikedIds: fetchLikedTrackIds, toggleAction: toggleTrackLikeAction });
+  const {
+    isLiked: isTrackLiked,
+    getLikeCount: getTrackLikeCount,
+    toggleLike: toggleTrackLike,
+  } = useLikes(trackLikeCounts, {
+    entityLabel: '트랙',
+    fetchLikedIds: fetchLikedTrackIds,
+    toggleAction: toggleTrackLikeAction,
+  });
 
   const combinedCards = useMemo<HomeListItem[]>(() => {
     if (isTrackTabOnly) {
@@ -362,7 +378,7 @@ export function Home() {
             </div>
           </div>
         ) : null}
-        <CoursesList
+        <HomeList
           cards={combinedCards}
           isLoading={isLoading}
           isRouteQueryViewportReady={effectiveQueryViewport !== null}

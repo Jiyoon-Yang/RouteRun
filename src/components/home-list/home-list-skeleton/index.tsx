@@ -4,7 +4,7 @@ import { SKELETON_CARD_COUNT } from '@/commons/utils/bottom-sheet';
 
 import styles from '../styles.module.css';
 
-export function CoursesListSkeleton() {
+export function HomeListSkeleton() {
   return (
     <div className={styles.listLoadingBlock} aria-busy>
       {Array.from({ length: SKELETON_CARD_COUNT }).map((_, index) => (

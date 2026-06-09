@@ -2,12 +2,12 @@
 import type { CourseCardView, HomeListItem } from '@/commons/types/routerun';
 import { pinToTopIfVisible } from '@/components/home/utils/course-filter';
 
-export type CourseListSortMode = 'distance' | 'likes';
+export type HomeListSortMode = 'distance' | 'likes';
 
 /** 거리순은 부모에서 정렬된 `cards` 순서를 유지하고, 좋아요순은 재정렬 후 선택 핀을 복원한다. */
 export function sortCourseCardsForDisplay(
   cards: CourseCardView[],
-  mode: CourseListSortMode,
+  mode: HomeListSortMode,
   getCourseLikeCount?: (courseId: string) => number,
 ): CourseCardView[] {
   if (mode === 'distance') {
@@ -46,7 +46,7 @@ function getHomeItemTitle(item: HomeListItem): string {
 /** 코스+트랙 통합 리스트 정렬. 거리순은 입력 순서 유지, 좋아요순은 내림차순 재정렬. */
 export function sortHomeListCardsForDisplay(
   cards: HomeListItem[],
-  mode: CourseListSortMode,
+  mode: HomeListSortMode,
   getCourseLikeCount?: (courseId: string) => number,
   getTrackLikeCount?: (trackId: string) => number,
 ): HomeListItem[] {

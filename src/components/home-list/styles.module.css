@@ -1,4 +1,4 @@
-.courseList {
+.homeList {
   position: absolute;
   left: 0;
   right: 0;
@@ -58,7 +58,7 @@
   background: var(--color-grey-200);
 }
 
-.courseListTitleRow {
+.homeListTitleRow {
   position: relative;
   z-index: 2;
   display: flex;
@@ -69,7 +69,7 @@
   margin: 0 0 12px;
 }
 
-.courseListTitle {
+.homeListTitle {
   flex: 1;
   min-width: 0;
   padding-left: 6px;

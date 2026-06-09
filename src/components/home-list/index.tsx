@@ -7,19 +7,16 @@ import { Card } from '@/commons/components/card';
 import { ROUTES } from '@/commons/constants/url';
 import type { HomeListItem } from '@/commons/types/routerun';
 
-import { CourseListSortDropdown } from './course-list-sort-dropdown';
-import { CoursesListSkeleton } from './courses-list-skeleton';
-import { useCourseCardKeyboardSelect } from './hooks/useCourseCardKeyboardSelect';
-import { useCourseListSort } from './hooks/useCourseListSort';
-import {
-  useCoursesListBottomSheet,
-  type SheetPositionPayload,
-} from './hooks/useCoursesListBottomSheet';
-import { useCoursesListEmptySheetState } from './hooks/useCoursesListEmptySheetState';
+import { HomeListSkeleton } from './home-list-skeleton';
+import { HomeListSortDropdown } from './home-list-sort-dropdown';
+import { useHomeListBottomSheet, type SheetPositionPayload } from './hooks/useHomeListBottomSheet';
+import { useHomeListEmptySheetState } from './hooks/useHomeListEmptySheetState';
+import { useHomeListSort } from './hooks/useHomeListSort';
+import { useItemCardKeyboardSelect } from './hooks/useItemCardKeyboardSelect';
 import styles from './styles.module.css';
-import { buildCoursesListSheetRootClassName } from './utils/sheet-root-class-name';
+import { buildHomeListSheetRootClassName } from './utils/sheet-root-class-name';
 
-type CoursesListProps = {
+type HomeListProps = {
   cards?: HomeListItem[];
   isLoading?: boolean;
   /** false면 아직 조회 뷰포트 없음 — 빈 목록으로 시트 접힘 고정하지 않음 */
@@ -36,7 +33,7 @@ type CoursesListProps = {
   onTrackSelect?: (trackId: string) => void;
 };
 
-export function CoursesList({
+export function HomeList({
   cards = [],
   isLoading = false,
   isRouteQueryViewportReady = true,
@@ -50,14 +47,14 @@ export function CoursesList({
   onSheetPositionChange,
   onCourseSelect,
   onTrackSelect,
-}: CoursesListProps) {
-  const { sortMode, displayCards, selectSortMode } = useCourseListSort(
+}: HomeListProps) {
+  const { sortMode, displayCards, selectSortMode } = useHomeListSort(
     cards,
     getCourseLikeCount,
     getTrackLikeCount,
   );
 
-  const { isEmpty } = useCoursesListEmptySheetState({
+  const { isEmpty } = useHomeListEmptySheetState({
     listLength: displayCards.length,
     isLoading,
     isRouteQueryViewportReady,
@@ -73,21 +70,21 @@ export function CoursesList({
     handlePanEnd,
     handleHandleKeyDown,
     handlePanStart,
-  } = useCoursesListBottomSheet({
+  } = useHomeListBottomSheet({
     openPeekFromCollapsedSignal,
     isEmpty,
     onSheetPositionChange,
   });
 
-  const sheetRootClassName = buildCoursesListSheetRootClassName(sheetState, isDragging, {
-    courseList: styles.courseList,
+  const sheetRootClassName = buildHomeListSheetRootClassName(sheetState, isDragging, {
+    homeList: styles.homeList,
     collapsed: styles.collapsed,
     peek: styles.peek,
     expanded: styles.expanded,
     dragging: styles.dragging,
   });
 
-  const handleCardKeyDown = useCourseCardKeyboardSelect();
+  const handleCardKeyDown = useItemCardKeyboardSelect();
 
   return (
     <div ref={sheetRef} className={sheetRootClassName}>
@@ -104,12 +101,12 @@ export function CoursesList({
       >
         <div className={styles.bottomSheetHandle} />
       </motion.div>
-      <div className={styles.courseListTitleRow}>
-        <h2 className={styles.courseListTitle}>러닝코스 목록</h2>
-        <CourseListSortDropdown sortMode={sortMode} onSelect={selectSortMode} />
+      <div className={styles.homeListTitleRow}>
+        <h2 className={styles.homeListTitle}>러닝코스 목록</h2>
+        <HomeListSortDropdown sortMode={sortMode} onSelect={selectSortMode} />
       </div>
       <div ref={cardListRef} className={styles.cardList}>
-        {isLoading && cards.length === 0 ? <CoursesListSkeleton /> : null}
+        {isLoading && cards.length === 0 ? <HomeListSkeleton /> : null}
         {displayCards.map((item) => {
           if (item.itemType === 'course') {
             const card = item.data;
@@ -170,7 +167,7 @@ export function CoursesList({
   );
 }
 
-export default CoursesList;
+export default HomeList;
 
 export type { SheetPositionPayload };
-export type { CourseListSortMode } from './utils/sort-course-cards';
+export type { HomeListSortMode } from './utils/sort-home-list';

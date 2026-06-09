@@ -5,8 +5,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { Route, RouteViewport } from '@/commons/types/routerun';
+import { SEOUL_CITY_HALL_COORDINATE } from '@/commons/utils/geo';
 import {
-  getCurrentPositionWithFallback,
+  PASSIVE_GEOLOCATION_OPTIONS,
   PRECISE_GEOLOCATION_OPTIONS,
 } from '@/commons/utils/geo/geolocation';
 import type {
@@ -193,16 +194,28 @@ export function useHomeMapLifecycle({
       syncRouteMarkers(map, routesRef.current);
     };
 
-    const startWithLocation = () => {
-      getCurrentPositionWithFallback((lat, lng) => {
-        initTmap(lat, lng);
-      });
-    };
-
     function checkLibrary() {
       if (isTmapRuntimeReady(getTmapv3())) {
         sdkRetryCount = 0;
-        startWithLocation();
+        initTmap(SEOUL_CITY_HALL_COORDINATE.lat, SEOUL_CITY_HALL_COORDINATE.lng);
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              if (cancelled) return;
+              const map = mapRef.current;
+              if (!map) return;
+              const { latitude, longitude } = position.coords;
+              if (!initialViewport) {
+                centerMapToLocationInVisibleArea(map, latitude, longitude);
+              }
+              createCurrentLocationMarker(map, latitude, longitude);
+            },
+            () => {
+              // 거부/에러: 서울시청 그대로 유지
+            },
+            PASSIVE_GEOLOCATION_OPTIONS,
+          );
+        }
       } else {
         sdkRetryCount += 1;
         if (sdkRetryCount % 25 === 0) {

@@ -30,6 +30,7 @@ export function Step1({ onNext }: Props) {
           width={467}
           height={321}
           className={styles.step1Image}
+          priority
         />
       </div>
 

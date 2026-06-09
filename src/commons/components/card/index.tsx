@@ -93,7 +93,7 @@ export function Card({
       <section className={styles.topSection}>
         <div className={styles.thumbnailWrap}>
           {thumbnailUrl ? (
-            <Image src={thumbnailUrl} alt="" fill className={styles.thumbnailImage} />
+            <Image src={thumbnailUrl} alt="" fill sizes="80px" className={styles.thumbnailImage} />
           ) : (
             <span className={styles.thumbnailPlaceholder}>
               <LogoIcon

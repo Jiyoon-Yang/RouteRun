@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useId, useRef } from 'react';
 
 import { Icon } from '@/commons/components/icons';
-import { getCurrentPositionWithFallback } from '@/commons/utils/geo/geolocation';
+import { SEOUL_CITY_HALL_COORDINATE } from '@/commons/utils/geo';
+import {
+  getCurrentPositionWithFallback,
+  PASSIVE_GEOLOCATION_OPTIONS,
+} from '@/commons/utils/geo/geolocation';
 import { getTmapv3Runtime } from '@/commons/utils/tmap/runtime';
 import type { TmapMap } from '@/commons/utils/tmap/types';
 import { useCurrentLocationMarker } from '@/components/tmap/commons/hooks/useCurrentLocationMarker';
@@ -45,14 +49,34 @@ export default function TmapCourseSubmit({ onSaveRoute }: CourseSubmitMapProps) 
         return;
       }
 
-      getCurrentPositionWithFallback((lat, lng) => {
-        if (cancelled) return;
-        initializeMap(mapElementId, { lat, lng });
-        const map = mapRef.current;
-        if (map) {
-          createCurrentLocationMarker(map as TmapMap, lat, lng);
-        }
-      });
+      initializeMap(mapElementId, SEOUL_CITY_HALL_COORDINATE);
+      const map = mapRef.current;
+      if (map) {
+        createCurrentLocationMarker(
+          map as TmapMap,
+          SEOUL_CITY_HALL_COORDINATE.lat,
+          SEOUL_CITY_HALL_COORDINATE.lng,
+        );
+      }
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            if (cancelled) return;
+            const liveMap = mapRef.current;
+            if (!liveMap) return;
+            const Tmapv3 = getTmapv3Runtime();
+            if (!Tmapv3) return;
+            const { latitude: lat, longitude: lng } = position.coords;
+            (liveMap as TmapMap).setCenter(new Tmapv3.LatLng(lat, lng));
+            createCurrentLocationMarker(liveMap as TmapMap, lat, lng);
+          },
+          () => {
+            // 거부/에러: 서울시청 그대로 유지
+          },
+          PASSIVE_GEOLOCATION_OPTIONS,
+        );
+      }
     };
 
     initialize();

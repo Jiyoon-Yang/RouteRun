@@ -54,7 +54,13 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   const [authState, setAuthState] = useState<AuthState>(() =>
     initialUser !== undefined
       ? buildAuthState(initialUser)
-      : { user: null, isLoggedIn: false, isAuthenticated: false, isAnonymous: false, isLoading: true },
+      : {
+          user: null,
+          isLoggedIn: false,
+          isAuthenticated: false,
+          isAnonymous: false,
+          isLoading: true,
+        },
   );
 
   useEffect(() => {
@@ -76,6 +82,8 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
     });
 
     return () => subscription.unsubscribe();
+    // initialUser는 mount 시 한 번만 체크하는 초기화 값이므로 deps에서 의도적으로 제외
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const value = useMemo<AuthContextValue>(() => ({ ...authState }), [authState]);

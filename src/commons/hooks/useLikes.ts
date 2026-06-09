@@ -130,7 +130,17 @@ export function useLikes(initialLikeCounts: LikeCountsById, config: LikeConfig) 
       });
       setOptimisticLikeCounts((previous) => ({ ...previous, [id]: previousCount }));
     },
-    [entityLabel, getLikeCount, isLoading, isLoggedIn, likedIds, openLoginConfirm, pathname, showToast, user],
+    [
+      entityLabel,
+      getLikeCount,
+      isLoading,
+      isLoggedIn,
+      likedIds,
+      openLoginConfirm,
+      pathname,
+      showToast,
+      user,
+    ],
   );
 
   return { isLiked, getLikeCount, toggleLike };

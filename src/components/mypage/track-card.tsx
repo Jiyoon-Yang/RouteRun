@@ -2,11 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 
+import { deleteTrackAction } from '@/actions/track.action';
 import { Card } from '@/commons/components/card';
 import { ROUTES } from '@/commons/constants/url';
 import type { MypageTab, MypageTrackCardData } from '@/commons/types/mypage';
-
-import { deleteTrackAction } from '@/actions/track.action';
 
 import { useDeleteItem } from './hooks/useDeleteItem';
 

@@ -41,7 +41,7 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
   - `(with-map)/` — TMap이 필요한 라우트 (홈, 코스/트랙 상세·생성·수정)
   - `(no-map)/` — TMap 없이 렌더링 (로그인, 마이페이지, 신고, 공지)
 - `src/actions/` — 인증, 코스, 유저 관련 Server Actions
-- `src/components/` — 기능별 컴포넌트 (`home/`, `courses-detail/`, `courses-list/`, `mypage/`, `course-submit/`, `track-submit/`, `tracks-detail/`, `tmap/`, `report/`, `login/` 등)
+- `src/components/` — 기능별 컴포넌트 (`home/`, `home-list/`, `courses-detail/`, `courses-submit/`, `tracks-detail/`, `tracks-submit/`, `mypage/`, `tmap/`, `report/`, `login/` 등)
 - `src/commons/` — 공통 UI 컴포넌트, 훅, 상수, 프로바이더, 타입, 유틸
 - `src/repositories/` — 데이터 접근 (course, user, map 레포지토리)
 - `src/services/` — 비즈니스 로직 (course, user, map 서비스)
@@ -78,6 +78,7 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+REPORT_EDGE_FUNCTION_URL=        # 선택. 제보 접수 시 이메일 발송용 Edge Function URL
 ```
 
 ## 코딩 컨벤션

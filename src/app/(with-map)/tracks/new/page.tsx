@@ -31,7 +31,8 @@ export default async function TrackNewPage() {
     const hasError = courseResult.error !== null || trackResult.error !== null;
     const courseCount = courseResult.count ?? null;
     const trackCount = trackResult.count ?? null;
-    const totalCount = courseCount !== null && trackCount !== null ? courseCount + trackCount : null;
+    const totalCount =
+      courseCount !== null && trackCount !== null ? courseCount + trackCount : null;
     const limitExceededOrUnsafe = hasError || totalCount === null || totalCount >= 1;
 
     if (limitExceededOrUnsafe) {

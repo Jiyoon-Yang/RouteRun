@@ -2,6 +2,10 @@ import { createClient } from '@/lib/supabase/client';
 
 export const COURSE_IMAGES_BUCKET = 'course_images' as const;
 
+const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const MAX_FILE_SIZE_MB = 5;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
 function sanitizeFileSegment(name: string): string {
   const base = name.split(/[/\\]/).pop() ?? 'image';
   const cleaned = base
@@ -19,6 +23,15 @@ function sanitizeFileSegment(name: string): string {
 export async function uploadCourseImages(files: File[]): Promise<string[]> {
   if (files.length === 0) {
     return [];
+  }
+
+  for (const file of files) {
+    if (!ALLOWED_MIME_TYPES.has(file.type)) {
+      throw new Error('jpg, png, webp, gif 형식의 이미지만 업로드할 수 있습니다.');
+    }
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      throw new Error(`이미지 파일 크기는 ${MAX_FILE_SIZE_MB}MB 이하여야 합니다.`);
+    }
   }
 
   const supabase = createClient();

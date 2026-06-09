@@ -6,9 +6,9 @@ import { useModal } from '@/commons/providers/modal/modal.provider';
 import type { TmapCoordinate, TmapLatLngLike, TmapMapLike } from '@/commons/types/tmap';
 import { getPedestrianRoute } from '@/repositories/map.repository';
 
-import { MAX_POINT_LENGTH, toCoordinate } from '../utils/courseMap';
 import { useTmapMapInitialization } from './useTmapMapInitialization';
 import { useTmapOverlays } from './useTmapOverlays';
+import { MAX_POINT_LENGTH, toCoordinate } from '../utils/courseMap';
 
 export type SaveRoutePayload = {
   totalDistanceKm: number;

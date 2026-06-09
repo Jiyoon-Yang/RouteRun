@@ -25,6 +25,7 @@ repositories/
 │   ├── detail.repository.ts   # 트랙 단건 조회 — 상세 페이지 전용
 │   └── home.repository.ts     # 홈 지도용 트랙 목록 (클라이언트 Supabase 사용)
 ├── map.repository.ts          # TMap API 호출 (역지오코딩, 보행자 경로)
+├── report.repository.ts       # reports 테이블 CRUD (createReport). Service Role 클라이언트를 주입받아 사용
 └── user.repository.ts         # users 테이블 CRUD (프로필 조회, 닉네임 중복·수정)
 ```
 

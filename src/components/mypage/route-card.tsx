@@ -2,11 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 
+import { deleteCourseAction } from '@/actions/course.action';
 import { Card } from '@/commons/components/card';
 import { ROUTES } from '@/commons/constants/url';
 import type { MypageRouteCardData, MypageTab } from '@/commons/types/mypage';
-
-import { deleteCourseAction } from '@/actions/course.action';
 
 import { useDeleteItem } from './hooks/useDeleteItem';
 

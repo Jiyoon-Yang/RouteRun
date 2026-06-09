@@ -17,6 +17,7 @@ Next.js **Server Actions** (`'use server'`)로, 클라이언트 컴포넌트의 
 actions/
 ├── auth.action.ts    # 인증 (Google OAuth, 익명 로그인, 로그아웃, 게스트 계정 삭제)
 ├── course.action.ts  # 코스 CRUD (등록, 수정, 삭제) + 좋아요
+├── report.action.ts  # 제보 접수 (버그·불편사항·제안). DB 저장 후 Edge Function으로 이메일 발송
 ├── track.action.ts   # 트랙 CRUD (등록, 수정, 삭제) + 좋아요
 └── user.action.ts    # 유저 (닉네임 중복 확인, 닉네임 변경)
 ```
@@ -48,7 +49,8 @@ actions/
 
 ## 주의사항
 
-- `deleteGuestAccount`는 `SUPABASE_SERVICE_ROLE_KEY`를 사용하며 **서버에서만** 실행된다. 이 키는 절대 클라이언트 번들에 포함되면 안 된다.
+- `deleteGuestAccount`와 `submitReportAction`은 `SUPABASE_SERVICE_ROLE_KEY`를 사용하며 **서버에서만** 실행된다. 이 키는 절대 클라이언트 번들에 포함되면 안 된다.
+- `submitReportAction`은 DB 저장 성공 후 `REPORT_EDGE_FUNCTION_URL` 환경 변수가 설정된 경우에만 Edge Function(이메일 발송)을 호출한다. Edge Function 실패는 무시하고 성공으로 반환한다.
 - `auth.action.ts`의 `resolveSiteOrigin()`은 `NEXT_PUBLIC_SITE_URL` → `VERCEL_URL` → `localhost` 순으로 폴백한다. 새 환경 추가 시 이 함수를 확인한다.
 - redirect URL 검증: `isRelativePath()`로 `/`로 시작하는 상대 경로만 허용해 open redirect를 방지한다.
 - `toggleCourseLikeAction`은 예외적으로 Service를 거치지 않고 Repository를 직접 호출한다. 여러 Repository 메서드를 순차 실행(upsert → count → update)하므로 Action 내에서 처리한다.

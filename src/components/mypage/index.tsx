@@ -20,15 +20,13 @@
 import { useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 
+import { toggleCourseLikeAction } from '@/actions/course.action';
+import { toggleTrackLikeAction } from '@/actions/track.action';
 import { Button } from '@/commons/components/button';
 import { Icon } from '@/commons/components/icons';
 import { Modal } from '@/commons/components/modal';
-import { toggleCourseLikeAction } from '@/actions/course.action';
-import { toggleTrackLikeAction } from '@/actions/track.action';
 import { useGuestGuard } from '@/commons/hooks/useGuestGuard';
 import { useLikes } from '@/commons/hooks/useLikes';
-import { fetchLikedCourseIds } from '@/services/course/courseLikeService';
-import { fetchLikedTrackIds } from '@/services/track/trackLikeService';
 import { Header } from '@/commons/layout/header';
 import { useAuth } from '@/commons/providers/auth/auth.provider';
 import modalBackdropStyles from '@/commons/providers/modal/modal.provider.module.css';
@@ -37,6 +35,8 @@ import type {
   MypageRouteCardData,
   MypageTrackCardData,
 } from '@/commons/types/mypage';
+import { fetchLikedCourseIds } from '@/services/course/courseLikeService';
+import { fetchLikedTrackIds } from '@/services/track/trackLikeService';
 
 import { useLinkGoogle } from './hooks/useLinkGoogle';
 import { useLogout } from './hooks/useLogout';
@@ -114,8 +114,15 @@ export default function Mypage({
       }, {}),
     [myRoutes, likedRoutes],
   );
-  const { isLiked: isCourseLiked, getLikeCount: getCourseLikeCount, toggleLike: toggleCourseLike } =
-    useLikes(allRouteLikeCounts, { entityLabel: '코스', fetchLikedIds: fetchLikedCourseIds, toggleAction: toggleCourseLikeAction });
+  const {
+    isLiked: isCourseLiked,
+    getLikeCount: getCourseLikeCount,
+    toggleLike: toggleCourseLike,
+  } = useLikes(allRouteLikeCounts, {
+    entityLabel: '코스',
+    fetchLikedIds: fetchLikedCourseIds,
+    toggleAction: toggleCourseLikeAction,
+  });
 
   const allTrackLikeCounts = useMemo(
     () =>
@@ -125,8 +132,15 @@ export default function Mypage({
       }, {}),
     [myTracks, likedTracks],
   );
-  const { isLiked: isTrackLiked, getLikeCount: getTrackLikeCount, toggleLike: toggleTrackLike } =
-    useLikes(allTrackLikeCounts, { entityLabel: '트랙', fetchLikedIds: fetchLikedTrackIds, toggleAction: toggleTrackLikeAction });
+  const {
+    isLiked: isTrackLiked,
+    getLikeCount: getTrackLikeCount,
+    toggleLike: toggleTrackLike,
+  } = useLikes(allTrackLikeCounts, {
+    entityLabel: '트랙',
+    fetchLikedIds: fetchLikedTrackIds,
+    toggleAction: toggleTrackLikeAction,
+  });
 
   const { isAnonymous } = useAuth();
   const { executeLogoutOrDelete, isPending: isLogoutPending, isError } = useLogout();

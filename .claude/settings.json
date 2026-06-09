@@ -1,5 +1,32 @@
 {
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /Users/jiyoon/Desktop/RunningCourse/RunningCourse/.claude/hooks/pre-push-build-check.sh",
+            "timeout": 120,
+            "statusMessage": "빌드 검사 중..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm run lint 2>&1",
+            "timeout": 120,
+            "statusMessage": "린트 검사 중..."
+          }
+        ]
+      }
+    ]
   }
 }

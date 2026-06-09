@@ -18,8 +18,7 @@ import { filterNonemptyImageUrls } from '@/commons/utils/image/filter';
 import { getCourseDescriptionDisplay } from '@/commons/utils/text/display';
 import TmapTrackDetail from '@/components/tmap/track-detail';
 
-import { TRACKS_DETAIL_COPY as COPY } from './constants/copy';
-import { useTrackDetailLikes } from './hooks/use-track-detail-likes';
+import { useTrackDetailLikes } from './hooks/useTrackDetailLikes';
 import styles from './styles.module.css';
 import { buildTrackCarouselNavButtonClassNames } from './utils/track-detail-display';
 
@@ -60,7 +59,7 @@ export function TracksDetail({
     }
   };
 
-  const descriptionText = getCourseDescriptionDisplay(track.description, COPY.emptyDescription);
+  const descriptionText = getCourseDescriptionDisplay(track.description, '설명이 없습니다.');
   const imageUrls = filterNonemptyImageUrls(track.image_urls);
   const hasImages = imageUrls.length > 0;
   const carouselLabels = imageUrls.map((_, idx) => `트랙 이미지 ${idx + 1}`);
@@ -83,8 +82,8 @@ export function TracksDetail({
         }}
       />
       <div className={styles.scrollArea}>
-        <section className={styles.mapPreview} aria-label={COPY.mapPreview}>
-          <TmapTrackDetail key={track.id} track={track} mapLabel={COPY.mapPreview} />
+        <section className={styles.mapPreview} aria-label="[MAP PREVIEW]">
+          <TmapTrackDetail key={track.id} track={track} mapLabel="[MAP PREVIEW]" />
         </section>
 
         <article className={styles.content}>
@@ -139,13 +138,13 @@ export function TracksDetail({
             </div>
           </section>
 
-          <section className={styles.descriptionSection} aria-label={COPY.descriptionTitle}>
-            <h3 className={styles.sectionTitle}>{COPY.descriptionTitle}</h3>
+          <section className={styles.descriptionSection} aria-label="설명">
+            <h3 className={styles.sectionTitle}>설명</h3>
             <p className={styles.description}>{descriptionText}</p>
           </section>
 
-          <section className={styles.imageSection} aria-label={COPY.imageTitle}>
-            <h3 className={styles.sectionTitle}>{COPY.imageTitle}</h3>
+          <section className={styles.imageSection} aria-label="이미지">
+            <h3 className={styles.sectionTitle}>이미지</h3>
             {hasImages ? (
               <div className={styles.carousel}>
                 <div className={styles.carouselViewport}>
@@ -165,12 +164,12 @@ export function TracksDetail({
                       <SwiperSlide key={imageLabel} className={styles.carouselSlide}>
                         <figure
                           className={styles.carouselItem}
-                          aria-label={`${COPY.imageAltPrefix} ${index + 1}`}
+                          aria-label={`트랙 이미지 ${index + 1}`}
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={imageUrls[index]}
-                            alt={`${COPY.imageAltPrefix} ${index + 1}`}
+                            alt={`트랙 이미지 ${index + 1}`}
                             className={styles.carouselImage}
                           />
                           <span className={styles.carouselCaption}>{imageLabel}</span>
@@ -183,14 +182,14 @@ export function TracksDetail({
                     <button
                       type="button"
                       className={`${styles.carouselButton} ${prevButtonClass}`}
-                      aria-label={COPY.previousImage}
+                      aria-label="이전 이미지"
                     >
                       <Icon name="chevronLeft" size={16} color="var(--color-black-900)" />
                     </button>
                     <button
                       type="button"
                       className={`${styles.carouselButton} ${nextButtonClass}`}
-                      aria-label={COPY.nextImage}
+                      aria-label="다음 이미지"
                     >
                       <Icon name="chevronRight" size={16} color="var(--color-black-900)" />
                     </button>
@@ -211,7 +210,7 @@ export function TracksDetail({
               </div>
             ) : (
               <div className={styles.emptyImageCard} role="status" aria-live="polite">
-                <p className={styles.emptyImageTitle}>{COPY.emptyImageTitle}</p>
+                <p className={styles.emptyImageTitle}>등록된 이미지가 없습니다</p>
               </div>
             )}
           </section>

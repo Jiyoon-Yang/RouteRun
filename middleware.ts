@@ -17,7 +17,7 @@ export async function middleware(request: NextRequest) {
   if (isPrivate && !user) {
     const loginUrl = new URL('/login', request.url);
     const redirectTo = `${pathname}${search}`;
-    loginUrl.searchParams.set('redirect_to', redirectTo);
+    loginUrl.searchParams.set('next', redirectTo);
     return NextResponse.redirect(loginUrl);
   }
 

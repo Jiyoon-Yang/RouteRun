@@ -19,8 +19,8 @@ import { LogoIcon } from '@/commons/components/icons';
 import { Spinner } from '@/commons/components/spinner';
 import { LOGO_SIZE_PRESETS } from '@/commons/constants/logo-presets';
 
-import { useAnonymousLogin } from './hooks/index.anonymous.login.hook';
-import { useGoogleLogin } from './hooks/index.google.login.hook';
+import { useAnonymousLogin } from './hooks/useAnonymousLogin';
+import { useGoogleLogin } from './hooks/useGoogleLogin';
 import styles from './styles.module.css';
 
 // i18n 대비 텍스트 상수 분리

@@ -13,7 +13,6 @@ export const TAB_ITEMS = [
 }>;
 
 export const HOME_QUERY_KEYS = {
-  selectedCourseId: 'courseId',
   categories: 'categories',
   sheet: 'sheet',
 } as const;
@@ -22,4 +21,6 @@ export const HOME_SESSION_KEYS = {
   savedViewport: 'homeSavedViewport',
   restoreViewportOnce: 'homeRestoreViewportOnce',
   restoreSelectedFocusOnce: 'homeRestoreSelectedFocusOnce',
+  savedCourseId: 'homeSavedCourseId',
+  savedTrackId: 'homeSavedTrackId',
 } as const;

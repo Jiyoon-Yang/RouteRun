@@ -8,6 +8,7 @@ import { getUserTrackWriteCount } from '@/services/track/trackService';
 
 export async function Providers({ children }: { children: React.ReactNode }) {
   let hasWrittenItem = false;
+  let initialUser: import('@supabase/supabase-js').User | null = null;
 
   try {
     const supabase = createClient();
@@ -19,6 +20,8 @@ export async function Providers({ children }: { children: React.ReactNode }) {
     if (userError && userError.message !== 'Auth session missing!') {
       console.error('[AppBody] getUser 실패:', userError.message);
     }
+
+    initialUser = user ?? null;
 
     if (user?.is_anonymous === true) {
       const [courseResult, trackResult] = await Promise.all([
@@ -45,7 +48,7 @@ export async function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <body className="antialiased">
-      <AuthProvider>
+      <AuthProvider initialUser={initialUser}>
         <ModalProvider>
           <ToastProvider>
             <Layout hasWrittenItem={hasWrittenItem}>{children}</Layout>

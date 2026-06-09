@@ -13,6 +13,7 @@
 npm run dev              # 개발 서버 (localhost:3000)
 npm run build            # 프로덕션 빌드
 npm run lint             # ESLint 실행
+npx tsc --noEmit        # TypeScript 타입 체크 (빌드 없이)
 npm run storybook        # Storybook (localhost:6006)
 npm run build-storybook  # Storybook 정적 사이트 빌드
 npx vitest               # Storybook 컴포넌트/인터랙션 테스트 (Vitest 브라우저 모드)
@@ -37,8 +38,10 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
 **주요 디렉토리:**
 
 - `src/app/` — Next.js App Router 페이지 & 레이아웃
+  - `(with-map)/` — TMap이 필요한 라우트 (홈, 코스/트랙 상세·생성·수정)
+  - `(no-map)/` — TMap 없이 렌더링 (로그인, 마이페이지, 신고, 공지)
 - `src/actions/` — 인증, 코스, 유저 관련 Server Actions
-- `src/components/` — 기능별 컴포넌트 (`home/`, `courses-detail/`, `courses-list/`, `mypage/`, `course-submit/`, `track-submit/`, `tracks-detail/`, `tmap/` 등)
+- `src/components/` — 기능별 컴포넌트 (`home/`, `home-list/`, `courses-detail/`, `courses-submit/`, `tracks-detail/`, `tracks-submit/`, `mypage/`, `tmap/`, `report/`, `login/` 등)
 - `src/commons/` — 공통 UI 컴포넌트, 훅, 상수, 프로바이더, 타입, 유틸
 - `src/repositories/` — 데이터 접근 (course, user, map 레포지토리)
 - `src/services/` — 비즈니스 로직 (course, user, map 서비스)
@@ -75,6 +78,7 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+REPORT_EDGE_FUNCTION_URL=        # 선택. 제보 접수 시 이메일 발송용 Edge Function URL
 ```
 
 ## 코딩 컨벤션
@@ -131,3 +135,9 @@ PR을 생성할 때는 반드시 아래 템플릿 구조를 따릅니다.
 - [x] 전역 적용 범위가 **의도한 영역만** 영향을 주는지 확인
 - [x] (가능 시) 린트/타입체크 통과 확인
 ```
+
+## Gotchas
+
+- **TMap SDK 로딩:** `(with-map)/layout.tsx`에서 인라인 스크립트로 로드. `document.write` 호환을 위한 우회 로직 포함. TMap 관련 이슈 발생 시 이 레이아웃을 먼저 확인.
+- **`redirect()` + try/catch 금지:** Next.js `redirect()`는 내부적으로 예외를 throw하므로 절대 try 블록 안에서 호출하지 않는다 (actions에서).
+- **익명 세션 vs 미로그인:** 미들웨어는 세션 없는 경우만 차단. 익명 세션은 통과하지만 mutation은 Action 레벨에서 `isAnonymous`로 차단.

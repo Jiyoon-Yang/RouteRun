@@ -31,8 +31,7 @@ import { filterNonemptyImageUrls } from '@/commons/utils/image/filter';
 import { getCourseDescriptionDisplay } from '@/commons/utils/text/display';
 import { TmapCourseDetail } from '@/components/tmap/course-detail';
 
-import { COURSES_DETAIL_COPY as COPY } from './constants/copy';
-import { useCourseDetailLikes } from './hooks/use-course-detail-likes';
+import { useCourseDetailLikes } from './hooks/useCourseDetailLikes';
 import styles from './styles.module.css';
 import { buildCarouselNavButtonClassNames } from './utils/course-detail-display';
 
@@ -68,7 +67,7 @@ export function Courses({ course, authorNickname, location, canEdit = false }: C
       showToast('링크 복사에 실패했습니다', 'failed');
     }
   };
-  const descriptionText = getCourseDescriptionDisplay(course.description, COPY.emptyDescription);
+  const descriptionText = getCourseDescriptionDisplay(course.description, '설명이 없습니다.');
   const imageUrls = filterNonemptyImageUrls(course.image_urls);
   const hasImages = imageUrls.length > 0;
   const carouselLabels = imageUrls.map((_, idx) => `코스 이미지 ${idx + 1}`);
@@ -91,8 +90,8 @@ export function Courses({ course, authorNickname, location, canEdit = false }: C
         }}
       />
       <div className={styles.scrollArea}>
-        <section className={styles.mapPreview} aria-label={COPY.mapPreview}>
-          <TmapCourseDetail key={course.id} course={course} mapLabel={COPY.mapPreview} />
+        <section className={styles.mapPreview} aria-label="[MAP PREVIEW]">
+          <TmapCourseDetail key={course.id} course={course} mapLabel="[MAP PREVIEW]" />
         </section>
 
         <article className={styles.content}>
@@ -152,13 +151,13 @@ export function Courses({ course, authorNickname, location, canEdit = false }: C
               </span>
             </div>
           </section>
-          <section className={styles.descriptionSection} aria-label={COPY.descriptionTitle}>
-            <h3 className={styles.sectionTitle}>{COPY.descriptionTitle}</h3>
+          <section className={styles.descriptionSection} aria-label="설명">
+            <h3 className={styles.sectionTitle}>설명</h3>
             <p className={styles.description}>{descriptionText}</p>
           </section>
 
-          <section className={styles.imageSection} aria-label={COPY.imageTitle}>
-            <h3 className={styles.sectionTitle}>{COPY.imageTitle}</h3>
+          <section className={styles.imageSection} aria-label="이미지">
+            <h3 className={styles.sectionTitle}>이미지</h3>
             {hasImages ? (
               <div className={styles.carousel}>
                 <div className={styles.carouselViewport}>
@@ -179,13 +178,13 @@ export function Courses({ course, authorNickname, location, canEdit = false }: C
                         <SwiperSlide key={imageLabel} className={styles.carouselSlide}>
                           <figure
                             className={styles.carouselItem}
-                            aria-label={`${COPY.imageAltPrefix} ${index + 1}`}
+                            aria-label={`코스 이미지 ${index + 1}`}
                           >
                             {/* 상세 코스 이미지는 외부 URL을 그대로 표시한다. */}
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={imageUrls[index]}
-                              alt={`${COPY.imageAltPrefix} ${index + 1}`}
+                              alt={`코스 이미지 ${index + 1}`}
                               className={styles.carouselImage}
                             />
                             <span className={styles.carouselCaption}>{imageLabel}</span>
@@ -199,14 +198,14 @@ export function Courses({ course, authorNickname, location, canEdit = false }: C
                     <button
                       type="button"
                       className={`${styles.carouselButton} ${prevButtonClass}`}
-                      aria-label={COPY.previousImage}
+                      aria-label="이전 이미지"
                     >
                       <Icon name="chevronLeft" size={16} color="var(--color-black-900)" />
                     </button>
                     <button
                       type="button"
                       className={`${styles.carouselButton} ${nextButtonClass}`}
-                      aria-label={COPY.nextImage}
+                      aria-label="다음 이미지"
                     >
                       <Icon name="chevronRight" size={16} color="var(--color-black-900)" />
                     </button>
@@ -227,7 +226,7 @@ export function Courses({ course, authorNickname, location, canEdit = false }: C
               </div>
             ) : (
               <div className={styles.emptyImageCard} role="status" aria-live="polite">
-                <p className={styles.emptyImageTitle}>{COPY.emptyImageTitle}</p>
+                <p className={styles.emptyImageTitle}>등록된 이미지가 없습니다</p>
               </div>
             )}
           </section>

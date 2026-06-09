@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
 
-import TrackSubmit from '@/components/track-submit';
+import TrackSubmit from '@/components/tracks-submit';
 import { createClient } from '@/lib/supabase/server';
+import { getUserRouteWriteCount } from '@/services/course/courseService';
 import { getUserTrackWriteCount } from '@/services/track/trackService';
 
 export default async function TrackNewPage() {
@@ -22,15 +23,24 @@ export default async function TrackNewPage() {
   const isGuestUser = user.is_anonymous === true;
 
   if (isGuestUser) {
-    const { count, error } = await getUserTrackWriteCount(user.id);
-    const limitExceededOrUnsafe = error !== null || count === null || count >= 1;
+    const [courseResult, trackResult] = await Promise.all([
+      getUserRouteWriteCount(user.id),
+      getUserTrackWriteCount(user.id),
+    ]);
+
+    const hasError = courseResult.error !== null || trackResult.error !== null;
+    const courseCount = courseResult.count ?? null;
+    const trackCount = trackResult.count ?? null;
+    const totalCount =
+      courseCount !== null && trackCount !== null ? courseCount + trackCount : null;
+    const limitExceededOrUnsafe = hasError || totalCount === null || totalCount >= 1;
 
     if (limitExceededOrUnsafe) {
-      if (error) {
-        console.error('[TrackNewPage] 게스트 트랙 개수 조회 실패 — 진입 차단:', error);
-      } else if (count === null) {
+      if (hasError) {
+        console.error('[TrackNewPage] 게스트 코스·트랙 개수 조회 실패 — 진입 차단');
+      } else if (totalCount === null) {
         console.error(
-          '[TrackNewPage] 게스트 트랙 개수가 null — 진입 차단 (userId 일부):',
+          '[TrackNewPage] 게스트 코스·트랙 개수가 null — 진입 차단 (userId 일부):',
           user.id.slice(0, 8),
         );
       }

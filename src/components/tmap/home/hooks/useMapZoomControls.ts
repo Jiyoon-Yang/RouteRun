@@ -8,7 +8,7 @@ import type { TmapMap } from '@/commons/utils/tmap/types';
 
 import type { RefObject } from 'react';
 
-const MIN_ZOOM_LEVEL = 8;
+const MIN_ZOOM_LEVEL = 6;
 const MAX_ZOOM_LEVEL = 19;
 
 type UseMapZoomControlsParams = {

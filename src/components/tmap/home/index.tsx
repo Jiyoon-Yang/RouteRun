@@ -90,7 +90,7 @@ type TmapHomeProps = {
   onDragSettled?: () => void;
 };
 
-const MIN_ZOOM_LEVEL = 8;
+const MIN_ZOOM_LEVEL = 6;
 const MAX_ZOOM_LEVEL = 19;
 
 function clampHomeMapZoom(map: TmapMap): void {

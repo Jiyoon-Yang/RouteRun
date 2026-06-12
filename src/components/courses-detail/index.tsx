@@ -7,7 +7,7 @@
  * - [x] 공용 Icon 컴포넌트만 사용
  * - [x] 인라인 스타일 미사용
  * - [x] 피그마 메타데이터 구조 기준으로 섹션 반영
- * - [x] 캐러셀/찜 상태 UI 반영
+ * - [x] 캐러셀/좋아요 상태 UI 반영
  */
 
 'use client';
@@ -123,7 +123,7 @@ export function Courses({ course, authorNickname, location, canEdit = false }: C
                   type="button"
                   className={styles.likeButton}
                   aria-pressed={isLiked}
-                  aria-label={isLiked ? '코스 찜 취소' : '코스 찜하기'}
+                  aria-label={isLiked ? '코스 좋아요 취소' : '코스 좋아요'}
                   onClick={() => toggleCourseLike(course.id)}
                 >
                   <Icon name={isLiked ? 'heartFilled' : 'heart'} color="var(--color-red-500)" />

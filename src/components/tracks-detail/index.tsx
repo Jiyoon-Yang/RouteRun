@@ -115,7 +115,7 @@ export function TracksDetail({
                   type="button"
                   className={styles.likeButton}
                   aria-pressed={isLiked}
-                  aria-label={isLiked ? '트랙 찜 취소' : '트랙 찜하기'}
+                  aria-label={isLiked ? '트랙 좋아요 취소' : '트랙 좋아요'}
                   onClick={() => toggleTrackLike(track.id)}
                 >
                   <Icon name={isLiked ? 'heartFilled' : 'heart'} color="var(--color-red-500)" />

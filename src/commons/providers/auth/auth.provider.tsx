@@ -52,7 +52,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   const [authState, setAuthState] = useState<AuthState>(() =>
-    initialUser !== undefined
+    initialUser
       ? buildAuthState(initialUser)
       : {
           user: null,
@@ -66,8 +66,9 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   useEffect(() => {
     const supabase = createClient();
 
-    // 서버에서 initialUser를 받은 경우 클라이언트 초기 조회 생략
-    if (initialUser === undefined) {
+    // 실제 유저 객체가 있을 때만 클라이언트 초기 조회 생략.
+    // null은 레이아웃 보존으로 stale할 수 있으므로 항상 재확인.
+    if (!initialUser) {
       supabase.auth.getUser().then(({ data: { user } }) => {
         setAuthState(buildAuthState(user));
       });

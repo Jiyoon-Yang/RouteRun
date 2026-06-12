@@ -109,17 +109,17 @@ export function useRouteMarkers({
   }, [getTmapv3]);
 
   const logMarkerCoordinateAudit = useCallback(
-    (map: TmapMap, phase: string) => {
+    (map: TmapMap, _phase: string) => {
       if (!isMarkerCoordDebugEnabled()) return;
-      const zoom = typeof map.getZoom === 'function' ? map.getZoom() : Number.NaN;
+      const _zoom = typeof map.getZoom === 'function' ? map.getZoom() : Number.NaN;
       const selectedId = selectedRouteIdRef.current;
       const rows: Array<Record<string, string | number | boolean | null>> = [];
-      let mismatch = 0;
-      let noSdkReader = 0;
+      let _mismatch = 0;
+      let _noSdkReader = 0;
 
       routeMarkerMapRef.current.forEach((entry, routeId) => {
         const sdk = tryReadSdkLatLngFromMarker(entry.marker);
-        if (!sdk) noSdkReader += 1;
+        if (!sdk) _noSdkReader += 1;
         const dLat = sdk ? sdk.lat - entry.lat : null;
         const dLng = sdk ? sdk.lng - entry.lng : null;
         const coordsOk =
@@ -128,7 +128,7 @@ export function useRouteMarkers({
           dLng !== null &&
           Math.abs(dLat) < 1e-9 &&
           Math.abs(dLng) < 1e-9;
-        if (!coordsOk) mismatch += 1;
+        if (!coordsOk) _mismatch += 1;
         rows.push({
           routeId: `${routeId.slice(0, 10)}…`,
           sel: routeId === selectedId,
@@ -141,17 +141,6 @@ export function useRouteMarkers({
           dLng: dLng !== null ? roundCoordForLog(dLng) : null,
         });
       });
-
-      /* eslint-disable no-console */
-      console.groupCollapsed(
-        `[TmapHome] marker-debug · ${phase} · zoom=${String(zoom)} · mismatch=${mismatch}/${rows.length} · noGetPosition=${noSdkReader}`,
-      );
-      console.table(rows);
-      console.log(
-        '해석: stored* = 앱이 route에 넣은 값, sdk* = Marker.getPosition() (없으면 null). d가 0이면 위경도 숫자는 안 바뀐 것. 여전히 화면에서 밀리면 앵커/투영/CSS 이슈.',
-      );
-      console.groupEnd();
-      /* eslint-enable no-console */
     },
     [
       isMarkerCoordDebugEnabled,
@@ -163,15 +152,15 @@ export function useRouteMarkers({
   );
 
   const logRouteMarkerAttachSnapshot = useCallback(
-    (map: TmapMap | null, phase: string) => {
+    (map: TmapMap | null, _phase: string) => {
       if (!isMarkerLifecycleDebugEnabled()) return;
       const targetMap = map ?? mapRef.current;
-      let routeMarkersAttachedToMap = 0;
+      let _routeMarkersAttachedToMap = 0;
       const sample: Record<string, unknown>[] = [];
       routeMarkerMapRef.current.forEach((entry, routeId) => {
         const sdkMap = tryReadMarkerAttachedMap(entry.marker);
         const markerOnTarget = sdkMap != null && sdkMap === targetMap;
-        if (markerOnTarget) routeMarkersAttachedToMap += 1;
+        if (markerOnTarget) _routeMarkersAttachedToMap += 1;
 
         let iconProbe: boolean | string = 'no-element';
         const el = entry.marker.getElement?.();
@@ -195,31 +184,16 @@ export function useRouteMarkers({
         getMarkers?: () => unknown[];
         markers?: unknown[];
       } | null;
-      let clusterMarkerCount: number | null = null;
+      let _clusterMarkerCount: number | null = null;
       if (cluster && typeof cluster.getMarkers === 'function') {
         try {
-          clusterMarkerCount = cluster.getMarkers()?.length ?? null;
+          _clusterMarkerCount = cluster.getMarkers()?.length ?? null;
         } catch {
-          clusterMarkerCount = null;
+          _clusterMarkerCount = null;
         }
       } else if (cluster && Array.isArray(cluster.markers)) {
-        clusterMarkerCount = cluster.markers.length;
+        _clusterMarkerCount = cluster.markers.length;
       }
-
-      /* eslint-disable no-console */
-      console.groupCollapsed(`[TmapHome:lifecycle] SDK 부착 스냅샷 · ${phase}`);
-      console.log({
-        targetMapExists: !!targetMap,
-        mapMarkerEntryCount: routeMarkerMapRef.current.size,
-        routeMarkersAttachedToTargetMap: routeMarkersAttachedToMap,
-        clusterRefExists: !!routeMarkerClusterRef.current,
-        clusterMarkerCountProbe: clusterMarkerCount,
-        bottomSheetPx: bottomSheetVisibleHeightRef.current,
-        zoom: targetMap && typeof targetMap.getZoom === 'function' ? targetMap.getZoom() : null,
-        sampleRows: sample,
-      });
-      console.groupEnd();
-      /* eslint-enable no-console */
     },
     [
       bottomSheetVisibleHeightRef,
@@ -493,20 +467,9 @@ export function useRouteMarkers({
       if (map !== null) markerOptions.map = map;
       const routeMarker = new Tmapv3.Marker(markerOptions) as TmapMarker;
       applyPointerCursorToTmapMarker(routeMarker);
-      if (isMarkerCoordDebugEnabled()) {
-        const sdkAfterCreate = tryReadSdkLatLngFromMarker(routeMarker);
-        /* eslint-disable-next-line no-console */
-        console.log('[TmapHome:createRouteMarker]', {
-          routeId: route.id,
-          positionInput: { lat: routeStart.lat, lng: routeStart.lng },
-          icon: getRunningCourseMarkerIconUrlForCategory(category, visualState),
-          visualState,
-          sdkGetPositionAfterCreate: sdkAfterCreate,
-        });
-      }
       return routeMarker;
     },
-    [getTmapv3, isMarkerCoordDebugEnabled, tryReadSdkLatLngFromMarker],
+    [getTmapv3],
   );
 
   const attachRouteMarkerListeners = useCallback(

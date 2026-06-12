@@ -55,7 +55,7 @@ export function useLikes(initialLikeCounts: LikeCountsById, config: LikeConfig) 
       const result = await fetchRef.current(user.id, ids);
       if (!isMounted) return;
       if (result.error) {
-        console.error(`[useLikes:${entityLabel}] 찜 상태 조회 실패:`, result.error);
+        console.error(`[useLikes:${entityLabel}] 좋아요 상태 조회 실패:`, result.error);
         return;
       }
       setLikedIds(result.data);
@@ -69,7 +69,7 @@ export function useLikes(initialLikeCounts: LikeCountsById, config: LikeConfig) 
   const openLoginConfirm = useCallback(() => {
     openModal({
       type: 'confirm',
-      title: `'${entityLabel} 좋아요'는 로그인한 유저만 이용가능합니다. 로그인 하시겠습니까?`,
+      title: '좋아요는 로그인이 필요합니다. 로그인하시겠어요?',
       confirmText: '네',
       cancelText: '아니오',
       onConfirm: () => {
@@ -120,7 +120,7 @@ export function useLikes(initialLikeCounts: LikeCountsById, config: LikeConfig) 
         return;
       }
 
-      console.error(`[useLikes:${entityLabel}] 찜 상태 변경 실패:`, result.error);
+      console.error(`[useLikes:${entityLabel}] 좋아요 상태 변경 실패:`, result.error);
       showToast('좋아요 처리에 실패했습니다.', 'failed');
       setLikedIds((previous) => {
         const next = new Set(previous);

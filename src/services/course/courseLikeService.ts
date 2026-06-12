@@ -1,5 +1,5 @@
 /**
- * Course Like Service — 코스 찜 상태 조회와 변경을 담당한다.
+ * Course Like Service — 코스 좋아요 상태 조회와 변경을 담당한다.
  */
 import { createClient } from '@/lib/supabase/client';
 

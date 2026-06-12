@@ -62,7 +62,7 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
 ## DB 스키마 (Supabase Postgres)
 
 - `users`: `id, nickname, profile_image_url, is_anonymous`
-- `routes`: `id, user_id, title, description, distance_meters, path_data (JSON), start_lat, start_lng, start_address_region, image_urls, likes_count, created_at, updated_at`
+- `routes`: `id, user_id, title, description, distance_meters, path_data (JSON), is_round_trip (boolean), start_lat, start_lng, start_address_region, image_urls, likes_count, created_at, updated_at`
 - `route_likes`: 복합키 `(user_id, route_id)`
 - `tracks`: `id, user_id, title, description, distance_meters, start_lat, start_lng, start_address_region, image_urls, likes_count, created_at` (routes와 달리 `path_data` 없음)
 - `track_likes`: 복합키 `(user_id, track_id)`

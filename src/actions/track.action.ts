@@ -4,7 +4,6 @@ import { revalidatePath } from 'next/cache';
 
 import type { Track } from '@/commons/types/routerun';
 import { createClient } from '@/lib/supabase/server';
-import { reverseGeocodeRegion } from '@/repositories/map.repository';
 import * as trackRepository from '@/repositories/track/track.repository';
 import { getUserRouteWriteCount } from '@/services/course/courseService';
 import * as trackService from '@/services/track/trackService';
@@ -112,22 +111,11 @@ export async function createTrackAction(input: SubmitTrackInput): Promise<Create
     return { success: false, message: '트랙 거리를 입력해 주세요.' };
   }
 
-  let start_address_region: string | null = null;
-  try {
-    start_address_region = await reverseGeocodeRegion({
-      lat: start_lat,
-      lng: start_lng,
-    });
-  } catch (error) {
-    console.error('[createTrackAction] 역지오코딩 실패:', error);
-    start_address_region = null;
-  }
-
   const { data, error } = await trackService.submitNewTrack(
     supabase,
     input,
     user.id,
-    start_address_region,
+    input.addressRegion ?? null,
   );
 
   if (error || !data) {

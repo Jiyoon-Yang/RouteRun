@@ -49,8 +49,6 @@ export function useTmapMapInitialization({
         latLng?: TmapLatLngLike;
         _latLng?: TmapLatLngLike;
       }) => {
-        // eslint-disable-next-line no-console -- Tmap v3 click payload shape debugging
-        console.log('Map Click Event:', event);
         const rawLatLng = extractLatLngFromVectorEvent(event);
         const nextCoordinate = rawLatLng ? toCoordinate(rawLatLng) : null;
         if (!nextCoordinate) return;

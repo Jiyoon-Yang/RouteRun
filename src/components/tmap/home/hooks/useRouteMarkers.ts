@@ -141,17 +141,6 @@ export function useRouteMarkers({
           dLng: dLng !== null ? roundCoordForLog(dLng) : null,
         });
       });
-
-      /* eslint-disable no-console */
-      console.groupCollapsed(
-        `[TmapHome] marker-debug · ${phase} · zoom=${String(zoom)} · mismatch=${mismatch}/${rows.length} · noGetPosition=${noSdkReader}`,
-      );
-      console.table(rows);
-      console.log(
-        '해석: stored* = 앱이 route에 넣은 값, sdk* = Marker.getPosition() (없으면 null). d가 0이면 위경도 숫자는 안 바뀐 것. 여전히 화면에서 밀리면 앵커/투영/CSS 이슈.',
-      );
-      console.groupEnd();
-      /* eslint-enable no-console */
     },
     [
       isMarkerCoordDebugEnabled,
@@ -205,21 +194,6 @@ export function useRouteMarkers({
       } else if (cluster && Array.isArray(cluster.markers)) {
         clusterMarkerCount = cluster.markers.length;
       }
-
-      /* eslint-disable no-console */
-      console.groupCollapsed(`[TmapHome:lifecycle] SDK 부착 스냅샷 · ${phase}`);
-      console.log({
-        targetMapExists: !!targetMap,
-        mapMarkerEntryCount: routeMarkerMapRef.current.size,
-        routeMarkersAttachedToTargetMap: routeMarkersAttachedToMap,
-        clusterRefExists: !!routeMarkerClusterRef.current,
-        clusterMarkerCountProbe: clusterMarkerCount,
-        bottomSheetPx: bottomSheetVisibleHeightRef.current,
-        zoom: targetMap && typeof targetMap.getZoom === 'function' ? targetMap.getZoom() : null,
-        sampleRows: sample,
-      });
-      console.groupEnd();
-      /* eslint-enable no-console */
     },
     [
       bottomSheetVisibleHeightRef,
@@ -493,20 +467,9 @@ export function useRouteMarkers({
       if (map !== null) markerOptions.map = map;
       const routeMarker = new Tmapv3.Marker(markerOptions) as TmapMarker;
       applyPointerCursorToTmapMarker(routeMarker);
-      if (isMarkerCoordDebugEnabled()) {
-        const sdkAfterCreate = tryReadSdkLatLngFromMarker(routeMarker);
-        /* eslint-disable-next-line no-console */
-        console.log('[TmapHome:createRouteMarker]', {
-          routeId: route.id,
-          positionInput: { lat: routeStart.lat, lng: routeStart.lng },
-          icon: getRunningCourseMarkerIconUrlForCategory(category, visualState),
-          visualState,
-          sdkGetPositionAfterCreate: sdkAfterCreate,
-        });
-      }
       return routeMarker;
     },
-    [getTmapv3, isMarkerCoordDebugEnabled, tryReadSdkLatLngFromMarker],
+    [getTmapv3],
   );
 
   const attachRouteMarkerListeners = useCallback(

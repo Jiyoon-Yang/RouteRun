@@ -23,6 +23,7 @@ export type SubmitCourseInput = {
   description?: string | null;
   routeData: SubmitCourseRouteData;
   imageUrls: string[];
+  addressRegion?: string | null;
 };
 
 function routeToMypageCard(route: Route): MypageRouteCardData {

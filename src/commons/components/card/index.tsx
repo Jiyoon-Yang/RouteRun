@@ -75,7 +75,7 @@ export function Card({
   ]
     .filter(Boolean)
     .join(' ');
-  const likeLabel = isLiked ? '코스 찜 취소' : '코스 찜하기';
+  const likeLabel = isLiked ? '코스 좋아요 취소' : '코스 좋아요';
   const likeContent = (
     <>
       <Icon

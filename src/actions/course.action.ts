@@ -8,7 +8,6 @@ import { revalidatePath } from 'next/cache';
 import type { Route } from '@/commons/types/routerun';
 import { createClient } from '@/lib/supabase/server';
 import * as courseRepository from '@/repositories/course/course.repository';
-import { reverseGeocodeRegion } from '@/repositories/map.repository';
 import * as courseService from '@/services/course/courseService';
 import type { SubmitCourseInput } from '@/services/course/courseService';
 
@@ -126,17 +125,6 @@ export async function createCourseAction(
 
   const distance_meters = toDistanceMetersSafe(input.routeData.totalDistanceKm);
 
-  let start_address_region: string | null = null;
-  try {
-    start_address_region = await reverseGeocodeRegion({
-      lat: start_lat,
-      lng: start_lng,
-    });
-  } catch (error) {
-    console.error('[createCourseAction] 역지오코딩 실패:', error);
-    start_address_region = null;
-  }
-
   const { data, error } = await courseRepository.createRoute(supabase, {
     user_id: user.id,
     title: input.title,
@@ -145,7 +133,7 @@ export async function createCourseAction(
     path_data: input.routeData.pathData,
     start_lat,
     start_lng,
-    start_address_region,
+    start_address_region: input.addressRegion ?? null,
     image_urls: input.imageUrls,
     is_round_trip: Boolean(input.routeData.isRoundTrip),
   });

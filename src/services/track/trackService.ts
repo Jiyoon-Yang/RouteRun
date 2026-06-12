@@ -11,6 +11,7 @@ export type SubmitTrackInput = {
   trackPoint: { lat: number; lng: number };
   distanceMeters: number;
   imageUrls: string[];
+  addressRegion?: string | null;
 };
 
 export async function submitNewTrack(

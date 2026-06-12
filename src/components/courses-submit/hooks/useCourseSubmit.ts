@@ -6,8 +6,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createCourseAction, updateCourseAction } from '@/actions/course.action';
 import { useToast } from '@/commons/providers/toast/toast.provider';
 import { uploadCourseImages } from '@/commons/utils/storage';
-import { reverseGeocodeRegion } from '@/repositories/map.repository';
 import type { SaveRoutePayload } from '@/components/tmap/courses-submit/hooks/useCourseMap';
+import { reverseGeocodeRegion } from '@/repositories/map.repository';
 import type { CourseDetailPayload } from '@/services/course/courseDetailService';
 
 import type { ChangeEvent } from 'react';

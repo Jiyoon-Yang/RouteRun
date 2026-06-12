@@ -6,8 +6,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createTrackAction, updateTrackAction } from '@/actions/track.action';
 import { useToast } from '@/commons/providers/toast/toast.provider';
 import { uploadCourseImages } from '@/commons/utils/storage';
-import { reverseGeocodeRegion } from '@/repositories/map.repository';
 import type { SaveTrackPayload } from '@/components/tmap/tracks-submit/hooks/useTrackMap';
+import { reverseGeocodeRegion } from '@/repositories/map.repository';
 import type { TrackDetailPayload } from '@/services/track/trackDetailService';
 
 import type { ChangeEvent } from 'react';

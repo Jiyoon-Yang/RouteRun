@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createCourseAction, updateCourseAction } from '@/actions/course.action';
 import { useToast } from '@/commons/providers/toast/toast.provider';
 import { uploadCourseImages } from '@/commons/utils/storage';
+import { reverseGeocodeRegion } from '@/repositories/map.repository';
 import type { SaveRoutePayload } from '@/components/tmap/courses-submit/hooks/useCourseMap';
 import type { CourseDetailPayload } from '@/services/course/courseDetailService';
 
@@ -189,7 +190,11 @@ export function useCourseSubmit({ mode, courseId, initialData }: UseCourseSubmit
     submittingRef.current = true;
     setIsSubmitting(true);
     try {
-      const imageUrls = await uploadCourseImages(images);
+      const [imageUrls, addressRegion] = await Promise.all([
+        uploadCourseImages(images),
+        reverseGeocodeRegion({ lat: routeData.startPoint.lat, lng: routeData.startPoint.lng }),
+      ]);
+
       const result = await createCourseAction({
         title,
         description: description.trim() || null,
@@ -203,8 +208,8 @@ export function useCourseSubmit({ mode, courseId, initialData }: UseCourseSubmit
           },
         },
         imageUrls,
+        addressRegion,
       });
-
       if (!result.success) {
         showToast(result.message ?? '코스 등록에 실패했습니다.', 'failed');
         return;

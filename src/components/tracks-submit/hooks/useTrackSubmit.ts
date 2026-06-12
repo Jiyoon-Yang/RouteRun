@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createTrackAction, updateTrackAction } from '@/actions/track.action';
 import { useToast } from '@/commons/providers/toast/toast.provider';
 import { uploadCourseImages } from '@/commons/utils/storage';
+import { reverseGeocodeRegion } from '@/repositories/map.repository';
 import type { SaveTrackPayload } from '@/components/tmap/tracks-submit/hooks/useTrackMap';
 import type { TrackDetailPayload } from '@/services/track/trackDetailService';
 
@@ -118,13 +119,17 @@ export function useTrackSubmit({ mode, trackId, initialData }: UseTrackSubmitPar
     submittingRef.current = true;
     setIsSubmitting(true);
     try {
-      const imageUrls = await uploadCourseImages(images);
+      const [imageUrls, addressRegion] = await Promise.all([
+        uploadCourseImages(images),
+        reverseGeocodeRegion({ lat: trackData.trackPoint.lat, lng: trackData.trackPoint.lng }),
+      ]);
       const result = await createTrackAction({
         title,
         description: description.trim() || null,
         trackPoint: trackData.trackPoint,
         distanceMeters: trackData.distanceMeters,
         imageUrls,
+        addressRegion,
       });
       if (!result.success) {
         showToast(result.message ?? '트랙 등록에 실패했습니다.', 'failed');

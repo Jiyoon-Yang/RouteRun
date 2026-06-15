@@ -69,7 +69,7 @@ export function useLikes(initialLikeCounts: LikeCountsById, config: LikeConfig) 
   const openLoginConfirm = useCallback(() => {
     openModal({
       type: 'confirm',
-      title: '좋아요는 로그인이 필요합니다. 로그인하시겠어요?',
+      title: '좋아요는 로그인이 필요합니다.\n로그인하시겠어요?',
       confirmText: '네',
       cancelText: '아니오',
       onConfirm: () => {

@@ -27,6 +27,7 @@
 .title {
   margin: 0;
   text-align: center;
+  white-space: pre-line;
   /* Figma #020618 — 등록 색 중 RGB 거리상 가장 근접: --color-black-500 (#0a0a0a) */
   color: var(--color-black-500);
   font-family: var(--typography-modal-title-ko-desktop-font-family);

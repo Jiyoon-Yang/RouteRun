@@ -5,6 +5,8 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+
 import type { Route } from '@/commons/types/routerun';
 import { createClient } from '@/lib/supabase/server';
 import * as courseRepository from '@/repositories/course/course.repository';
@@ -75,17 +77,27 @@ export async function toggleCourseLikeAction(
     if (error) return { likeCount: null, error: error.message };
   }
 
-  const { count, error: countError } = await courseRepository.getRouteLikeCount(supabase, courseId);
+  // RLS 우회: 좋아요 수 집계·갱신은 소유자 여부와 무관하게 동작해야 한다.
+  const serviceSupabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { count, error: countError } = await courseRepository.getRouteLikeCount(
+    serviceSupabase,
+    courseId,
+  );
   if (countError) return { likeCount: null, error: countError.message };
 
   const nextLikeCount = count ?? 0;
   const { error: updateError } = await courseRepository.updateRouteLikesCount(
-    supabase,
+    serviceSupabase,
     courseId,
     nextLikeCount,
   );
   if (updateError) return { likeCount: null, error: updateError.message };
 
+  revalidatePath(`/courses/${courseId}`);
   if (revalidateMypage) {
     revalidatePath('/mypage');
   }

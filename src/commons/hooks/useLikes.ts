@@ -76,7 +76,7 @@ export function useLikes(initialLikeCounts: LikeCountsById, config: LikeConfig) 
         router.push(`${ROUTES.LOGIN}?next=${encodeURIComponent(pathname || '/')}`);
       },
     });
-  }, [entityLabel, openModal, pathname, router]);
+  }, [openModal, pathname, router]);
 
   const isLiked = useCallback((id: string) => likedIds.has(id), [likedIds]);
 

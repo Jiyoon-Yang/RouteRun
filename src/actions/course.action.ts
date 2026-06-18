@@ -3,9 +3,8 @@
 // 코스 관련 Server Actions
 // 예) 좋아요 누르기, 코스 등록 폼 제출
 
-import { revalidatePath } from 'next/cache';
-
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { revalidatePath } from 'next/cache';
 
 import type { Route } from '@/commons/types/routerun';
 import { createClient } from '@/lib/supabase/server';

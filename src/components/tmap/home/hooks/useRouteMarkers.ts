@@ -4,13 +4,14 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 
-import type { Route } from '@/commons/types/routerun';
+import type { Route, Track } from '@/commons/types/routerun';
 import { getDistanceCategory, type DistanceCategory } from '@/commons/utils/distance/category';
 import {
   getRunningCourseMarkerIconUrlForCategory,
   type MarkerVisualState,
 } from '@/commons/utils/marker/route-marker';
 import { resolveRouteStartForMapMarker } from '@/commons/utils/marker/route-marker-position';
+import type { RegionBucket } from '@/commons/utils/region/region-bucket';
 import { bindTmapMarkerListener } from '@/commons/utils/tmap/events';
 import type {
   RouteMarkerEntry,
@@ -22,18 +23,22 @@ import type {
 } from '@/commons/utils/tmap/types';
 import { applyPointerCursorToTmapMarker } from '@/components/tmap/commons/utils/apply-pointer-cursor-to-tmap-marker';
 
+import { useRegionClusterMarkers } from './useRegionClusterMarkers';
 import { syncRouteMarkerDomVisualState } from '../sync-route-marker-dom-visual';
 
 import type { MutableRefObject } from 'react';
 
 const ROUTE_MARKER_CLUSTER_ZOOM_AT_OR_BELOW = 11;
 const ROUTE_MARKER_INDIVIDUAL_ZOOM_AT_OR_ABOVE = ROUTE_MARKER_CLUSTER_ZOOM_AT_OR_BELOW + 1;
+const ROUTE_MARKER_REGION_ZOOM_AT_OR_BELOW = 7;
 const MARKER_VISIBILITY_DEBOUNCE_MS = 140;
 
 type UseRouteMarkersParams = {
   mapRootRef?: MutableRefObject<HTMLDivElement | null>;
   mapRef: MutableRefObject<TmapMap | null>;
   routesRef: MutableRefObject<Route[]>;
+  tracksRef: MutableRefObject<Track[]>;
+  regionClusterMarkersRef: MutableRefObject<Map<RegionBucket, TmapMarker>>;
   routeMarkerMapRef: MutableRefObject<Map<string, RouteMarkerEntry>>;
   routeMarkerClusterRef: MutableRefObject<TmapMarkerCluster | null>;
   routeMarkerClusterGenerationRef: MutableRefObject<number>;
@@ -74,6 +79,8 @@ export function useRouteMarkers({
   mapRootRef,
   mapRef,
   routesRef,
+  tracksRef,
+  regionClusterMarkersRef,
   routeMarkerMapRef,
   routeMarkerClusterRef,
   routeMarkerClusterGenerationRef,
@@ -103,6 +110,14 @@ export function useRouteMarkers({
   >(() => {});
   const routeMarkerOverlaySignatureRef = useRef('');
   const lastMarkerClickAtRef = useRef<{ routeId: string; at: number } | null>(null);
+
+  const { syncRegionClusters, clearRegionClusters } = useRegionClusterMarkers({
+    mapRef,
+    routesRef,
+    tracksRef,
+    regionClusterMarkersRef,
+    getTmapv3,
+  });
 
   const isTmapRouteMarkerClusterLoaded = useCallback((): boolean => {
     return typeof getTmapv3()?.extension?.MarkerCluster === 'function';
@@ -233,6 +248,26 @@ export function useRouteMarkers({
 
   const syncRouteMarkersDisplayForZoom = useCallback(
     (map: TmapMap) => {
+      const rawZoomForRegionCheck = map.getZoom();
+      if (
+        typeof rawZoomForRegionCheck === 'number' &&
+        !Number.isNaN(rawZoomForRegionCheck) &&
+        rawZoomForRegionCheck <= ROUTE_MARKER_REGION_ZOOM_AT_OR_BELOW
+      ) {
+        tearDownRouteMarkerCluster();
+        routeMarkerRouteDisplayModeRef.current = 'individual';
+        routeMarkerClusterAttachGenerationRef.current = -1;
+        routeMarkerOverlaySignatureRef.current = '';
+        routeMarkerMapRef.current.forEach((entry) => {
+          entry.marker.setMap(null);
+          entry.isVisible = false;
+        });
+        trackMarkersRef.current.forEach((m) => m.setMap(null));
+        syncRegionClusters(map);
+        return;
+      }
+      clearRegionClusters();
+
       const markerCount = routeMarkerMapRef.current.size;
       if (!isTmapRouteMarkerClusterLoaded()) {
         tearDownRouteMarkerCluster();
@@ -329,11 +364,13 @@ export function useRouteMarkers({
       routeMarkerRouteDisplayModeRef.current = 'cluster';
     },
     [
+      clearRegionClusters,
       getTmapv3,
       isTmapRouteMarkerClusterLoaded,
       routeMarkerClusterGenerationRef,
       routeMarkerClusterRef,
       routeMarkerMapRef,
+      syncRegionClusters,
       tearDownRouteMarkerCluster,
       trackMarkersRef,
     ],

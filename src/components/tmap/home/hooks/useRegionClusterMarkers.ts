@@ -11,6 +11,7 @@ import {
   resolveRegionBucket,
   type RegionBucket,
 } from '@/commons/utils/region/region-bucket';
+import { bindTmapMarkerListener } from '@/commons/utils/tmap/events';
 import type { TmapMap, TmapMarker, TmapV3API } from '@/commons/utils/tmap/types';
 
 import { buildRegionClusterIconDataUrl } from '../utils/region-cluster-icon';
@@ -148,16 +149,7 @@ export function useRegionClusterMarkers({
         }) as TmapMarker;
 
         const handleClick = () => focusRegionGroup(group);
-        marker.addListener?.('click', handleClick);
-        marker.on?.('click', handleClick);
-        const addListener = Tmapv3.event?.addListener ?? Tmapv3.Event?.addListener;
-        if (typeof addListener === 'function') {
-          try {
-            addListener(marker, 'Click', handleClick);
-          } catch {
-            /* noop */
-          }
-        }
+        bindTmapMarkerListener(marker, getTmapv3, 'click', handleClick);
 
         regionClusterMarkersRef.current.set(bucket, marker);
       });

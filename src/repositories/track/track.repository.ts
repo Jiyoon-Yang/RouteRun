@@ -225,27 +225,23 @@ export async function deleteTrackLike(
   return { error: error ? new Error(error.message) : null };
 }
 
-export async function getTrackLikeCount(
+/**
+ * `tracks.likes_count`를 조회한다. 이 값은 DB 트리거(`sync_track_likes_count`)가
+ * `track_likes` insert/delete에 맞춰 자동으로 갱신하므로 여기서는 읽기만 한다.
+ */
+export async function getTrackLikesCount(
   supabase: SupabaseClient,
   trackId: string,
 ): Promise<{ count: number | null; error: Error | null }> {
-  const { count, error } = await supabase
-    .from('track_likes')
-    .select('*', { count: 'exact', head: true })
-    .eq('track_id', trackId);
-
-  return { count: count ?? null, error: error ? new Error(error.message) : null };
-}
-
-export async function updateTrackLikesCount(
-  supabase: SupabaseClient,
-  trackId: string,
-  likesCount: number,
-): Promise<{ error: Error | null }> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('tracks')
-    .update({ likes_count: likesCount })
-    .eq('id', trackId);
+    .select('likes_count')
+    .eq('id', trackId)
+    .single();
 
-  return { error: error ? new Error(error.message) : null };
+  if (error) {
+    return { count: null, error: new Error(error.message) };
+  }
+
+  return { count: data?.likes_count ?? 0, error: null };
 }

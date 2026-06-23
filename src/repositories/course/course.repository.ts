@@ -241,29 +241,25 @@ export async function deleteRouteLike(
   return { error: error ? new Error(error.message) : null };
 }
 
-export async function getRouteLikeCount(
+/**
+ * `routes.likes_count`를 조회한다. 이 값은 DB 트리거(`sync_route_likes_count`)가
+ * `route_likes` insert/delete에 맞춰 자동으로 갱신하므로 여기서는 읽기만 한다.
+ */
+export async function getRouteLikesCount(
   supabase: SupabaseClient,
   routeId: string,
 ): Promise<{ count: number | null; error: Error | null }> {
-  const { count, error } = await supabase
-    .from('route_likes')
-    .select('*', { count: 'exact', head: true })
-    .eq('route_id', routeId);
-
-  return { count: count ?? null, error: error ? new Error(error.message) : null };
-}
-
-export async function updateRouteLikesCount(
-  supabase: SupabaseClient,
-  routeId: string,
-  likesCount: number,
-): Promise<{ error: Error | null }> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('routes')
-    .update({ likes_count: likesCount })
-    .eq('id', routeId);
+    .select('likes_count')
+    .eq('id', routeId)
+    .single();
 
-  return { error: error ? new Error(error.message) : null };
+  if (error) {
+    return { count: null, error: new Error(error.message) };
+  }
+
+  return { count: data?.likes_count ?? 0, error: null };
 }
 
 export async function deleteRoute(routeId: string, userId: string): Promise<void> {

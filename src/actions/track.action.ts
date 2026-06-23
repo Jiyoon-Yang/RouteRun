@@ -60,16 +60,11 @@ export async function toggleTrackLikeAction(
     if (error) return { likeCount: null, error: error.message };
   }
 
-  const { count, error: countError } = await trackRepository.getTrackLikeCount(supabase, trackId);
+  // likes_count는 DB 트리거(sync_track_likes_count)가 자동으로 갱신하므로 결과만 읽어온다.
+  const { count, error: countError } = await trackRepository.getTrackLikesCount(supabase, trackId);
   if (countError) return { likeCount: null, error: countError.message };
 
   const nextLikeCount = count ?? 0;
-  const { error: updateError } = await trackRepository.updateTrackLikesCount(
-    supabase,
-    trackId,
-    nextLikeCount,
-  );
-  if (updateError) return { likeCount: null, error: updateError.message };
 
   if (revalidateMypage) {
     revalidatePath('/mypage');

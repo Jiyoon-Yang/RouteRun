@@ -75,16 +75,14 @@ export async function toggleCourseLikeAction(
     if (error) return { likeCount: null, error: error.message };
   }
 
-  const { count, error: countError } = await courseRepository.getRouteLikeCount(supabase, courseId);
+  // likes_count는 DB 트리거(sync_route_likes_count)가 자동으로 갱신하므로 결과만 읽어온다.
+  const { count, error: countError } = await courseRepository.getRouteLikesCount(
+    supabase,
+    courseId,
+  );
   if (countError) return { likeCount: null, error: countError.message };
 
   const nextLikeCount = count ?? 0;
-  const { error: updateError } = await courseRepository.updateRouteLikesCount(
-    supabase,
-    courseId,
-    nextLikeCount,
-  );
-  if (updateError) return { likeCount: null, error: updateError.message };
 
   if (revalidateMypage) {
     revalidatePath('/mypage');

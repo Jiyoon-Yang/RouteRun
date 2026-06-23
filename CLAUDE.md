@@ -55,6 +55,8 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
 - `isAuthenticated` — 실제 OAuth 로그인 유저 (익명 아님)
 - `isAnonymous` — 게스트 세션
 
+`Providers` (`src/commons/layout/providers.tsx`)는 `AuthProvider`, `ModalProvider`, `ToastProvider`를 한 번에 래핑하는 Server Component다. 단순 래퍼가 아니라 익명 유저의 코스·트랙 작성 횟수를 서버에서 집계해 `hasWrittenItem` 플래그로 레이아웃에 주입한다.
+
 미들웨어 (`middleware.ts`)는 모든 요청에서 세션을 갱신하고 비공개 라우트를 보호합니다. 세션이 없는 경우(완전 미로그인)만 차단하고 `/login`으로 리다이렉트합니다. 익명(게스트) 세션은 라우트를 통과하나, 코스 생성·수정·좋아요 등 mutation은 Action 레벨에서 `isAnonymous` 여부로 별도 차단됩니다.
 
 **비공개 라우트:** `/courses/new`, `/courses/[id]/edit`, `/tracks/new`, `/tracks/[id]/edit`, `/mypage`
@@ -141,3 +143,5 @@ PR을 생성할 때는 반드시 아래 템플릿 구조를 따릅니다.
 - **TMap SDK 로딩:** `(with-map)/layout.tsx`에서 인라인 스크립트로 로드. `document.write` 호환을 위한 우회 로직 포함. TMap 관련 이슈 발생 시 이 레이아웃을 먼저 확인.
 - **`redirect()` + try/catch 금지:** Next.js `redirect()`는 내부적으로 예외를 throw하므로 절대 try 블록 안에서 호출하지 않는다 (actions에서).
 - **익명 세션 vs 미로그인:** 미들웨어는 세션 없는 경우만 차단. 익명 세션은 통과하지만 mutation은 Action 레벨에서 `isAnonymous`로 차단.
+- **`likes_count`는 애플리케이션 코드가 아닌 DB 트리거가 갱신한다:** `routes`/`tracks`의 RLS UPDATE 정책이 작성자 본인만 허용해서, 과거에는 다른 사용자가 좋아요를 눌러도 `likes_count`가 갱신되지 않는 버그가 있었다. `sync_route_likes_count`/`sync_track_likes_count` 트리거(SECURITY DEFINER, `route_likes`/`track_likes` insert·delete 시 실행)가 RLS와 무관하게 카운트를 동기화하므로, `toggleCourseLikeAction`/`toggleTrackLikeAction`은 `getRouteLikesCount`/`getTrackLikesCount`로 **읽기만** 한다. likes_count를 직접 `UPDATE`하는 코드를 추가하지 않는다.
+- **`Providers` 이중 역할:** `src/commons/layout/providers.tsx`는 Provider 래핑 외에 익명 유저의 작성 횟수(`getUserRouteWriteCount` + `getUserTrackWriteCount`)를 병렬 집계한다. 익명 유저 관련 UI 게이팅 이슈 발생 시 이 컴포넌트를 먼저 확인.

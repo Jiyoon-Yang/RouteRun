@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Icon } from '@/commons/components/icons';
 import type { Route, RouteViewport, Track } from '@/commons/types/routerun';
+import type { RegionBucket } from '@/commons/utils/region/region-bucket';
 import { bindMapEvents, bindTmapMarkerListener } from '@/commons/utils/tmap/events';
 import { getTmapv3Runtime } from '@/commons/utils/tmap/runtime';
 import type {
@@ -130,6 +131,7 @@ export function TmapHome({
   /** 코스 마커 인스턴스 집합이 바뀔 때마다 증가 → 클러스터 재부착 필요 */
   const routeMarkerClusterGenerationRef = useRef(0);
   const routesRef = useRef<Route[]>(routes);
+  const tracksRef = useRef<Track[]>(tracks);
   /** syncRouteMarkers 가 실제 데이터 변경 시에만 돌도록 마지막 동기화 서명 */
   const routesSyncSigRef = useRef<string | null>(null);
   const selectedRouteIdRef = useRef<string | null>(null);
@@ -277,6 +279,7 @@ export function TmapHome({
   });
 
   const trackMarkersRef = useRef<TmapMarker[]>([]);
+  const regionClusterMarkersRef = useRef<Map<RegionBucket, TmapMarker>>(new Map());
 
   const {
     syncRouteMarkersDisplayForZoom: syncRouteMarkersDisplayForZoomByHook,
@@ -287,6 +290,8 @@ export function TmapHome({
     mapRootRef: rootRef,
     mapRef: mapInstance,
     routesRef,
+    tracksRef,
+    regionClusterMarkersRef,
     routeMarkerMapRef,
     routeMarkerClusterRef,
     routeMarkerClusterGenerationRef,
@@ -450,6 +455,7 @@ export function TmapHome({
     currentLocationCoordinateRef,
     routeMarkerMapRef,
     routeMarkerClusterRef,
+    regionClusterMarkersRef,
     mapListenersRegisteredRef,
     isMapInteractingRef,
     interactionWatchdogTimerRef,
@@ -543,6 +549,10 @@ export function TmapHome({
   useEffect(() => {
     routesRef.current = routes;
   }, [routes]);
+
+  useEffect(() => {
+    tracksRef.current = tracks;
+  }, [tracks]);
 
   useEffect(() => {
     type TrackMarkerRuntime = {

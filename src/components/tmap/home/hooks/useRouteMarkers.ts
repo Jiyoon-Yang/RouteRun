@@ -87,7 +87,7 @@ export function useRouteMarkers({
   roundCoordForLog,
   isMarkerCoordDebugEnabled,
   isMarkerLifecycleDebugEnabled,
-  bottomSheetVisibleHeightRef,
+  // bottomSheetVisibleHeightRef,
   onCourseMarkerClick,
   setMarkerHoverCursor,
   syncSelectedRoutePolyline,
@@ -196,7 +196,7 @@ export function useRouteMarkers({
       }
     },
     [
-      bottomSheetVisibleHeightRef,
+      // bottomSheetVisibleHeightRef,
       isMarkerLifecycleDebugEnabled,
       mapRef,
       routeMarkerClusterRef,

@@ -66,6 +66,7 @@ export async function toggleTrackLikeAction(
 
   const nextLikeCount = count ?? 0;
 
+  revalidatePath(`/tracks/${trackId}`);
   if (revalidateMypage) {
     revalidatePath('/mypage');
   }

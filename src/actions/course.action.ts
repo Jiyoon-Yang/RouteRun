@@ -84,6 +84,7 @@ export async function toggleCourseLikeAction(
 
   const nextLikeCount = count ?? 0;
 
+  revalidatePath(`/courses/${courseId}`);
   if (revalidateMypage) {
     revalidatePath('/mypage');
   }

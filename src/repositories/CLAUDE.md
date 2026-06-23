@@ -33,4 +33,5 @@ repositories/
 
 - `course.repository.ts`의 `createRoute`와 `createCourse`는 동일 함수의 별칭이다 (`export const createCourse = createRoute`). 새로운 호출부는 `createCourse`를 사용한다.
 - `map.repository.ts`는 Supabase가 아닌 TMap REST API를 fetch로 직접 호출한다. `NEXT_PUBLIC_TMAP_API_KEY` 환경 변수가 없으면 `null`/`throw`로 처리한다.
-- `route_likes` write 로직(`upsertRouteLike`, `deleteRouteLike`, `getRouteLikeCount`, `updateRouteLikesCount`)은 이 레포지토리에 있고, `toggleCourseLikeAction`에서 직접 호출한다. read 전용 조회(`fetchLikedCourseIds`)만 `courseLikeService.ts`에 남아있다.
+- `route_likes`/`track_likes` write 로직(`upsertRouteLike`, `deleteRouteLike` 등)은 이 레포지토리에 있고, `toggleCourseLikeAction`/`toggleTrackLikeAction`에서 직접 호출한다. read 전용 조회(`fetchLikedCourseIds`)만 `courseLikeService.ts`에 남아있다.
+- `likes_count`는 DB 트리거(`sync_route_likes_count`/`sync_track_likes_count`)가 자동으로 갱신한다. `getRouteLikesCount`/`getTrackLikesCount`는 `routes`/`tracks.likes_count`를 **읽기만** 하는 함수이며, 직접 `UPDATE`하는 함수(과거의 `updateRouteLikesCount`/`updateTrackLikesCount`)는 더 이상 존재하지 않는다.

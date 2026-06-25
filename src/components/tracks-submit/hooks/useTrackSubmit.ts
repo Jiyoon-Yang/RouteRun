@@ -100,14 +100,17 @@ export function useTrackSubmit({ mode, trackId, initialData }: UseTrackSubmitPar
         });
         if (!result.success) {
           showToast(result.error ?? '트랙 수정에 실패했습니다.', 'failed');
+          setIsSubmitting(false);
+          submittingRef.current = false;
           return;
         }
+        // 페이지 전환이 끝나기 전에 스피너가 풀리지 않도록, 성공 시에는 isSubmitting을 유지한다
+        // (컴포넌트가 언마운트되며 자연히 정리됨).
         router.push(`/tracks/${trackId.trim()}`);
       } catch (error) {
         const message =
           error instanceof Error ? error.message : '트랙 수정 중 오류가 발생했습니다.';
         showToast(message, 'failed');
-      } finally {
         setIsSubmitting(false);
         submittingRef.current = false;
       }
@@ -133,13 +136,16 @@ export function useTrackSubmit({ mode, trackId, initialData }: UseTrackSubmitPar
       });
       if (!result.success) {
         showToast(result.message ?? '트랙 등록에 실패했습니다.', 'failed');
+        setIsSubmitting(false);
+        submittingRef.current = false;
         return;
       }
+      // 페이지 전환이 끝나기 전에 스피너가 풀리지 않도록, 성공 시에는 isSubmitting을 유지한다
+      // (컴포넌트가 언마운트되며 자연히 정리됨).
       router.push(`/tracks/${result.trackId}?registered=true`);
     } catch (error) {
       const message = error instanceof Error ? error.message : '트랙 등록 중 오류가 발생했습니다.';
       showToast(message, 'failed');
-    } finally {
       setIsSubmitting(false);
       submittingRef.current = false;
     }

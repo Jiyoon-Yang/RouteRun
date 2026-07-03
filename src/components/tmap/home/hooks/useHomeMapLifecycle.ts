@@ -10,7 +10,6 @@ import {
   PASSIVE_GEOLOCATION_OPTIONS,
   PRECISE_GEOLOCATION_OPTIONS,
 } from '@/commons/utils/geo/geolocation';
-import type { RegionBucket } from '@/commons/utils/region/region-bucket';
 import type {
   RouteMarkerEntry,
   TmapMap,
@@ -33,7 +32,6 @@ type UseHomeMapLifecycleParams = {
   currentLocationCoordinateRef: MutableRefObject<{ lat: number; lng: number } | null>;
   routeMarkerMapRef: MutableRefObject<Map<string, RouteMarkerEntry>>;
   routeMarkerClusterRef: MutableRefObject<TmapMarkerCluster | null>;
-  regionClusterMarkersRef: MutableRefObject<Map<RegionBucket, TmapMarker>>;
   mapListenersRegisteredRef: MutableRefObject<boolean>;
   isMapInteractingRef: MutableRefObject<boolean>;
   interactionWatchdogTimerRef: MutableRefObject<number | null>;
@@ -71,7 +69,6 @@ export function useHomeMapLifecycle({
   currentLocationCoordinateRef,
   routeMarkerMapRef,
   routeMarkerClusterRef,
-  regionClusterMarkersRef,
   mapListenersRegisteredRef,
   isMapInteractingRef,
   interactionWatchdogTimerRef,
@@ -232,7 +229,6 @@ export function useHomeMapLifecycle({
     checkLibrary();
 
     const routeMarkerMap = routeMarkerMapRef.current;
-    const regionClusterMarkers = regionClusterMarkersRef.current;
     return () => {
       cancelled = true;
       if (sdkRetryTimerId !== null) {
@@ -255,11 +251,6 @@ export function useHomeMapLifecycle({
         entry.marker.setMap(null);
       });
       routeMarkerMap.clear();
-
-      regionClusterMarkers.forEach((marker) => {
-        marker.setMap(null);
-      });
-      regionClusterMarkers.clear();
 
       clearSelectedRoutePolyline();
       try {
@@ -318,7 +309,6 @@ export function useHomeMapLifecycle({
     minZoomLevel,
     registerMapListeners,
     routeMarkerClusterRef,
-    regionClusterMarkersRef,
     routeMarkerMapRef,
     routesRef,
     scheduleMarkerVisibilitySync,

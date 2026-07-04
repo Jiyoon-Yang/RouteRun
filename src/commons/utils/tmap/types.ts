@@ -61,7 +61,16 @@ export type TmapV3API = {
   Marker: new (options: Record<string, unknown>) => TmapMarker;
   Polyline: new (options: Record<string, unknown>) => TmapPolyline;
   extension?: {
-    MarkerCluster: new (options: { markers: TmapMarker[]; map: TmapMap }) => TmapMarkerCluster;
+    MarkerCluster: new (options: {
+      markers: TmapMarker[];
+      map: TmapMap;
+      /** 클러스터로 묶는 픽셀 거리 임계값 (SDK 기본값 80) */
+      gridSize?: number;
+      /** 이 줌 이하에서만 클러스터링 (SDK 기본값 19) */
+      maxClusterZoom?: number;
+      /** 클러스터 형성 최소 마커 수 (SDK 기본값 2) */
+      minClusterCount?: number;
+    }) => TmapMarkerCluster;
   };
   event?: {
     addListener?: (target: TmapMarker, eventName: string, callback: () => void) => void;

@@ -28,6 +28,8 @@ import type { MutableRefObject } from 'react';
 
 const ROUTE_MARKER_CLUSTER_ZOOM_AT_OR_BELOW = 11;
 const ROUTE_MARKER_INDIVIDUAL_ZOOM_AT_OR_ABOVE = ROUTE_MARKER_CLUSTER_ZOOM_AT_OR_BELOW + 1;
+// SDK 기본값(80)보다 작게 잡아 최대 축소 시 마커들이 한 점으로 연쇄 병합되는 정도를 완화한다.
+const ROUTE_MARKER_CLUSTER_GRID_SIZE = 30;
 const MARKER_VISIBILITY_DEBOUNCE_MS = 140;
 
 type UseRouteMarkersParams = {
@@ -314,7 +316,11 @@ export function useRouteMarkers({
         ];
         if (markers.length > 0) {
           try {
-            routeMarkerClusterRef.current = new MarkerCluster({ markers, map });
+            routeMarkerClusterRef.current = new MarkerCluster({
+              markers,
+              map,
+              gridSize: ROUTE_MARKER_CLUSTER_GRID_SIZE,
+            });
             routeMarkerClusterAttachGenerationRef.current = gen;
           } catch {
             routeMarkerClusterRef.current = null;

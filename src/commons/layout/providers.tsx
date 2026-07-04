@@ -47,7 +47,7 @@ export async function Providers({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <body className="antialiased">
+    <body>
       <AuthProvider initialUser={initialUser}>
         <ModalProvider>
           <ToastProvider>

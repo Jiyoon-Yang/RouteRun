@@ -1,27 +1,24 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
-import { toggleCourseLikeAction } from '@/actions/course.action';
-import { toggleTrackLikeAction } from '@/actions/track.action';
 import { Icon } from '@/commons/components/icons';
 import { TabButton } from '@/commons/components/tab';
 import { TAB_ITEMS } from '@/commons/constants/home';
-import { useLikes } from '@/commons/hooks/useLikes';
 import { Header } from '@/commons/layout/header';
 import { Sidebar } from '@/commons/layout/sidebar';
-import type { HomeListItem, Route, RouteViewport } from '@/commons/types/routerun';
-import { calculateLinearDistanceMeters } from '@/commons/utils/geo';
+import type { RouteViewport } from '@/commons/types/routerun';
 import { HomeList } from '@/components/home-list';
 import { TmapHome } from '@/components/tmap/home';
-import { fetchLikedCourseIds } from '@/services/course/courseLikeService';
-import { fetchLikedTrackIds } from '@/services/track/trackLikeService';
 
 import { useClearSelectedRouteSnapshotOnDeselect } from './hooks/useClearSelectedRouteSnapshot';
-import { useHomeCourseMarkerClick } from './hooks/useHomeCourseMarkerClick';
+import { useHomeCombinedCards } from './hooks/useHomeCombinedCards';
 import { useHomeDistanceCategories } from './hooks/useHomeDistanceCategories';
 import { useHomeFrozenViewportSync } from './hooks/useHomeFrozenViewport';
+import { useHomeLikes } from './hooks/useHomeLikes';
+import { useHomeSelection } from './hooks/useHomeSelection';
+import { useHomeSheetState } from './hooks/useHomeSheetState';
 import { useHomeStateSync } from './hooks/useHomeStateSync';
 import { useHomeToast } from './hooks/useHomeToast';
 import { useHomeVisibleRouteViewport } from './hooks/useHomeVisibleViewport';
@@ -31,7 +28,6 @@ import { useTracks } from './hooks/useTracks';
 import { OnboardingModal } from './onboarding-modal';
 import styles from './styles.module.css';
 import { buildCourseCardViews } from './utils/course-filter';
-import { buildCourseLikeCountsLookup } from './utils/home-like-counts';
 import {
   computeFilteredRoutesForHome,
   computeRoutesForCourseListForHome,
@@ -39,18 +35,33 @@ import {
 
 export function Home() {
   const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
-  const [sheetVisibleHeight, setSheetVisibleHeight] = useState(260);
-  const [sheetVisualVisibleHeight, setSheetVisualVisibleHeight] = useState(260);
-  const sheetVisibleHeightRef = useRef(sheetVisibleHeight);
-  sheetVisibleHeightRef.current = sheetVisibleHeight;
-  const [openPeekFromCollapsedSignal, setOpenPeekFromCollapsedSignal] = useState(0);
-  const [markerClickRecenterToken, setMarkerClickRecenterToken] = useState(0);
-  const [isSheetExpanded, setIsSheetExpanded] = useState(false);
+
+  const {
+    sheetVisibleHeight,
+    sheetVisualVisibleHeight,
+    sheetVisibleHeightRef,
+    openPeekFromCollapsedSignal,
+    setOpenPeekFromCollapsedSignal,
+    isSheetExpanded,
+    setIsSheetExpanded,
+    handleSheetPositionChange,
+  } = useHomeSheetState();
+
+  const {
+    selectedCourseId,
+    setSelectedCourseId,
+    selectedTrackId,
+    setSelectedTrackId,
+    selectedRouteSnapshot,
+    setSelectedRouteSnapshot,
+    markerClickRecenterToken,
+    setMarkerClickRecenterToken,
+    handleCourseMarkerClick,
+    handleTrackMarkerClick,
+  } = useHomeSelection({ sheetVisibleHeightRef, setOpenPeekFromCollapsedSignal });
+
   const { selectedCategories, setSelectedCategories, toggleCategory } = useHomeDistanceCategories();
-  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
-  const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
-  /** 뷰포트 밖으로 이동해도 선택 코스를 목록·지도에 유지 (조회 결과 우선, 없을 때만 사용) */
-  const [selectedRouteSnapshot, setSelectedRouteSnapshot] = useState<Route | null>(null);
+
   const [visibleRouteViewport, setVisibleRouteViewport] = useState<RouteViewport | null>(null);
   const [frozenVisibleRouteViewport, setFrozenVisibleRouteViewport] =
     useState<RouteViewport | null>(null);
@@ -130,152 +141,40 @@ export function Home() {
     [allRoutes, effectiveQueryViewport, filteredRoutes, selectedCourseId, selectedRouteSnapshot],
   );
 
-  const isTrackTabOnly = selectedCategories.has('TRACK') && selectedCategories.size === 1;
-
-  const filteredTracks = useMemo(() => {
-    const hasDistanceFilter = Array.from(selectedCategories).some((c) => c !== 'TRACK');
-    if (hasDistanceFilter) return [];
-    return tracks;
-  }, [tracks, selectedCategories]);
-
   const courseCards = useMemo(
     () => buildCourseCardViews(routesForCourseList, referenceLocation, selectedCourseId),
     [routesForCourseList, referenceLocation, selectedCourseId],
   );
 
-  const courseLikeCounts = useMemo(
-    () => buildCourseLikeCountsLookup(allRoutes, selectedCourseId, selectedRouteSnapshot),
-    [allRoutes, selectedCourseId, selectedRouteSnapshot],
-  );
-  const {
-    isLiked: isCourseLiked,
-    getLikeCount: getCourseLikeCount,
-    toggleLike: toggleCourseLike,
-  } = useLikes(courseLikeCounts, {
-    entityLabel: '코스',
-    fetchLikedIds: fetchLikedCourseIds,
-    toggleAction: toggleCourseLikeAction,
-  });
-
-  const trackLikeCounts = useMemo(
-    () =>
-      tracks.reduce<Record<string, number>>((acc, t) => {
-        acc[t.id] = t.likes_count;
-        return acc;
-      }, {}),
-    [tracks],
-  );
-  const {
-    isLiked: isTrackLiked,
-    getLikeCount: getTrackLikeCount,
-    toggleLike: toggleTrackLike,
-  } = useLikes(trackLikeCounts, {
-    entityLabel: '트랙',
-    fetchLikedIds: fetchLikedTrackIds,
-    toggleAction: toggleTrackLikeAction,
-  });
-
-  const combinedCards = useMemo<HomeListItem[]>(() => {
-    if (isTrackTabOnly) {
-      return tracks.map((t) => ({
-        itemType: 'track' as const,
-        data: {
-          trackId: t.id,
-          title: t.title,
-          location:
-            t.start_address_region ?? `${t.start_lat.toFixed(4)}, ${t.start_lng.toFixed(4)}`,
-          distanceMeters: t.distance_meters,
-          likeCount: t.likes_count,
-          isSelected: t.id === selectedTrackId,
-          thumbnailUrl: t.image_urls[0],
-        },
-      }));
-    }
-    if (selectedCategories.size > 0 && !isTrackTabOnly) {
-      return courseCards.map((card) => ({ itemType: 'course' as const, data: card }));
-    }
-
-    const sortableCourseItems = courseCards.map((card) => ({
-      item: { itemType: 'course' as const, data: card } satisfies HomeListItem,
-      distanceFromReference: card.distanceFromReference,
-    }));
-
-    const sortableTrackItems = tracks.map((t) => ({
-      item: {
-        itemType: 'track' as const,
-        data: {
-          trackId: t.id,
-          title: t.title,
-          location:
-            t.start_address_region ?? `${t.start_lat.toFixed(4)}, ${t.start_lng.toFixed(4)}`,
-          distanceMeters: t.distance_meters,
-          likeCount: t.likes_count,
-          isSelected: t.id === selectedTrackId,
-          thumbnailUrl: t.image_urls[0],
-        },
-      } satisfies HomeListItem,
-      distanceFromReference: calculateLinearDistanceMeters(referenceLocation, {
-        lat: t.start_lat,
-        lng: t.start_lng,
-      }),
-    }));
-
-    const merged = [...sortableCourseItems, ...sortableTrackItems].sort(
-      (a, b) => a.distanceFromReference - b.distanceFromReference,
-    );
-
-    // 선택된 항목을 최상단으로 고정
-    const selectedId = selectedCourseId ?? selectedTrackId;
-    if (selectedId) {
-      const selectedIdx = merged.findIndex(({ item }) =>
-        item.itemType === 'course'
-          ? item.data.courseId === selectedId
-          : item.data.trackId === selectedId,
-      );
-      if (selectedIdx > 0) {
-        const [selected] = merged.splice(selectedIdx, 1);
-        merged.unshift(selected);
-      }
-    }
-
-    return merged.map(({ item }) => item);
-  }, [
+  const { isTrackTabOnly, filteredTracks, combinedCards } = useHomeCombinedCards({
     courseCards,
     tracks,
-    isTrackTabOnly,
     selectedCategories,
-    selectedTrackId,
     selectedCourseId,
+    selectedTrackId,
     referenceLocation,
-  ]);
-
-  const handleCourseMarkerClick = useHomeCourseMarkerClick({
-    collapsedPeekHeightThreshold: 24,
-    sheetVisibleHeightRef,
-    setSelectedCourseId,
-    setSelectedTrackId,
-    setSelectedRouteSnapshot,
-    setMarkerClickRecenterToken,
-    setOpenPeekFromCollapsedSignal,
   });
 
-  const handleTrackMarkerClick = useCallback(
-    (trackId: string) => {
-      setSelectedTrackId(trackId);
-      setSelectedCourseId(null);
-      if (sheetVisibleHeightRef.current <= 24) {
-        setOpenPeekFromCollapsedSignal((prev) => prev + 1);
-      }
-    },
-    [sheetVisibleHeightRef],
-  );
+  const {
+    isCourseLiked,
+    getCourseLikeCount,
+    toggleCourseLike,
+    isTrackLiked,
+    getTrackLikeCount,
+    toggleTrackLike,
+  } = useHomeLikes({
+    allRoutes,
+    tracks,
+    selectedCourseId,
+    selectedRouteSnapshot,
+  });
 
   const handleCourseSelect = useCallback(
     (courseId: string) => {
       setSelectedCourseId(courseId);
       snapshotBeforeDetail('course', courseId);
     },
-    [snapshotBeforeDetail],
+    [snapshotBeforeDetail, setSelectedCourseId],
   );
 
   const handleTrackSelect = useCallback(
@@ -283,23 +182,6 @@ export function Home() {
       snapshotBeforeDetail('track', trackId);
     },
     [snapshotBeforeDetail],
-  );
-
-  const handleSheetPositionChange = useCallback(
-    ({
-      state,
-      visibleHeight,
-      visualVisibleHeight,
-    }: {
-      state: 'collapsed' | 'peek' | 'expanded';
-      visibleHeight: number;
-      visualVisibleHeight: number;
-    }) => {
-      setIsSheetExpanded(state === 'expanded');
-      setSheetVisibleHeight(visibleHeight);
-      setSheetVisualVisibleHeight(visualVisibleHeight);
-    },
-    [],
   );
 
   return (

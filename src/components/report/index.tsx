@@ -1,15 +1,17 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
 
-import { submitReportAction } from '@/actions/report.action';
 import { Button } from '@/commons/components/button';
 import { Spinner } from '@/commons/components/spinner';
 import { Header } from '@/commons/layout/header';
-import { useToast } from '@/commons/providers/toast/toast.provider';
-import type { ReportType } from '@/commons/types/routerun';
 
+import {
+  MAX_REPORT_CONTENT,
+  MIN_REPORT_CONTENT,
+  REPORT_TYPE_OPTIONS,
+  useReportForm,
+} from './hooks/useReportForm';
 import styles from './styles.module.css';
 
 // ── StaticInfoPage — 공지 등 정적 문구 전용 레이아웃 ─────────────────────────────
@@ -39,44 +41,18 @@ export function StaticInfoPage({ title, description }: StaticInfoPageProps) {
 
 // ── ReportPage ────────────────────────────────────────────────────────────────
 
-const TYPE_OPTIONS: { value: ReportType; label: string }[] = [
-  { value: 'bug', label: '버그 신고' },
-  { value: 'inconvenience', label: '불편함' },
-  { value: 'suggestion', label: '기능 건의' },
-];
-
-const MAX_CONTENT = 500;
-
 export function ReportPage() {
   const router = useRouter();
-  const { showToast } = useToast();
-
-  const [selectedType, setSelectedType] = useState<ReportType | null>(null);
-  const [content, setContent] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-
-  function handleSubmit() {
-    if (!selectedType) {
-      setError('제보 유형을 선택해주세요.');
-      return;
-    }
-    if (content.trim().length < 10) {
-      setError('내용을 10자 이상 입력해주세요.');
-      return;
-    }
-    setError(null);
-
-    startTransition(async () => {
-      const result = await submitReportAction({ type: selectedType, content });
-      if (!result.success) {
-        setError(result.message);
-        return;
-      }
-      showToast('제보가 접수됐습니다.', 'success');
-      router.push('/');
-    });
-  }
+  const {
+    selectedType,
+    content,
+    error,
+    isPending,
+    isSubmitEnabled,
+    selectType,
+    changeContent,
+    handleSubmit,
+  } = useReportForm();
 
   return (
     <section className={styles.root}>
@@ -90,7 +66,7 @@ export function ReportPage() {
         <div className={styles.formSection}>
           <p className={styles.fieldLabel}>제보 유형</p>
           <div className={styles.typeChips}>
-            {TYPE_OPTIONS.map(({ value, label }) => (
+            {REPORT_TYPE_OPTIONS.map(({ value, label }) => (
               <button
                 key={value}
                 type="button"
@@ -100,10 +76,7 @@ export function ReportPage() {
                 ]
                   .filter(Boolean)
                   .join(' ')}
-                onClick={() => {
-                  setSelectedType(value);
-                  setError(null);
-                }}
+                onClick={() => selectType(value)}
               >
                 {label}
               </button>
@@ -115,16 +88,13 @@ export function ReportPage() {
           <p className={styles.fieldLabel}>내용</p>
           <textarea
             className={styles.textarea}
-            placeholder="구체적으로 알려주세요. (10자 ~ 500자)"
+            placeholder={`구체적으로 알려주세요. (${MIN_REPORT_CONTENT}자 ~ ${MAX_REPORT_CONTENT}자)`}
             value={content}
-            maxLength={MAX_CONTENT}
-            onChange={(e) => {
-              setContent(e.target.value);
-              if (error) setError(null);
-            }}
+            maxLength={MAX_REPORT_CONTENT}
+            onChange={(e) => changeContent(e.target.value)}
           />
           <p className={styles.charCount}>
-            {content.length} / {MAX_CONTENT}
+            {content.length} / {MAX_REPORT_CONTENT}
           </p>
         </div>
 
@@ -137,7 +107,7 @@ export function ReportPage() {
             size="medium"
             borderRadius="r16"
             style={{ width: '100%' }}
-            disabled={isPending || !selectedType || content.trim().length < 10}
+            disabled={isPending || !isSubmitEnabled}
             onClick={handleSubmit}
           >
             제출하기

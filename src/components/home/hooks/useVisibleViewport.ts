@@ -7,7 +7,7 @@ import type { RouteViewport } from '@/commons/types/routerun';
 import { isSameRouteViewport, isValidRouteViewport } from '@/commons/utils/viewport/route-viewport';
 
 /** 지도에서 관측한 가시 뷰포트 상태 + sessionStorage 동기화 */
-export function useHomeVisibleRouteViewport(
+export function useVisibleViewport(
   setVisibleRouteViewport: Dispatch<SetStateAction<RouteViewport | null>>,
 ) {
   return useCallback(

@@ -1,3 +1,10 @@
+/* 전역 리셋 — Tailwind Preflight 제거로 사라진 box-sizing 보정 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
   /* Color tokens (from Figma foundation) */
   --color-black-50: #e7e7e7;

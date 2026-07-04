@@ -32,7 +32,7 @@ interface UseHomeCombinedCardsResult {
  * - 거리 필터 존재: 코스만
  * - 필터 없음: 코스+트랙을 기준점 거리순 병합 후 선택 항목 최상단 고정
  */
-export function useHomeCombinedCards({
+export function useCombinedCards({
   courseCards,
   tracks,
   selectedCategories,

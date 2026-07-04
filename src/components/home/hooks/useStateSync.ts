@@ -38,7 +38,7 @@ type UseHomeUrlSyncParams = {
 };
 
 /** 쿼리·세션 복원, URL 동기화, 상세 진입 전 히스토리 스냅샷 (순수 로직은 `home-url-sync-helpers`) */
-export function useHomeStateSync({
+export function useStateSync({
   searchParams,
   pathname,
   router,

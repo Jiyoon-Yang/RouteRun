@@ -12,19 +12,18 @@ import type { RouteViewport } from '@/commons/types/routerun';
 import { HomeList } from '@/components/home-list';
 import { TmapHome } from '@/components/tmap/home';
 
-import { useClearSelectedRouteSnapshotOnDeselect } from './hooks/useClearSelectedRouteSnapshot';
-import { useHomeCombinedCards } from './hooks/useHomeCombinedCards';
-import { useHomeDistanceCategories } from './hooks/useHomeDistanceCategories';
-import { useHomeFrozenViewportSync } from './hooks/useHomeFrozenViewport';
+import { useCombinedCards } from './hooks/useCombinedCards';
+import { useDistanceCategories } from './hooks/useDistanceCategories';
+import { useFrozenViewportSync } from './hooks/useFrozenViewportSync';
 import { useHomeLikes } from './hooks/useHomeLikes';
-import { useHomeSelection } from './hooks/useHomeSelection';
-import { useHomeSheetState } from './hooks/useHomeSheetState';
-import { useHomeStateSync } from './hooks/useHomeStateSync';
 import { useHomeToast } from './hooks/useHomeToast';
-import { useHomeVisibleRouteViewport } from './hooks/useHomeVisibleViewport';
 import { useReferenceLocation } from './hooks/useReferenceLocation';
 import { useRoutes } from './hooks/useRoutes';
+import { useSelection } from './hooks/useSelection';
+import { useSheetState } from './hooks/useSheetState';
+import { useStateSync } from './hooks/useStateSync';
 import { useTracks } from './hooks/useTracks';
+import { useVisibleViewport } from './hooks/useVisibleViewport';
 import { OnboardingModal } from './onboarding-modal';
 import styles from './styles.module.css';
 import { buildCourseCardViews } from './utils/course-filter';
@@ -45,7 +44,7 @@ export function Home() {
     isSheetExpanded,
     setIsSheetExpanded,
     handleSheetPositionChange,
-  } = useHomeSheetState();
+  } = useSheetState();
 
   const {
     selectedCourseId,
@@ -53,14 +52,13 @@ export function Home() {
     selectedTrackId,
     setSelectedTrackId,
     selectedRouteSnapshot,
-    setSelectedRouteSnapshot,
     markerClickRecenterToken,
     setMarkerClickRecenterToken,
     handleCourseMarkerClick,
     handleTrackMarkerClick,
-  } = useHomeSelection({ sheetVisibleHeightRef, setOpenPeekFromCollapsedSignal });
+  } = useSelection({ sheetVisibleHeightRef, setOpenPeekFromCollapsedSignal });
 
-  const { selectedCategories, setSelectedCategories, toggleCategory } = useHomeDistanceCategories();
+  const { selectedCategories, setSelectedCategories, toggleCategory } = useDistanceCategories();
 
   const [visibleRouteViewport, setVisibleRouteViewport] = useState<RouteViewport | null>(null);
   const [frozenVisibleRouteViewport, setFrozenVisibleRouteViewport] =
@@ -88,17 +86,15 @@ export function Home() {
       errorMessage,
     });
 
-  const handleVisibleRouteViewportChanged = useHomeVisibleRouteViewport(setVisibleRouteViewport);
+  const handleVisibleRouteViewportChanged = useVisibleViewport(setVisibleRouteViewport);
 
-  useHomeFrozenViewportSync({
+  useFrozenViewportSync({
     isSheetExpanded,
     visibleRouteViewport,
     setFrozenVisibleRouteViewport,
   });
 
-  useClearSelectedRouteSnapshotOnDeselect(selectedCourseId, setSelectedRouteSnapshot);
-
-  const { snapshotBeforeDetail } = useHomeStateSync({
+  const { snapshotBeforeDetail } = useStateSync({
     searchParams,
     pathname: pathname ?? '',
     router,
@@ -146,7 +142,7 @@ export function Home() {
     [routesForCourseList, referenceLocation, selectedCourseId],
   );
 
-  const { isTrackTabOnly, filteredTracks, combinedCards } = useHomeCombinedCards({
+  const { isTrackTabOnly, filteredTracks, combinedCards } = useCombinedCards({
     courseCards,
     tracks,
     selectedCategories,

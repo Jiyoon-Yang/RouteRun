@@ -5,7 +5,7 @@ import { useCallback, useState } from 'react';
 import type { DistanceCategory } from '@/commons/utils/distance/category';
 
 /** 홈 탭 거리 카테고리 필터(Set) 및 탭 클릭 토글 */
-export function useHomeDistanceCategories() {
+export function useDistanceCategories() {
   const [selectedCategories, setSelectedCategories] = useState<Set<DistanceCategory>>(new Set());
 
   const toggleCategory = useCallback((category: DistanceCategory) => {

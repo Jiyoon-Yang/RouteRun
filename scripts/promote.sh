@@ -29,7 +29,7 @@ die()  { printf '\033[1;31m✗ %s\033[0m\n' "$*" >&2; exit 1; }
 [ -n "$FEATURE" ] || die "기능 브랜치를 확인할 수 없습니다."
 [ "$FEATURE" != "$DEV" ] && [ "$FEATURE" != "$MAIN" ] || die "기능 브랜치에서 실행하세요 (현재: $FEATURE)."
 
-# CLAUDE.md PR 템플릿에 맞춰 본문을 생성한다.
+# .cursor/rules/09-pr-template.mdc 규칙에 맞춰 본문을 생성한다.
 #   $1=base  $2=head
 # "주요 변경 사항"은 base..head 커밋 제목에서 자동 추출한다.
 build_body() {
@@ -44,24 +44,16 @@ build_body() {
 - **무엇을**: \`$head\` 브랜치를 \`$base\`(으)로 승격
 - **왜**: 검증 완료된 변경을 상위 브랜치에 반영
 
----
-
 ### 🔎 주요 변경 사항
 - \`$head\` → \`$base\` 포함 커밋
 $changes
 
----
-
 ### 🎯 의도 / Why
 - **scripts/promote.sh 기반 자동 승격 PR** — ${head}의 변경을 ${base}에 통합
-
----
 
 ### 🧪 테스트 / 검증
 - **로컬 빌드/실행**: 기능 브랜치에서 검증 완료 후 승격
 - **화면 확인**: 기능 브랜치 단계에서 확인
-
----
 
 ### ✅ 체크리스트
 - [x] 토큰/변수 네이밍/사용처 **오탈자 없는지** 확인
@@ -91,7 +83,7 @@ promote() {
     # 출력에서 PR 번호를 추출한다.
     local out
     out="$(gh pr create --repo "$REPO" --base "$base" --head "$head" \
-            --title "[chore(promote)]: $head → $base 승격" \
+            --title "[chore] \`$head → $base 승격\`" \
             --body "$(build_body "$base" "$head")" 2>&1)" || true
     num="$(printf '%s' "$out" | grep -oE '/pull/[0-9]+' | grep -oE '[0-9]+' | head -1)"
     [ -n "$num" ] || die "PR 생성 실패:

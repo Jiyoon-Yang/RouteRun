@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "migrate:route-paths": "node --env-file=.env.local scripts/migrate-route-path-data.mjs",
+    "promote": "bash scripts/promote.sh",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

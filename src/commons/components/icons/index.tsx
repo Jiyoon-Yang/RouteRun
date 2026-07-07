@@ -1,13 +1,16 @@
 // 디자인: Figma node 164:16090 (icon 프레임 심볼 → lucide-react)
 import {
+  BookOpen,
   Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   CircleAlert,
   CircleCheckBig,
+  CircleHelp,
   CircleMinus,
   CirclePlus,
+  ExternalLink,
   Heart,
   Home,
   Info,
@@ -38,6 +41,7 @@ import {
 import styles from './styles.module.css';
 
 const iconRegistry = {
+  bookOpen: BookOpen,
   chevronDown: ChevronDown,
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
@@ -62,6 +66,8 @@ const iconRegistry = {
   trash2: Trash2,
   userRound: UserRound,
   circleCheckBig: CircleCheckBig,
+  circleHelp: CircleHelp,
+  externalLink: ExternalLink,
   heartFilled: Heart,
   check: Check,
   circleAlert: CircleAlert,

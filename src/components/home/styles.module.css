@@ -13,7 +13,7 @@
 
 .topChrome {
   position: relative;
-  z-index: 1;
+  z-index: 30;
   flex-shrink: 0;
 }
 

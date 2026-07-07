@@ -26,6 +26,7 @@ import { useTracks } from './hooks/useTracks';
 import { useVisibleViewport } from './hooks/useVisibleViewport';
 import { OnboardingModal } from './onboarding-modal';
 import styles from './styles.module.css';
+import { UsageGuide } from './usage-guide';
 import { buildCourseCardViews } from './utils/course-filter';
 import {
   computeFilteredRoutesForHome,
@@ -190,6 +191,7 @@ export function Home() {
           showRightIcon
           rightIconName="menu"
           rightIconAriaLabel="메뉴 열기"
+          rightSlot={<UsageGuide />}
           onRightIconClick={() => {
             setIsHomeMenuOpen(true);
           }}

@@ -1,0 +1,112 @@
+.root {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.trigger {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-black-500);
+  cursor: pointer;
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--color-green-600);
+  outline-offset: 2px;
+}
+
+.tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: max-content;
+  max-width: 240px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-white_grey-500);
+  border-radius: 12px;
+  background: var(--color-white-500);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-black-500) 14%, transparent);
+}
+
+/* 트리거 아이콘을 가리키는 상단 캐럿 */
+.tooltip::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 14px;
+  width: 12px;
+  height: 12px;
+  border-top: 1px solid var(--color-white_grey-500);
+  border-left: 1px solid var(--color-white_grey-500);
+  background: var(--color-white-500);
+  transform: rotate(45deg);
+}
+
+.tooltipHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-green-600);
+}
+
+.tooltipTitle {
+  color: var(--color-grey-900);
+  font-family: var(--typography-body-1-ko-mobile-semibold-font-family);
+  font-size: var(--typography-body-1-ko-mobile-semibold-font-size);
+  font-weight: var(--typography-body-1-ko-mobile-semibold-font-weight);
+  line-height: var(--typography-body-1-ko-mobile-semibold-line-height);
+  letter-spacing: var(--typography-body-1-ko-mobile-semibold-letter-spacing);
+}
+
+.tooltipDescription {
+  margin: 0;
+  white-space: pre-line;
+  color: var(--color-grey-600);
+  font-family: var(--typography-body-2-ko-mobile-regular-font-family);
+  font-size: var(--typography-body-2-ko-mobile-regular-font-size);
+  font-weight: var(--typography-body-2-ko-mobile-regular-font-weight);
+  line-height: var(--typography-body-2-ko-mobile-regular-line-height);
+  letter-spacing: var(--typography-body-2-ko-mobile-regular-letter-spacing);
+}
+
+.openLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 2px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--color-green-50);
+  color: var(--color-green-700);
+  text-decoration: none;
+  cursor: pointer;
+  font-family: var(--typography-body-2-ko-mobile-semibold-font-family);
+  font-size: var(--typography-body-2-ko-mobile-semibold-font-size);
+  font-weight: var(--typography-body-2-ko-mobile-semibold-font-weight);
+  line-height: var(--typography-body-2-ko-mobile-semibold-line-height);
+  letter-spacing: var(--typography-body-2-ko-mobile-semibold-letter-spacing);
+  transition: background-color 0.15s ease;
+}
+
+.openLink:hover {
+  background: var(--color-green-100);
+}
+
+.openLink:focus-visible {
+  outline: 2px solid var(--color-green-600);
+  outline-offset: 2px;
+}

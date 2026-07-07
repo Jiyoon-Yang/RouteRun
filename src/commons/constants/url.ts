@@ -16,6 +16,12 @@ export const ROUTES = {
   MYPAGE: '/mypage',
 } as const;
 
+/** 외부(앱 외부) 링크 모음 */
+export const EXTERNAL_LINKS = {
+  /** 사용 방법 노션 가이드 */
+  USAGE_GUIDE: 'https://app.notion.com/p/38207bc2852480c4b0ace6a2ebaa978f?source=copy_link',
+} as const;
+
 type AccessLevel = 'public' | 'private';
 
 interface RouteConfig {

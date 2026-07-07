@@ -35,7 +35,7 @@ actions/
 - `createCourseAction(input)` — 코스 등록, 역지오코딩 포함. 성공 시 `/`로 redirect
 - `deleteCourseAction(routeId)` — 본인 코스 삭제. `/mypage`, `/` 캐시 무효화
 - `updateCourseAction(input)` — 제목·설명·이미지 수정. 상세·목록 캐시 무효화
-- `toggleCourseLikeAction(courseId, shouldLike, revalidateMypage?)` — 좋아요 추가/제거 후 likes_count 갱신. Service 레이어 없이 Repository를 직접 호출한다.
+- `toggleCourseLikeAction(courseId, shouldLike, revalidateMypage?)` — 좋아요 추가/제거 후 갱신된 likes_count를 읽어 반환(갱신은 DB 트리거가 처리). Service 레이어 없이 Repository를 직접 호출한다.
 
 **track.action.ts**
 - `createTrackAction(input)` — 트랙 등록, 역지오코딩 포함. 성공 시 `{ success: true, trackId }` 반환
@@ -53,4 +53,4 @@ actions/
 - `submitReportAction`은 DB 저장 성공 후 `REPORT_EDGE_FUNCTION_URL` 환경 변수가 설정된 경우에만 Edge Function(이메일 발송)을 호출한다. Edge Function 실패는 무시하고 성공으로 반환한다.
 - `auth.action.ts`의 `resolveSiteOrigin()`은 `NEXT_PUBLIC_SITE_URL` → `VERCEL_URL` → `localhost` 순으로 폴백한다. 새 환경 추가 시 이 함수를 확인한다.
 - redirect URL 검증: `isRelativePath()`로 `/`로 시작하는 상대 경로만 허용해 open redirect를 방지한다.
-- `toggleCourseLikeAction`은 예외적으로 Service를 거치지 않고 Repository를 직접 호출한다. 여러 Repository 메서드를 순차 실행(upsert → count → update)하므로 Action 내에서 처리한다.
+- `toggleCourseLikeAction`은 예외적으로 Service를 거치지 않고 Repository를 직접 호출한다. `upsertRouteLike`/`deleteRouteLike` 후 `getRouteLikesCount`로 **읽기만** 한다(likes_count 갱신은 DB 트리거 담당). 여러 Repository 메서드를 순차 실행하므로 Action 내에서 처리한다.

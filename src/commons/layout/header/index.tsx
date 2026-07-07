@@ -16,6 +16,8 @@ import { LOGO_SIZE_PRESETS } from '@/commons/constants/logo-presets';
 
 import styles from './styles.module.css';
 
+import type { ReactNode } from 'react';
+
 const COPY = {
   runningCourse: '러닝 코스',
   leftIconAriaLabel: '이전',
@@ -32,6 +34,8 @@ export type HeaderProps = {
   leftIconName?: IconName;
   rightIconName?: IconName;
   rightIconAriaLabel?: string;
+  /** 우측 아이콘 버튼 왼쪽에 렌더되는 부가 요소 (예: 링크 버튼) */
+  rightSlot?: ReactNode;
   onLeftIconClick?: () => void;
   onRightIconClick?: () => void;
 };
@@ -45,6 +49,7 @@ export function Header({
   leftIconName = 'chevronLeft',
   rightIconName = 'chevronRight',
   rightIconAriaLabel,
+  rightSlot,
   onLeftIconClick,
   onRightIconClick,
 }: HeaderProps) {
@@ -70,6 +75,7 @@ export function Header({
           </button>
         ) : null}
         <h1 className={styles.title}>{title}</h1>
+        {rightSlot}
         {showRightIcon ? (
           <button
             type="button"

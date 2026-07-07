@@ -128,6 +128,9 @@
   line-height: var(--typography-body-2-ko-mobile-semibold-line-height);
   text-decoration: none;
   background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
   transition: background-color 160ms ease-out;
 }
 

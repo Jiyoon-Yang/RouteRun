@@ -9,6 +9,7 @@
 #   FEATURE=perf/refactor scripts/promote.sh
 #   MERGE_METHOD=merge scripts/promote.sh   # squash(기본) 대신 merge 커밋
 #   SKIP_MAIN=1 scripts/promote.sh    # dev까지만, main 승격은 건너뜀
+#   RESET_FEATURE=0 scripts/promote.sh # 승격 후 작업 브랜치 리셋 안 함
 #
 # 요구사항: gh CLI 로그인, upstream 리모트에 push 권한.
 
@@ -19,6 +20,7 @@ REPO="${REPO:-heehee-ju/RunningCourse}"
 DEV="${DEV:-dev}"
 MAIN="${MAIN:-main}"
 ORIGIN="${ORIGIN:-origin}"   # 내 포크. 승격 후 main을 여기로 동기화한다.
+RESET_FEATURE="${RESET_FEATURE:-1}"   # 승격 후 작업 브랜치를 main으로 리셋(충돌 예방). 0이면 끔.
 MERGE_METHOD="${MERGE_METHOD:-squash}"   # squash | merge | rebase
 FEATURE="${FEATURE:-$(git branch --show-current)}"
 
@@ -134,6 +136,30 @@ if git push "$ORIGIN" "$REMOTE/$MAIN:$MAIN" 2>/dev/null; then
   ok "${ORIGIN}/${MAIN} 동기화 완료"
 else
   die "${ORIGIN}/${MAIN} 동기화 실패 — fast-forward 불가(갈라짐). 수동 확인 필요."
+fi
+
+# 승격 후 작업 브랜치를 최신 main과 똑같이 맞춰(리셋) 다음 사이클의 충돌을 예방한다.
+# 스쿼시 머지는 히스토리 연결을 끊어, 같은 브랜치를 재사용하면 매번 충돌이 난다.
+# 승격된 내용은 이미 main에 있으므로 리셋해도 잃는 것이 없다.
+# 끄려면 RESET_FEATURE=0 으로 실행.
+if [ "${RESET_FEATURE:-1}" = "1" ]; then
+  log "작업 브랜치 '$FEATURE'를 ${REMOTE}/${MAIN} 기준으로 리셋 (충돌 예방)"
+  git fetch "$REMOTE" "$MAIN" -q
+  if [ "$(git branch --show-current)" = "$FEATURE" ]; then
+    # 현재 체크아웃된 브랜치 → 워킹트리까지 리셋. 커밋 안 된 변경이 있으면 리셋만 건너뜀.
+    if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+      ok "커밋 안 된 변경이 있어 브랜치 리셋은 건너뜀 (승격은 완료됨). 정리 후 'git reset --hard ${REMOTE}/${MAIN}' 권장."
+    else
+      git reset --hard "$REMOTE/$MAIN"
+      git push --force-with-lease "$REMOTE" "$FEATURE"
+      ok "작업 브랜치 리셋 완료 (다음 승격은 깨끗한 기준에서 시작)"
+    fi
+  else
+    # 체크아웃되어 있지 않은 브랜치 → ref만 이동 (워킹트리 영향 없음)
+    git branch -f "$FEATURE" "$REMOTE/$MAIN"
+    git push --force-with-lease "$REMOTE" "$FEATURE"
+    ok "작업 브랜치 리셋 완료 (다음 승격은 깨끗한 기준에서 시작)"
+  fi
 fi
 
 ok "전체 승격 완료: $FEATURE → $DEV → $MAIN (+ ${ORIGIN}/${MAIN} 동기화)"

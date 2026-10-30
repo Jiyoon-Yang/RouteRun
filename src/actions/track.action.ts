@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import type { Track } from '@/commons/types/routerun';
+import { isValidUuid } from '@/commons/utils/uuid';
 import { createClient } from '@/lib/supabase/server';
 import * as trackRepository from '@/repositories/track/track.repository';
 import { getUserRouteWriteCount } from '@/services/course/courseService';
@@ -27,12 +28,6 @@ export type UpdateTrackActionResult =
   | { success: false; error: string };
 
 export type ToggleTrackLikeActionResult = { likeCount: number | null; error: string | null };
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function isValidUuid(value: string): boolean {
-  return UUID_REGEX.test(value.trim());
-}
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);

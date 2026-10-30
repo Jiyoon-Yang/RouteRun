@@ -4,6 +4,7 @@
 import { cache } from 'react';
 
 import type { Route } from '@/commons/types/routerun';
+import { isValidUuid } from '@/commons/utils/uuid';
 import { createClient } from '@/lib/supabase/server';
 import * as courseDetailRepository from '@/repositories/course/detail.repository';
 import * as userRepository from '@/repositories/user.repository';
@@ -17,6 +18,9 @@ export type CourseDetailPayload = {
 
 export const fetchCourseDetail = cache(
   async (courseId: string): Promise<CourseDetailPayload | null> => {
+    // uuid가 아닌 id는 DB가 에러를 내므로 조회 전에 "없음"으로 처리한다.
+    if (!isValidUuid(courseId)) return null;
+
     const supabase = createClient();
 
     const routeResult = await courseDetailRepository.getRouteById(supabase, courseId);

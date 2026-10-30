@@ -2,6 +2,20 @@ import { createClient } from '@/lib/supabase/client';
 
 export const COURSE_IMAGES_BUCKET = 'course_images' as const;
 
+const PUBLIC_PATH_MARKER = `/storage/v1/object/public/${COURSE_IMAGES_BUCKET}/`;
+
+/**
+ * `uploadCourseImages`가 돌려준 public URL을 버킷 내 경로로 되돌린다.
+ * 본인 폴더(`userId/`) 밖의 파일이면 null — 남의 파일은 지우지 않는다.
+ */
+export function extractCourseImagePath(url: string, userId: string): string | null {
+  const index = url.indexOf(PUBLIC_PATH_MARKER);
+  if (index === -1) return null;
+
+  const path = url.slice(index + PUBLIC_PATH_MARKER.length).split('?')[0];
+  return path.startsWith(`${userId}/`) && !path.includes('..') ? path : null;
+}
+
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const MAX_FILE_SIZE_MB = 5;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;

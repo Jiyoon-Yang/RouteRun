@@ -52,6 +52,26 @@ export interface UpdateCourseParams {
   image_urls: string[];
 }
 
+/** 본인 코스의 현재 `image_urls` (수정 시 빠진 이미지를 Storage에서 지우기 위해 조회) */
+export async function getRouteImageUrls(
+  supabase: SupabaseClient,
+  routeId: string,
+  userId: string,
+): Promise<{ data: string[] | null; error: Error | null }> {
+  const { data, error } = await supabase
+    .from('routes')
+    .select('image_urls')
+    .eq('id', routeId)
+    .eq('user_id', userId)
+    .maybeSingle<{ image_urls: string[] | null }>();
+
+  if (error) {
+    return { data: null, error: new Error(error.message) };
+  }
+
+  return { data: data?.image_urls ?? [], error: null };
+}
+
 /**
  * 주어진 코스의 title, description, image_urls, updated_at을 갱신하고
  * 갱신된 행을 조회 모델(`Route`)로 반환한다.
@@ -209,7 +229,8 @@ export async function getRouteLikesCount(
   return { count: data?.likes_count ?? 0, error: null };
 }
 
-export async function deleteRoute(routeId: string, userId: string): Promise<void> {
+/** 본인 코스를 삭제하고, 삭제된 행의 `image_urls`를 돌려준다 (Storage 정리용). */
+export async function deleteRoute(routeId: string, userId: string): Promise<string[]> {
   const supabase = createClient();
 
   const { data, error } = await supabase
@@ -217,8 +238,8 @@ export async function deleteRoute(routeId: string, userId: string): Promise<void
     .delete()
     .eq('id', routeId)
     .eq('user_id', userId)
-    .select('id')
-    .returns<{ id: string }[]>();
+    .select('id, image_urls')
+    .returns<{ id: string; image_urls: string[] | null }[]>();
 
   if (error) {
     throw new Error(error.message);
@@ -227,4 +248,6 @@ export async function deleteRoute(routeId: string, userId: string): Promise<void
   if (!data || data.length === 0) {
     throw new Error('삭제할 코스를 찾을 수 없거나 삭제 권한이 없습니다.');
   }
+
+  return data[0].image_urls ?? [];
 }

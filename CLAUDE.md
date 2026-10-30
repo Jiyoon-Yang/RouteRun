@@ -81,6 +81,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 REPORT_EDGE_FUNCTION_URL=        # 선택. 제보 접수 시 이메일 발송용 Edge Function URL
+REPORT_EMAIL_SECRET=             # 선택. Edge Function 호출 인증용 비밀값. 함수 쪽 `supabase secrets set REPORT_EMAIL_SECRET=...`과 같은 값
 ```
 
 ## 코딩 컨벤션

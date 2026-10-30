@@ -6,6 +6,15 @@ const TYPE_LABELS: Record<string, string> = {
   suggestion: '기능 건의',
 };
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 serve(async (req: Request) => {
   if (req.method !== 'POST') {
     return new Response('Method Not Allowed', { status: 405 });
@@ -13,10 +22,16 @@ serve(async (req: Request) => {
 
   const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
   const REPORT_EMAIL_TO = Deno.env.get('REPORT_EMAIL_TO');
+  const REPORT_EMAIL_SECRET = Deno.env.get('REPORT_EMAIL_SECRET');
 
-  if (!RESEND_API_KEY || !REPORT_EMAIL_TO) {
+  if (!RESEND_API_KEY || !REPORT_EMAIL_TO || !REPORT_EMAIL_SECRET) {
     console.error('[send-report-email] 환경변수 누락');
     return new Response('Server configuration error', { status: 500 });
+  }
+
+  // anon key는 브라우저에 공개돼 있으므로, 서버(submitReportAction)만 아는 비밀값으로 호출자를 확인한다.
+  if (req.headers.get('x-report-secret') !== REPORT_EMAIL_SECRET) {
+    return new Response('Unauthorized', { status: 401 });
   }
 
   let body: { userId?: string; type?: string; content?: string; createdAt?: string };
@@ -27,7 +42,7 @@ serve(async (req: Request) => {
   }
 
   const { userId, type, content, createdAt } = body;
-  const typeLabel = TYPE_LABELS[type ?? ''] ?? type ?? '알 수 없음';
+  const typeLabel = escapeHtml(TYPE_LABELS[type ?? ''] ?? type ?? '알 수 없음');
   // Edge Function은 UTC로 동작하므로 한국 시각으로 명시한다.
   const date = createdAt
     ? new Date(createdAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
@@ -37,9 +52,9 @@ serve(async (req: Request) => {
     <h2>[제보] ${typeLabel}</h2>
     <table style="border-collapse:collapse;width:100%;max-width:600px">
       <tr><td style="padding:8px;font-weight:bold;width:100px">유형</td><td style="padding:8px">${typeLabel}</td></tr>
-      <tr style="background:#f7f7f7"><td style="padding:8px;font-weight:bold">제보자 ID</td><td style="padding:8px;font-family:monospace;font-size:12px">${userId ?? '-'}</td></tr>
+      <tr style="background:#f7f7f7"><td style="padding:8px;font-weight:bold">제보자 ID</td><td style="padding:8px;font-family:monospace;font-size:12px">${escapeHtml(userId ?? '-')}</td></tr>
       <tr><td style="padding:8px;font-weight:bold">접수 시각</td><td style="padding:8px">${date}</td></tr>
-      <tr style="background:#f7f7f7"><td style="padding:8px;font-weight:bold;vertical-align:top">내용</td><td style="padding:8px;white-space:pre-wrap">${content ?? ''}</td></tr>
+      <tr style="background:#f7f7f7"><td style="padding:8px;font-weight:bold;vertical-align:top">내용</td><td style="padding:8px;white-space:pre-wrap">${escapeHtml(content ?? '')}</td></tr>
     </table>
   `;
 

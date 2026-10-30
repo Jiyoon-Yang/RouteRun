@@ -63,13 +63,18 @@ export async function submitReportAction(
   }
 
   const edgeFunctionUrl = process.env.REPORT_EDGE_FUNCTION_URL;
-  if (edgeFunctionUrl) {
+  const reportEmailSecret = process.env.REPORT_EMAIL_SECRET;
+  if (edgeFunctionUrl && !reportEmailSecret) {
+    console.error('[report] REPORT_EMAIL_SECRET 미설정으로 이메일 발송 생략');
+  }
+  if (edgeFunctionUrl && reportEmailSecret) {
     try {
-      await fetch(edgeFunctionUrl, {
+      const emailRes = await fetch(edgeFunctionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+          'x-report-secret': reportEmailSecret,
         },
         body: JSON.stringify({
           userId: data.user_id,
@@ -78,6 +83,9 @@ export async function submitReportAction(
           createdAt: data.created_at,
         }),
       });
+      if (!emailRes.ok) {
+        console.error('[report] 이메일 발송 실패 status:', emailRes.status);
+      }
     } catch (emailError) {
       console.error('[report] 이메일 발송 실패:', emailError);
     }

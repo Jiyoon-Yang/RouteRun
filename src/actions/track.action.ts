@@ -3,11 +3,13 @@
 import { revalidatePath } from 'next/cache';
 
 import type { Track } from '@/commons/types/routerun';
+import { validatePostInput } from '@/commons/utils/post-input';
+import { isValidUuid } from '@/commons/utils/uuid';
 import { createClient } from '@/lib/supabase/server';
 import * as trackRepository from '@/repositories/track/track.repository';
-import { getUserRouteWriteCount } from '@/services/course/courseService';
 import * as trackService from '@/services/track/trackService';
 import type { SubmitTrackInput } from '@/services/track/trackService';
+import { isGuestWriteLimitReached } from '@/services/user/userService';
 
 export type CreateTrackActionResult =
   | { success: true; trackId: string }
@@ -27,12 +29,6 @@ export type UpdateTrackActionResult =
   | { success: false; error: string };
 
 export type ToggleTrackLikeActionResult = { likeCount: number | null; error: string | null };
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function isValidUuid(value: string): boolean {
-  return UUID_REGEX.test(value.trim());
-}
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
@@ -84,16 +80,13 @@ export async function createTrackAction(input: SubmitTrackInput): Promise<Create
     return { success: false, message: '로그인이 필요합니다.' };
   }
 
-  if (user.is_anonymous === true) {
-    const [courseResult, trackResult] = await Promise.all([
-      getUserRouteWriteCount(user.id),
-      trackService.getUserTrackWriteCount(user.id),
-    ]);
-    const courseCount = courseResult.count ?? 0;
-    const trackCount = trackResult.count ?? 0;
-    if (courseCount + trackCount >= 1) {
-      return { success: false, message: '게스트는 코스·트랙을 합산 1개까지만 등록할 수 있습니다.' };
-    }
+  if (user.is_anonymous === true && (await isGuestWriteLimitReached(user.id))) {
+    return { success: false, message: '게스트는 코스·트랙을 합산 1개까지만 등록할 수 있습니다.' };
+  }
+
+  const validated = validatePostInput({ ...input, userId: user.id });
+  if (validated.error !== null) {
+    return { success: false, message: validated.error };
   }
 
   const start_lat = input.trackPoint?.lat;
@@ -109,7 +102,7 @@ export async function createTrackAction(input: SubmitTrackInput): Promise<Create
 
   const { data, error } = await trackService.submitNewTrack(
     supabase,
-    input,
+    { ...input, ...validated.data },
     user.id,
     input.addressRegion ?? null,
   );
@@ -163,19 +156,6 @@ export async function updateTrackAction(
     return { success: false, error: '유효하지 않은 트랙 ID입니다.' };
   }
 
-  const trimmedTitle = typeof title === 'string' ? title.trim() : '';
-  if (!trimmedTitle) {
-    return { success: false, error: '제목을 입력해 주세요.' };
-  }
-
-  if (!Array.isArray(image_urls)) {
-    return { success: false, error: '이미지 URL 목록 형식이 올바르지 않습니다.' };
-  }
-
-  if (!image_urls.every((url): url is string => typeof url === 'string')) {
-    return { success: false, error: '이미지 URL 목록 형식이 올바르지 않습니다.' };
-  }
-
   const supabase = createClient();
   const {
     data: { user },
@@ -185,8 +165,15 @@ export async function updateTrackAction(
     return { success: false, error: '로그인이 필요합니다.' };
   }
 
-  const normalizedDescription =
-    typeof description === 'string' && description.trim().length > 0 ? description.trim() : null;
+  const validated = validatePostInput({
+    title,
+    description,
+    imageUrls: image_urls,
+    userId: user.id,
+  });
+  if (validated.error !== null) {
+    return { success: false, error: validated.error };
+  }
 
   const id = trackId.trim();
 
@@ -194,9 +181,9 @@ export async function updateTrackAction(
     supabase,
     {
       trackId: id,
-      title: trimmedTitle,
-      description: normalizedDescription,
-      image_urls,
+      title: validated.data.title,
+      description: validated.data.description,
+      image_urls: validated.data.imageUrls,
     },
     user.id,
   );

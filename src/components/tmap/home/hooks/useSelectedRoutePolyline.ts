@@ -10,6 +10,7 @@ import {
   extractPathCoordinates,
 } from '@/commons/utils/route/path-parser';
 import type { TmapMap, TmapPolyline, TmapV3API } from '@/commons/utils/tmap/types';
+import { fetchHomeRoutePathData } from '@/services/course/homeCourseService';
 
 import type { MutableRefObject } from 'react';
 
@@ -132,6 +133,8 @@ export function useSelectedRoutePolyline({
   const selectedRoutePolylineRef = useRef<TmapPolyline | null>(null);
   const routePolylineGenerationRef = useRef(0);
   const selectedPolylineRetryTimerRef = useRef<number | null>(null);
+  // 홈 목록 조회에는 상세 경로가 없으므로 선택한 코스만 받아 두고 재사용한다.
+  const pathDataByIdRef = useRef(new Map<string, Record<string, unknown>>());
 
   const clearSelectedRoutePolyline = useCallback(() => {
     routePolylineGenerationRef.current += 1;
@@ -144,7 +147,7 @@ export function useSelectedRoutePolyline({
   }, []);
 
   const syncSelectedRoutePolyline = useCallback(
-    (courseId: string | null, retryCount = 0) => {
+    async (courseId: string | null, retryCount = 0) => {
       if (selectedPolylineRetryTimerRef.current !== null) {
         window.clearTimeout(selectedPolylineRetryTimerRef.current);
         selectedPolylineRetryTimerRef.current = null;
@@ -183,15 +186,29 @@ export function useSelectedRoutePolyline({
         return;
       }
 
-      const lineCoordinates = dedupeConsecutiveCoordinates(
-        extractPathCoordinates(route.path_data, route.id),
-      );
-
       const isStale = (): boolean =>
         generation !== routePolylineGenerationRef.current ||
         selectedRouteIdRef.current !== courseId;
 
+      let pathData = pathDataByIdRef.current.get(courseId);
+      if (!pathData) {
+        let fetched: Record<string, unknown> | null;
+        try {
+          fetched = await fetchHomeRoutePathData(courseId);
+        } catch (error) {
+          console.error('[useSelectedRoutePolyline] 코스 경로 조회 실패:', error);
+          return;
+        }
+        // null(삭제·권한 등)은 캐시하지 않아 다시 선택하면 재조회한다.
+        if (fetched) pathDataByIdRef.current.set(courseId, fetched);
+        pathData = fetched ?? {};
+      }
+
       if (isStale()) return;
+
+      const lineCoordinates = dedupeConsecutiveCoordinates(
+        extractPathCoordinates(pathData, route.id),
+      );
 
       const liveMap = mapRef.current;
       const liveTmap = getTmapv3();

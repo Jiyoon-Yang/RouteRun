@@ -2,72 +2,21 @@
 import type { Route, RouteViewport } from '@/commons/types/routerun';
 import { createClient } from '@/lib/supabase/client';
 
-type RouteRow = {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string | null;
-  distance_meters: number | null;
-  path_data: Record<string, unknown> | null;
-  start_lat: number | null;
-  start_lng: number | null;
-  start_address_region: string | null;
-  image_urls: string[] | null;
-  likes_count: number | null;
-  is_round_trip: boolean | null;
-  created_at: string | null;
-};
-
-const ROUTE_SELECT =
-  'id, user_id, title, description, distance_meters, path_data, start_lat, start_lng, start_address_region, image_urls, likes_count, is_round_trip, created_at';
+import { ROUTE_SELECT, normalizeRouteRows, type RouteRow } from './route-row';
 
 // 화면 모서리·바텀시트 인접 코스를 미리 받아오기 위한 가시 뷰포트 확장 비율
 const VIEWPORT_PADDING_RATIO = 0.3;
 
-function toRoute(row: RouteRow): Route | null {
-  if (
-    !row.id ||
-    !row.user_id ||
-    !row.title ||
-    row.distance_meters === null ||
-    row.start_lat === null ||
-    row.start_lng === null ||
-    !row.created_at
-  ) {
-    return null;
-  }
+// 목록·마커에는 첫 웨이포인트만 필요하므로 무거운 path_data 전체 대신 그 한 점만 받는다.
+// 선택한 코스의 상세 경로는 getHomeRoutePathData로 따로 조회한다.
+const HOME_ROUTE_SELECT = ROUTE_SELECT.replace(
+  'path_data',
+  'waypoint_start:path_data->waypoint_points->0',
+);
 
-  return {
-    id: row.id,
-    user_id: row.user_id,
-    title: row.title,
-    description: row.description ?? undefined,
-    distance_meters: row.distance_meters,
-    path_data: row.path_data ?? {},
-    start_lat: row.start_lat,
-    start_lng: row.start_lng,
-    start_address_region: row.start_address_region,
-    image_urls: row.image_urls ?? [],
-    likes_count: row.likes_count ?? 0,
-    is_round_trip: row.is_round_trip ?? false,
-    created_at: row.created_at,
-  };
-}
-
-function normalizeRouteRows(rows: RouteRow[] | null): Route[] {
-  return (rows ?? []).map(toRoute).filter((route): route is Route => route !== null);
-}
-
-export async function getHomeRoutes(): Promise<Route[]> {
-  const supabase = createClient();
-  const { data, error } = await supabase.from('routes').select(ROUTE_SELECT).returns<RouteRow[]>();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return normalizeRouteRows(data);
-}
+type HomeRouteRow = Omit<RouteRow, 'path_data'> & {
+  waypoint_start: { lat: number; lng: number } | null;
+};
 
 export async function getHomeRoutesByViewport(viewport: RouteViewport): Promise<Route[]> {
   const supabase = createClient();
@@ -86,16 +35,39 @@ export async function getHomeRoutesByViewport(viewport: RouteViewport): Promise<
 
   const { data, error } = await supabase
     .from('routes')
-    .select(ROUTE_SELECT)
+    .select(HOME_ROUTE_SELECT)
     .gte('start_lat', minLat)
     .lte('start_lat', maxLat)
     .gte('start_lng', minLng)
     .lte('start_lng', maxLng)
-    .returns<RouteRow[]>();
+    .returns<HomeRouteRow[]>();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return normalizeRouteRows(data);
+  return normalizeRouteRows(
+    (data ?? []).map(({ waypoint_start, ...row }) => ({
+      ...row,
+      path_data: waypoint_start ? { waypoint_points: [waypoint_start] } : null,
+    })),
+  );
+}
+
+/** 홈에서 선택한 코스 하나의 상세 경로(`path_data`) */
+export async function getHomeRoutePathData(
+  routeId: string,
+): Promise<Record<string, unknown> | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('routes')
+    .select('path_data')
+    .eq('id', routeId)
+    .maybeSingle<{ path_data: Record<string, unknown> | null }>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data?.path_data ?? null;
 }

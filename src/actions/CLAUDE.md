@@ -50,7 +50,7 @@ actions/
 ## 주의사항
 
 - `deleteGuestAccount`와 `submitReportAction`은 `SUPABASE_SERVICE_ROLE_KEY`를 사용하며 **서버에서만** 실행된다. 이 키는 절대 클라이언트 번들에 포함되면 안 된다.
-- `submitReportAction`은 DB 저장 성공 후 `REPORT_EDGE_FUNCTION_URL` 환경 변수가 설정된 경우에만 Edge Function(이메일 발송)을 호출한다. Edge Function 실패는 무시하고 성공으로 반환한다.
+- `submitReportAction`은 DB 저장 성공 후 `REPORT_EDGE_FUNCTION_URL`과 `REPORT_EMAIL_SECRET`이 모두 설정된 경우에만 Edge Function(이메일 발송)을 호출한다. 비밀값은 `x-report-secret` 헤더로 보내며, 함수는 값이 다르면 401을 반환한다(anon key는 공개라 인증 수단이 아님). Edge Function 실패는 로그만 남기고 성공으로 반환한다.
 - `auth.action.ts`의 `resolveSiteOrigin()`은 `NEXT_PUBLIC_SITE_URL` → `VERCEL_URL` → `localhost` 순으로 폴백한다. 새 환경 추가 시 이 함수를 확인한다.
 - redirect URL 검증: `isRelativePath()`로 `/`로 시작하는 상대 경로만 허용해 open redirect를 방지한다.
 - `toggleCourseLikeAction`은 예외적으로 Service를 거치지 않고 Repository를 직접 호출한다. `upsertRouteLike`/`deleteRouteLike` 후 `getRouteLikesCount`로 **읽기만** 한다(likes_count 갱신은 DB 트리거 담당). 여러 Repository 메서드를 순차 실행하므로 Action 내에서 처리한다.

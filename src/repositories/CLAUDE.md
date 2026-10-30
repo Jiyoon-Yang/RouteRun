@@ -9,18 +9,19 @@ Supabase(DB)와 TMap 외부 API에 대한 **유일한 통신 창구**다. 비즈
   - 예외: 독립적으로 실행되어야 하는 함수(예: `getRouteCountByUserId`, `deleteRoute`)는 내부에서 `createClient()`를 직접 호출한다.
 - 홈 지도(`home.repository.ts`)는 클라이언트 컴포넌트에서 실시간 뷰포트 쿼리를 수행하므로 `createClient` from `@/lib/supabase/client`를 사용한다. 나머지는 서버 전용 `@/lib/supabase/server`를 사용한다.
 - 반환 타입은 `{ data, error }` 객체이거나 실패 시 `throw`다. 두 패턴을 혼용하지 말고, 파일 내에서 일관되게 유지한다.
-- DB Row → 도메인 타입 변환은 레포지토리 내 `toRoute()` 같은 private 헬퍼가 담당한다.
-- 필드 목록은 `const ROUTE_SELECT = '...'` 상수로 관리한다. 쿼리마다 inline으로 작성하지 않는다.
+- DB Row 타입·필드 목록(`ROUTE_SELECT`)·도메인 변환(`toRoute`, `normalizeRouteRows`)은 `course/route-row.ts`, `track/track-row.ts` 한 곳에만 둔다. 컬럼을 추가할 때 이 파일만 고치면 모든 조회에 반영된다. 쿼리마다 필드 목록을 inline으로 작성하지 않는다.
 
 ## 파일 구조
 
 ```
 repositories/
 ├── course/
+│   ├── route-row.ts           # RouteRow 타입, ROUTE_SELECT, toRoute (아래 3개 파일 공용)
 │   ├── course.repository.ts   # routes CRUD (create, update, delete, getByUser, getLiked, getCount)
 │   ├── detail.repository.ts   # 코스 단건 조회 (getRouteById) — 상세 페이지 전용
 │   └── home.repository.ts     # 홈 지도용 목록·뷰포트 조회 (클라이언트 Supabase 사용)
 ├── track/
+│   ├── track-row.ts           # TrackRow 타입, TRACK_SELECT, toTrack (아래 3개 파일 공용)
 │   ├── track.repository.ts    # tracks CRUD + track_likes (create, update, delete, getLiked, getCount)
 │   ├── detail.repository.ts   # 트랙 단건 조회 — 상세 페이지 전용
 │   └── home.repository.ts     # 홈 지도용 트랙 목록 (클라이언트 Supabase 사용)

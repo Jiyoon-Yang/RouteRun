@@ -192,13 +192,16 @@ export function useSelectedRoutePolyline({
 
       let pathData = pathDataByIdRef.current.get(courseId);
       if (!pathData) {
+        let fetched: Record<string, unknown> | null;
         try {
-          pathData = (await fetchHomeRoutePathData(courseId)) ?? {};
+          fetched = await fetchHomeRoutePathData(courseId);
         } catch (error) {
           console.error('[useSelectedRoutePolyline] 코스 경로 조회 실패:', error);
           return;
         }
-        pathDataByIdRef.current.set(courseId, pathData);
+        // null(삭제·권한 등)은 캐시하지 않아 다시 선택하면 재조회한다.
+        if (fetched) pathDataByIdRef.current.set(courseId, fetched);
+        pathData = fetched ?? {};
       }
 
       if (isStale()) return;

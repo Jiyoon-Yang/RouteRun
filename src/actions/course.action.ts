@@ -102,7 +102,7 @@ export async function createCourseAction(
     return { success: false, message: '게스트는 코스·트랙을 합산 1개까지만 등록할 수 있습니다.' };
   }
 
-  const validated = validatePostInput(input);
+  const validated = validatePostInput({ ...input, userId: user.id });
   if (validated.error !== null) {
     return { success: false, message: validated.error };
   }
@@ -193,11 +193,6 @@ export async function updateCourseAction(
     return { success: false, error: '유효하지 않은 코스 ID입니다.' };
   }
 
-  const validated = validatePostInput({ title, description, imageUrls: image_urls });
-  if (validated.error !== null) {
-    return { success: false, error: validated.error };
-  }
-
   const supabase = createClient();
   const {
     data: { user },
@@ -205,6 +200,16 @@ export async function updateCourseAction(
 
   if (!user) {
     return { success: false, error: '로그인이 필요합니다.' };
+  }
+
+  const validated = validatePostInput({
+    title,
+    description,
+    imageUrls: image_urls,
+    userId: user.id,
+  });
+  if (validated.error !== null) {
+    return { success: false, error: validated.error };
   }
 
   const id = courseId.trim();

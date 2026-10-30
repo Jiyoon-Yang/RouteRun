@@ -19,6 +19,9 @@ const VALID_TYPES: ReportType[] = ['bug', 'inconvenience', 'suggestion'];
 // shortcut: 조회 후 insert라 동시 요청은 한도를 조금 넘을 수 있음, 악용되면 DB 트리거로 강제.
 const REPORT_LIMIT_COUNT = 3;
 const REPORT_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+// 게스트 세션을 계속 새로 만들면 유저당 한도는 우회되므로, 하루 전체 접수량도 막아 메일 쿼터를 지킨다.
+const REPORT_GLOBAL_DAILY_LIMIT = 50;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export async function submitReportAction(
   input: SubmitReportInput,
@@ -49,19 +52,38 @@ export async function submitReportAction(
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const { count: recentCount, error: countError } = await reportRepository.countReportsByUserSince(
-    serviceSupabase,
-    user.id,
-    new Date(Date.now() - REPORT_LIMIT_WINDOW_MS).toISOString(),
-  );
-  if (countError || recentCount === null) {
-    console.error('[report] 최근 제보 수 조회 실패:', countError?.message);
+  const now = Date.now();
+  const [userResult, globalResult] = await Promise.all([
+    reportRepository.countReportsSince(
+      serviceSupabase,
+      new Date(now - REPORT_LIMIT_WINDOW_MS).toISOString(),
+      user.id,
+    ),
+    reportRepository.countReportsSince(serviceSupabase, new Date(now - DAY_MS).toISOString()),
+  ]);
+  if (
+    userResult.error ||
+    userResult.count === null ||
+    globalResult.error ||
+    globalResult.count === null
+  ) {
+    console.error(
+      '[report] 최근 제보 수 조회 실패:',
+      userResult.error?.message ?? globalResult.error?.message,
+    );
     return { success: false, message: '제보 접수에 실패했습니다. 다시 시도해주세요.' };
   }
-  if (recentCount >= REPORT_LIMIT_COUNT) {
+  if (userResult.count >= REPORT_LIMIT_COUNT) {
     return {
       success: false,
       message: '제보는 10분에 3건까지 가능합니다. 잠시 후 다시 시도해주세요.',
+    };
+  }
+  if (globalResult.count >= REPORT_GLOBAL_DAILY_LIMIT) {
+    console.warn('[report] 하루 전체 제보 한도 도달');
+    return {
+      success: false,
+      message: '지금은 제보가 많이 몰려 접수할 수 없습니다. 내일 다시 시도해주세요.',
     };
   }
 

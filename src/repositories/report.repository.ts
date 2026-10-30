@@ -36,17 +36,18 @@ export async function createReport(
   return { data: toReport(data as ReportRow), error: null };
 }
 
-/** `sinceIso` 이후 해당 유저가 접수한 제보 수 */
-export async function countReportsByUserSince(
+/** `sinceIso` 이후 접수된 제보 수. `userId`가 없으면 전체 유저 합계 */
+export async function countReportsSince(
   supabase: SupabaseClient,
-  userId: string,
   sinceIso: string,
+  userId?: string,
 ): Promise<{ count: number | null; error: PostgrestError | null }> {
-  const { count, error } = await supabase
+  let query = supabase
     .from('reports')
     .select('id', { count: 'exact', head: true })
-    .eq('user_id', userId)
     .gte('created_at', sinceIso);
+  if (userId) query = query.eq('user_id', userId);
 
+  const { count, error } = await query;
   return { count, error };
 }

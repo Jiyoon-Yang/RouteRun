@@ -1,3 +1,5 @@
+import { isOwnCourseImageUrl } from './storage';
+
 export const MAX_POST_TITLE_LENGTH = 100;
 export const MAX_POST_DESCRIPTION_LENGTH = 1000;
 export const MAX_POST_IMAGES = 5;
@@ -16,6 +18,7 @@ export function validatePostInput(input: {
   title: unknown;
   description?: unknown;
   imageUrls: unknown;
+  userId: string;
 }): { data: ValidPostInput; error: null } | { data: null; error: string } {
   const title = typeof input.title === 'string' ? input.title.trim() : '';
   if (!title) {
@@ -42,6 +45,9 @@ export function validatePostInput(input: {
   }
   if (imageUrls.length > MAX_POST_IMAGES) {
     return { data: null, error: `이미지는 ${MAX_POST_IMAGES}장까지 등록할 수 있습니다.` };
+  }
+  if (!imageUrls.every((url) => isOwnCourseImageUrl(url, input.userId))) {
+    return { data: null, error: '직접 업로드한 이미지만 등록할 수 있습니다.' };
   }
 
   return { data: { title, description, imageUrls }, error: null };

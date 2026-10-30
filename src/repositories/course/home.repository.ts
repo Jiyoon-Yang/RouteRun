@@ -58,17 +58,6 @@ function normalizeRouteRows(rows: RouteRow[] | null): Route[] {
   return (rows ?? []).map(toRoute).filter((route): route is Route => route !== null);
 }
 
-export async function getHomeRoutes(): Promise<Route[]> {
-  const supabase = createClient();
-  const { data, error } = await supabase.from('routes').select(ROUTE_SELECT).returns<RouteRow[]>();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return normalizeRouteRows(data);
-}
-
 export async function getHomeRoutesByViewport(viewport: RouteViewport): Promise<Route[]> {
   const supabase = createClient();
   const rawMinLat = Math.min(viewport.northEastLat, viewport.southWestLat);

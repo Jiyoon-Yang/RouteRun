@@ -18,7 +18,6 @@ npm run storybook        # Storybook (localhost:6006)
 npm run build-storybook  # Storybook 정적 사이트 빌드
 npm test                 # 순수 로직 단위 테스트 (src/**/*.test.ts, Vitest node 모드)
 npx vitest               # Storybook 컴포넌트/인터랙션 테스트 (Vitest 브라우저 모드)
-npm run migrate:route-paths  # path_data 마이그레이션 (일회성, .env.local 필요)
 ```
 
 ## 아키텍처

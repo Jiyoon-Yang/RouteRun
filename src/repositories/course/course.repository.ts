@@ -94,8 +94,6 @@ export async function createRoute(
   return { data: toRoute(data), error: null };
 }
 
-export const createCourse = createRoute;
-
 /** `routes` 테이블에서 제목·설명·이미지 등 메타데이터만 갱신할 때 사용 */
 export interface UpdateCourseParams {
   courseId: string;

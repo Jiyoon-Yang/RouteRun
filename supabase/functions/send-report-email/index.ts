@@ -28,7 +28,10 @@ serve(async (req: Request) => {
 
   const { userId, type, content, createdAt } = body;
   const typeLabel = TYPE_LABELS[type ?? ''] ?? type ?? '알 수 없음';
-  const date = createdAt ? new Date(createdAt).toLocaleString('ko-KR') : '-';
+  // Edge Function은 UTC로 동작하므로 한국 시각으로 명시한다.
+  const date = createdAt
+    ? new Date(createdAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
+    : '-';
 
   const html = `
     <h2>[제보] ${typeLabel}</h2>

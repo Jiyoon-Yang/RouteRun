@@ -15,6 +15,11 @@ export type SubmitReportActionResult = { success: true } | { success: false; mes
 
 const VALID_TYPES: ReportType[] = ['bug', 'inconvenience', 'suggestion'];
 
+// 게스트 세션은 무제한 생성 가능하므로 유저당 접수 횟수로 스팸(메일 폭주)을 막는다.
+// shortcut: 조회 후 insert라 동시 요청은 한도를 조금 넘을 수 있음, 악용되면 DB 트리거로 강제.
+const REPORT_LIMIT_COUNT = 3;
+const REPORT_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+
 export async function submitReportAction(
   input: SubmitReportInput,
 ): Promise<SubmitReportActionResult> {
@@ -43,6 +48,22 @@ export async function submitReportAction(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
+
+  const { count: recentCount, error: countError } = await reportRepository.countReportsByUserSince(
+    serviceSupabase,
+    user.id,
+    new Date(Date.now() - REPORT_LIMIT_WINDOW_MS).toISOString(),
+  );
+  if (countError || recentCount === null) {
+    console.error('[report] 최근 제보 수 조회 실패:', countError?.message);
+    return { success: false, message: '제보 접수에 실패했습니다. 다시 시도해주세요.' };
+  }
+  if (recentCount >= REPORT_LIMIT_COUNT) {
+    return {
+      success: false,
+      message: '제보는 10분에 3건까지 가능합니다. 잠시 후 다시 시도해주세요.',
+    };
+  }
 
   const { data, error } = await reportRepository.createReport(serviceSupabase, {
     user_id: user.id,

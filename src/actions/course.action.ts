@@ -6,6 +6,7 @@
 import { revalidatePath } from 'next/cache';
 
 import type { Route } from '@/commons/types/routerun';
+import { validatePostInput } from '@/commons/utils/post-input';
 import { isValidUuid } from '@/commons/utils/uuid';
 import { createClient } from '@/lib/supabase/server';
 import * as courseRepository from '@/repositories/course/course.repository';
@@ -35,13 +36,6 @@ export type ToggleCourseLikeActionResult = { likeCount: number | null; error: st
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
-}
-
-function toDistanceMetersSafe(km: number): number {
-  if (!isFiniteNumber(km)) {
-    throw new Error('지도에서 경로를 완전히 지정해 주세요.');
-  }
-  return Math.round(km * 1000);
 }
 
 /**
@@ -108,25 +102,34 @@ export async function createCourseAction(
     return { success: false, message: '게스트는 코스·트랙을 합산 1개까지만 등록할 수 있습니다.' };
   }
 
+  const validated = validatePostInput(input);
+  if (validated.error !== null) {
+    return { success: false, message: validated.error };
+  }
+
   const start_lat = input.routeData?.startPoint?.lat;
   const start_lng = input.routeData?.startPoint?.lng;
+  const totalDistanceKm = input.routeData?.totalDistanceKm;
 
-  if (!isFiniteNumber(start_lat) || !isFiniteNumber(start_lng)) {
+  if (
+    !isFiniteNumber(start_lat) ||
+    !isFiniteNumber(start_lng) ||
+    !isFiniteNumber(totalDistanceKm) ||
+    totalDistanceKm <= 0
+  ) {
     return { success: false, message: '지도에서 경로를 완전히 지정해 주세요.' };
   }
 
-  const distance_meters = toDistanceMetersSafe(input.routeData.totalDistanceKm);
-
   const { data, error } = await courseRepository.createRoute(supabase, {
     user_id: user.id,
-    title: input.title,
-    description: input.description ?? null,
-    distance_meters,
+    title: validated.data.title,
+    description: validated.data.description,
+    distance_meters: Math.round(totalDistanceKm * 1000),
     path_data: input.routeData.pathData,
     start_lat,
     start_lng,
     start_address_region: input.addressRegion ?? null,
-    image_urls: input.imageUrls,
+    image_urls: validated.data.imageUrls,
     is_round_trip: Boolean(input.routeData.isRoundTrip),
   });
 
@@ -190,17 +193,9 @@ export async function updateCourseAction(
     return { success: false, error: '유효하지 않은 코스 ID입니다.' };
   }
 
-  const trimmedTitle = typeof title === 'string' ? title.trim() : '';
-  if (!trimmedTitle) {
-    return { success: false, error: '제목을 입력해 주세요.' };
-  }
-
-  if (!Array.isArray(image_urls)) {
-    return { success: false, error: '이미지 URL 목록 형식이 올바르지 않습니다.' };
-  }
-
-  if (!image_urls.every((url): url is string => typeof url === 'string')) {
-    return { success: false, error: '이미지 URL 목록 형식이 올바르지 않습니다.' };
+  const validated = validatePostInput({ title, description, imageUrls: image_urls });
+  if (validated.error !== null) {
+    return { success: false, error: validated.error };
   }
 
   const supabase = createClient();
@@ -212,18 +207,15 @@ export async function updateCourseAction(
     return { success: false, error: '로그인이 필요합니다.' };
   }
 
-  const normalizedDescription =
-    typeof description === 'string' && description.trim().length > 0 ? description.trim() : null;
-
   const id = courseId.trim();
 
   const { data, error } = await courseService.updateCourse(
     supabase,
     {
       courseId: id,
-      title: trimmedTitle,
-      description: normalizedDescription,
-      image_urls,
+      title: validated.data.title,
+      description: validated.data.description,
+      image_urls: validated.data.imageUrls,
     },
     user.id,
   );

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import type { Track } from '@/commons/types/routerun';
+import { validatePostInput } from '@/commons/utils/post-input';
 import { isValidUuid } from '@/commons/utils/uuid';
 import { createClient } from '@/lib/supabase/server';
 import * as trackRepository from '@/repositories/track/track.repository';
@@ -83,6 +84,11 @@ export async function createTrackAction(input: SubmitTrackInput): Promise<Create
     return { success: false, message: '게스트는 코스·트랙을 합산 1개까지만 등록할 수 있습니다.' };
   }
 
+  const validated = validatePostInput(input);
+  if (validated.error !== null) {
+    return { success: false, message: validated.error };
+  }
+
   const start_lat = input.trackPoint?.lat;
   const start_lng = input.trackPoint?.lng;
 
@@ -96,7 +102,7 @@ export async function createTrackAction(input: SubmitTrackInput): Promise<Create
 
   const { data, error } = await trackService.submitNewTrack(
     supabase,
-    input,
+    { ...input, ...validated.data },
     user.id,
     input.addressRegion ?? null,
   );
@@ -150,17 +156,9 @@ export async function updateTrackAction(
     return { success: false, error: '유효하지 않은 트랙 ID입니다.' };
   }
 
-  const trimmedTitle = typeof title === 'string' ? title.trim() : '';
-  if (!trimmedTitle) {
-    return { success: false, error: '제목을 입력해 주세요.' };
-  }
-
-  if (!Array.isArray(image_urls)) {
-    return { success: false, error: '이미지 URL 목록 형식이 올바르지 않습니다.' };
-  }
-
-  if (!image_urls.every((url): url is string => typeof url === 'string')) {
-    return { success: false, error: '이미지 URL 목록 형식이 올바르지 않습니다.' };
+  const validated = validatePostInput({ title, description, imageUrls: image_urls });
+  if (validated.error !== null) {
+    return { success: false, error: validated.error };
   }
 
   const supabase = createClient();
@@ -172,18 +170,15 @@ export async function updateTrackAction(
     return { success: false, error: '로그인이 필요합니다.' };
   }
 
-  const normalizedDescription =
-    typeof description === 'string' && description.trim().length > 0 ? description.trim() : null;
-
   const id = trackId.trim();
 
   const { data, error } = await trackService.updateTrack(
     supabase,
     {
       trackId: id,
-      title: trimmedTitle,
-      description: normalizedDescription,
-      image_urls,
+      title: validated.data.title,
+      description: validated.data.description,
+      image_urls: validated.data.imageUrls,
     },
     user.id,
   );

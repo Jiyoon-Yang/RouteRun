@@ -6,9 +6,9 @@ import type { Track } from '@/commons/types/routerun';
 import { isValidUuid } from '@/commons/utils/uuid';
 import { createClient } from '@/lib/supabase/server';
 import * as trackRepository from '@/repositories/track/track.repository';
-import { getUserRouteWriteCount } from '@/services/course/courseService';
 import * as trackService from '@/services/track/trackService';
 import type { SubmitTrackInput } from '@/services/track/trackService';
+import { isGuestWriteLimitReached } from '@/services/user/userService';
 
 export type CreateTrackActionResult =
   | { success: true; trackId: string }
@@ -79,16 +79,8 @@ export async function createTrackAction(input: SubmitTrackInput): Promise<Create
     return { success: false, message: '로그인이 필요합니다.' };
   }
 
-  if (user.is_anonymous === true) {
-    const [courseResult, trackResult] = await Promise.all([
-      getUserRouteWriteCount(user.id),
-      trackService.getUserTrackWriteCount(user.id),
-    ]);
-    const courseCount = courseResult.count ?? 0;
-    const trackCount = trackResult.count ?? 0;
-    if (courseCount + trackCount >= 1) {
-      return { success: false, message: '게스트는 코스·트랙을 합산 1개까지만 등록할 수 있습니다.' };
-    }
+  if (user.is_anonymous === true && (await isGuestWriteLimitReached(user.id))) {
+    return { success: false, message: '게스트는 코스·트랙을 합산 1개까지만 등록할 수 있습니다.' };
   }
 
   const start_lat = input.trackPoint?.lat;

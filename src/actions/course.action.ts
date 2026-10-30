@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/server';
 import * as courseRepository from '@/repositories/course/course.repository';
 import * as courseService from '@/services/course/courseService';
 import type { SubmitCourseInput } from '@/services/course/courseService';
+import { isGuestWriteLimitReached } from '@/services/user/userService';
 
 export type CreateCourseActionResult =
   | { success: true; courseId: string }
@@ -103,11 +104,8 @@ export async function createCourseAction(
     return { success: false, message: '로그인이 필요합니다.' };
   }
 
-  if (user.is_anonymous === true) {
-    const { count, error } = await courseService.getUserRouteWriteCount(user.id);
-    if (error !== null || count === null || count >= 1) {
-      return { success: false, message: '게스트는 코스를 1개까지만 등록할 수 있습니다.' };
-    }
+  if (user.is_anonymous === true && (await isGuestWriteLimitReached(user.id))) {
+    return { success: false, message: '게스트는 코스·트랙을 합산 1개까지만 등록할 수 있습니다.' };
   }
 
   const start_lat = input.routeData?.startPoint?.lat;

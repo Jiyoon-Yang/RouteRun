@@ -19,7 +19,7 @@ repositories/
 │   ├── route-row.ts           # RouteRow 타입, ROUTE_SELECT, toRoute (아래 3개 파일 공용)
 │   ├── course.repository.ts   # routes CRUD (create, update, delete, getByUser, getLiked, getCount)
 │   ├── detail.repository.ts   # 코스 단건 조회 (getRouteById) — 상세 페이지 전용
-│   └── home.repository.ts     # 홈 지도용 목록·뷰포트 조회 (클라이언트 Supabase 사용)
+│   └── home.repository.ts     # 홈 지도용 뷰포트 조회 + 선택한 코스 경로(getHomeRoutePathData). 클라이언트 Supabase 사용
 ├── track/
 │   ├── track-row.ts           # TrackRow 타입, TRACK_SELECT, toTrack (아래 3개 파일 공용)
 │   ├── track.repository.ts    # tracks CRUD + track_likes (create, update, delete, getLiked, getCount)
@@ -27,12 +27,13 @@ repositories/
 │   └── home.repository.ts     # 홈 지도용 트랙 목록 (클라이언트 Supabase 사용)
 ├── map.repository.ts          # TMap API 호출 (역지오코딩, 보행자 경로)
 ├── storage.repository.ts      # course_images 버킷 파일 삭제 (removeCourseImages, 본인 폴더만). 업로드는 commons/utils/storage.ts
-├── report.repository.ts       # reports 테이블 CRUD (createReport). Service Role 클라이언트를 주입받아 사용
+├── report.repository.ts       # reports 테이블 (createReport, countReportsSince). Service Role 클라이언트를 주입받아 사용
 └── user.repository.ts         # users 테이블 CRUD (프로필 조회, 닉네임 중복·수정)
 ```
 
 ## 주의사항
 
 - `map.repository.ts`는 Supabase가 아닌 TMap REST API를 fetch로 직접 호출한다. `NEXT_PUBLIC_TMAP_API_KEY` 환경 변수가 없으면 `null`/`throw`로 처리한다.
-- `route_likes`/`track_likes` write 로직(`upsertRouteLike`, `deleteRouteLike` 등)은 이 레포지토리에 있고, `toggleCourseLikeAction`/`toggleTrackLikeAction`에서 직접 호출한다. read 전용 조회(`fetchLikedCourseIds`)만 `courseLikeService.ts`에 남아있다.
+- `route_likes`/`track_likes` write 로직(`upsertRouteLike`, `deleteRouteLike` 등)은 이 레포지토리에 있고, `toggleCourseLikeAction`/`toggleTrackLikeAction`에서 직접 호출한다. read 전용 조회(`fetchLikedCourseIds`/`fetchLikedTrackIds`)만 `courseLikeService.ts`/`trackLikeService.ts`에 남아있다.
+- 홈 뷰포트 쿼리(`getHomeRoutesByViewport`)는 무거운 `path_data` 대신 `path_data->waypoint_points->0`만 받는다. 홈 목록에 `path_data`를 다시 넣지 말고, 선택한 코스는 `getHomeRoutePathData`로 조회한다.
 - `likes_count`는 DB 트리거(`sync_route_likes_count`/`sync_track_likes_count`)가 자동으로 갱신한다. `getRouteLikesCount`/`getTrackLikesCount`는 `routes`/`tracks.likes_count`를 **읽기만** 하는 함수이며, 직접 `UPDATE`하는 함수(과거의 `updateRouteLikesCount`/`updateTrackLikesCount`)는 더 이상 존재하지 않는다.

@@ -16,10 +16,10 @@ Repository에서 가져온 데이터를 **조합·가공·검증**하는 비즈�
 ```
 services/
 ├── course/
-│   ├── courseService.ts        # 코스 CRUD 비즈니스 로직 (등록·수정·삭제·마이페이지 목록)
+│   ├── courseService.ts        # 코스 수정·삭제·마이페이지 목록·게스트 작성 수 (등록은 Action이 Repository 직접 호출)
 │   ├── courseDetailService.ts  # 상세 페이지용 데이터 조합 (코스 + 작성자 + 위치)
 │   ├── courseLikeService.ts    # 좋아요 상태 조회 전용 (클라이언트 전용, createClient 사용)
-│   └── homeCourseService.ts    # 홈 지도용 코스 목록 (Repository 얇은 래퍼)
+│   └── homeCourseService.ts    # 홈 지도용 코스 목록 + 선택 코스 경로 (Repository 얇은 래퍼)
 ├── track/
 │   ├── trackService.ts         # 트랙 CRUD 비즈니스 로직 (등록·수정·삭제·마이페이지 목록)
 │   ├── trackDetailService.ts   # 상세 페이지용 데이터 조합 (트랙 + 작성자 + 위치)
@@ -35,7 +35,9 @@ services/
 
 ## 주요 패턴
 
-**데이터 조합:** `courseDetailService.fetchCourseDetail`은 코스·작성자 프로필·역지오코딩을 `Promise.all`로 병렬 패칭한다.
+**데이터 조합:** `fetchCourseDetail`은 코스를 먼저 조회한 뒤 작성자 프로필과 위치를 `Promise.all`로 병렬 패칭한다. 위치는 DB의 `start_address_region`을 우선하고, 없을 때만 TMap을 호출한다.
+
+**Storage 정리:** `deleteCourse`/`updateCourse`(트랙도 동일)는 지워지거나 빠진 이미지를 `storageRepository.removeCourseImages`로 Storage에서도 삭제한다.
 
 **View Model 변환:** `courseService.routeToMypageCard`처럼 DB 모델(`Route`)을 UI 카드 타입(`MypageRouteCardData`)으로 변환하는 헬퍼를 Service 내에 둔다.
 

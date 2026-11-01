@@ -44,7 +44,7 @@ actions/
 - `toggleTrackLikeAction(trackId, shouldLike, revalidateMypage?)` — 좋아요 추가/제거 후 likes_count를 읽어 반환. `toggleCourseLikeAction`과 동일 패턴으로 Repository를 직접 호출한다.
 
 **report.action.ts**
-- `submitReportAction(input)` — 유형·길이(10~500자) 검증 → 유저당 10분 3건 한도 → Service Role로 저장 → 최근 24시간 전체 50건 미만일 때만 메일 발송 (메일 한도를 넘어도 저장은 성공)
+- `submitReportAction(input)` — 유형·길이(10~500자) 검증 → 유저당 10분 3건 한도(조회 후 insert라 동시 요청은 조금 넘을 수 있음) → Service Role로 저장 → 최근 24시간 전체 50건 미만일 때만 메일 발송 (메일 한도를 넘어도 저장은 성공)
 
 **user.action.ts**
 - `checkNicknameAction(nickname)` — 닉네임 형식 검사 + 중복 확인
@@ -52,7 +52,7 @@ actions/
 
 ## 주의사항
 
-- 등록 Action의 `addressRegion`은 클라이언트 훅(`useCourseSubmit`/`useTrackSubmit`)이 역지오코딩해 넘긴다. Action은 TMap을 호출하지 않는다.
+- 등록 Action의 `addressRegion`은 클라이언트 훅(`useCourseSubmit`/`useTrackSubmit`)이 역지오코딩해 넘긴다. Action은 TMap을 호출하지 않는다. 이 값은 **서버에서 검증하지 않고** 그대로 `start_address_region`에 저장되며, 상세 페이지는 TMap 호출보다 이 값을 우선 사용한다.
 - 등록·수정 Action은 게스트 한도 확인 후 `validatePostInput`(`commons/utils/post-input.ts`)으로 제목·설명·이미지를 서버에서 다시 검증한다. 이미지 URL은 `isOwnCourseImageUrl`을 통과한 본인 Storage 폴더 URL만 허용된다.
 - `deleteGuestAccount`와 `submitReportAction`은 `SUPABASE_SERVICE_ROLE_KEY`를 사용하며 **서버에서만** 실행된다. 이 키는 절대 클라이언트 번들에 포함되면 안 된다.
 - `submitReportAction`은 DB 저장 성공 후 `REPORT_EDGE_FUNCTION_URL`과 `REPORT_EMAIL_SECRET`이 모두 설정된 경우에만 Edge Function(이메일 발송)을 호출한다. 비밀값은 `x-report-secret` 헤더로 보내며, 함수는 값이 다르면 401을 반환한다(anon key는 공개라 인증 수단이 아님). Edge Function 실패는 로그만 남기고 성공으로 반환한다.

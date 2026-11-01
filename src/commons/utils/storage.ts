@@ -20,7 +20,9 @@ export function extractCourseImagePath(url: string, userId: string): string | nu
 export function isOwnCourseImageUrl(url: string, userId: string): boolean {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/+$/, '');
   if (!supabaseUrl) return false;
-  return url.startsWith(`${supabaseUrl}${PUBLIC_PATH_MARKER}${userId}/`) && !url.includes('..');
+  const prefix = `${supabaseUrl}${PUBLIC_PATH_MARKER}${userId}/`;
+  // 업로드 파일명은 sanitizeFileSegment를 거치므로, `/`·`%`(인코딩된 ..)·`.`으로 시작하는 이름은 위조다.
+  return url.startsWith(prefix) && /^[\w-][\w.-]*$/.test(url.slice(prefix.length));
 }
 
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);

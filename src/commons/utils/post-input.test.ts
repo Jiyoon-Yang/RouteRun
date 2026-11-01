@@ -51,6 +51,8 @@ describe('validatePostInput', () => {
       'https://evil.example/storage/v1/object/public/course_images/user-1/a.jpg',
       'https://abc.supabase.co/storage/v1/object/public/course_images/user-2/a.jpg',
       'https://abc.supabase.co/storage/v1/object/public/course_images/user-1/../user-2/a.jpg',
+      'https://abc.supabase.co/storage/v1/object/public/course_images/user-1/%2e%2e/user-2/a.jpg',
+      'https://abc.supabase.co/storage/v1/object/public/course_images/user-1/..',
     ]) {
       expect(
         validatePostInput({ title: 't', imageUrls: [url], userId: USER }).error,

@@ -1,56 +1,9 @@
 import type { Track } from '@/commons/types/routerun';
 import { createClient } from '@/lib/supabase/server';
 
+import { TRACK_SELECT, toTrack, normalizeTrackRows, type TrackRow } from './track-row';
+
 import type { SupabaseClient } from '@supabase/supabase-js';
-
-type TrackRow = {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string | null;
-  distance_meters: number | null;
-  start_lat: number | null;
-  start_lng: number | null;
-  start_address_region: string | null;
-  image_urls: string[] | null;
-  likes_count: number | null;
-  created_at: string | null;
-};
-
-const TRACK_SELECT =
-  'id, user_id, title, description, distance_meters, start_lat, start_lng, start_address_region, image_urls, likes_count, created_at';
-
-function toTrack(row: TrackRow): Track | null {
-  if (
-    !row.id ||
-    !row.user_id ||
-    !row.title ||
-    row.distance_meters === null ||
-    row.start_lat === null ||
-    row.start_lng === null ||
-    !row.created_at
-  ) {
-    return null;
-  }
-
-  return {
-    id: row.id,
-    user_id: row.user_id,
-    title: row.title,
-    description: row.description ?? undefined,
-    distance_meters: row.distance_meters,
-    start_lat: row.start_lat,
-    start_lng: row.start_lng,
-    start_address_region: row.start_address_region,
-    image_urls: row.image_urls ?? [],
-    likes_count: row.likes_count ?? 0,
-    created_at: row.created_at,
-  };
-}
-
-function normalizeTrackRows(rows: TrackRow[] | null): Track[] {
-  return (rows ?? []).map(toTrack).filter((track): track is Track => track !== null);
-}
 
 export interface InsertTrackParams {
   user_id: string;
@@ -89,6 +42,26 @@ export interface UpdateTrackParams {
   image_urls: string[];
 }
 
+/** 본인 트랙의 현재 `image_urls` (수정 시 빠진 이미지를 Storage에서 지우기 위해 조회) */
+export async function getTrackImageUrls(
+  supabase: SupabaseClient,
+  trackId: string,
+  userId: string,
+): Promise<{ data: string[] | null; error: Error | null }> {
+  const { data, error } = await supabase
+    .from('tracks')
+    .select('image_urls')
+    .eq('id', trackId)
+    .eq('user_id', userId)
+    .maybeSingle<{ image_urls: string[] | null }>();
+
+  if (error) {
+    return { data: null, error: new Error(error.message) };
+  }
+
+  return { data: data?.image_urls ?? [], error: null };
+}
+
 export async function updateTrack(
   supabase: SupabaseClient,
   params: UpdateTrackParams,
@@ -116,7 +89,8 @@ export async function updateTrack(
   return { data: toTrack(data), error: null };
 }
 
-export async function deleteTrack(trackId: string, userId: string): Promise<void> {
+/** 본인 트랙를 삭제하고, 삭제된 행의 `image_urls`를 돌려준다 (Storage 정리용). */
+export async function deleteTrack(trackId: string, userId: string): Promise<string[]> {
   const supabase = createClient();
 
   const { data, error } = await supabase
@@ -124,8 +98,8 @@ export async function deleteTrack(trackId: string, userId: string): Promise<void
     .delete()
     .eq('id', trackId)
     .eq('user_id', userId)
-    .select('id')
-    .returns<{ id: string }[]>();
+    .select('id, image_urls')
+    .returns<{ id: string; image_urls: string[] | null }[]>();
 
   if (error) {
     throw new Error(error.message);
@@ -134,6 +108,8 @@ export async function deleteTrack(trackId: string, userId: string): Promise<void
   if (!data || data.length === 0) {
     throw new Error('삭제할 트랙을 찾을 수 없거나 삭제 권한이 없습니다.');
   }
+
+  return data[0].image_urls ?? [];
 }
 
 export async function getTracksByUserId(

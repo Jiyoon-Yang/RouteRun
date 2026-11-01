@@ -29,6 +29,15 @@ export default defineConfig({
           },
         },
       },
+      {
+        // 순수 로직 단위 테스트 (`npm test`)
+        resolve: { alias: { '@': path.join(dirname, 'src') } },
+        test: {
+          name: 'unit',
+          environment: 'node',
+          include: ['src/**/*.test.ts'],
+        },
+      },
     ],
   },
 });

@@ -5,6 +5,7 @@ import type { MypageRouteCardData } from '@/commons/types/mypage';
 import type { Route } from '@/commons/types/routerun';
 import * as courseRepository from '@/repositories/course/course.repository';
 import type { UpdateCourseParams } from '@/repositories/course/course.repository';
+import * as storageRepository from '@/repositories/storage.repository';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -67,7 +68,8 @@ export async function fetchMypageRouteLists(
 }
 
 export async function deleteCourse(routeId: string, userId: string): Promise<void> {
-  await courseRepository.deleteRoute(routeId, userId);
+  const imageUrls = await courseRepository.deleteRoute(routeId, userId);
+  await storageRepository.removeCourseImages(imageUrls, userId);
 }
 
 /**
@@ -78,7 +80,15 @@ export async function updateCourse(
   data: Omit<UpdateCourseParams, 'userId'>,
   userId: string,
 ): Promise<{ data: Route | null; error: Error | null }> {
-  return courseRepository.updateCourse(supabase, { ...data, userId });
+  const previous = await courseRepository.getRouteImageUrls(supabase, data.courseId, userId);
+  const result = await courseRepository.updateCourse(supabase, { ...data, userId });
+
+  // 수정에 성공했을 때만 빠진 이미지를 Storage에서 지운다.
+  if (result.data && previous.data) {
+    const removed = previous.data.filter((url) => !data.image_urls.includes(url));
+    await storageRepository.removeCourseImages(removed, userId);
+  }
+  return result;
 }
 
 /**

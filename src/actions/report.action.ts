@@ -15,6 +15,15 @@ export type SubmitReportActionResult = { success: true } | { success: false; mes
 
 const VALID_TYPES: ReportType[] = ['bug', 'inconvenience', 'suggestion'];
 
+// 게스트 세션은 무제한 생성 가능하므로 유저당 접수 횟수로 스팸(메일 폭주)을 막는다.
+// shortcut: 조회 후 insert라 동시 요청은 한도를 조금 넘을 수 있음, 악용되면 DB 트리거로 강제.
+const REPORT_LIMIT_COUNT = 3;
+const REPORT_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+// 게스트 세션을 계속 새로 만들면 유저당 한도는 우회되므로, 하루 전체 메일 발송량도 막아 쿼터를 지킨다.
+// 접수(DB 저장)까지 막으면 한도를 채우는 것만으로 정상 제보가 차단되므로 메일만 건너뛴다.
+const REPORT_EMAIL_DAILY_LIMIT = 50;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 export async function submitReportAction(
   input: SubmitReportInput,
 ): Promise<SubmitReportActionResult> {
@@ -44,6 +53,34 @@ export async function submitReportAction(
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
+  const now = Date.now();
+  const [userResult, globalResult] = await Promise.all([
+    reportRepository.countReportsSince(
+      serviceSupabase,
+      new Date(now - REPORT_LIMIT_WINDOW_MS).toISOString(),
+      user.id,
+    ),
+    reportRepository.countReportsSince(serviceSupabase, new Date(now - DAY_MS).toISOString()),
+  ]);
+  if (
+    userResult.error ||
+    userResult.count === null ||
+    globalResult.error ||
+    globalResult.count === null
+  ) {
+    console.error(
+      '[report] 최근 제보 수 조회 실패:',
+      userResult.error?.message ?? globalResult.error?.message,
+    );
+    return { success: false, message: '제보 접수에 실패했습니다. 다시 시도해주세요.' };
+  }
+  if (userResult.count >= REPORT_LIMIT_COUNT) {
+    return {
+      success: false,
+      message: '제보는 10분에 3건까지 가능합니다. 잠시 후 다시 시도해주세요.',
+    };
+  }
+
   const { data, error } = await reportRepository.createReport(serviceSupabase, {
     user_id: user.id,
     type: input.type,
@@ -63,13 +100,22 @@ export async function submitReportAction(
   }
 
   const edgeFunctionUrl = process.env.REPORT_EDGE_FUNCTION_URL;
-  if (edgeFunctionUrl) {
+  const reportEmailSecret = process.env.REPORT_EMAIL_SECRET;
+  const emailQuotaReached = globalResult.count >= REPORT_EMAIL_DAILY_LIMIT;
+  if (edgeFunctionUrl && !reportEmailSecret) {
+    console.error('[report] REPORT_EMAIL_SECRET 미설정으로 이메일 발송 생략');
+  }
+  if (emailQuotaReached) {
+    console.warn('[report] 하루 메일 발송 한도 도달로 이메일 발송 생략 (제보는 저장됨)');
+  }
+  if (edgeFunctionUrl && reportEmailSecret && !emailQuotaReached) {
     try {
-      await fetch(edgeFunctionUrl, {
+      const emailRes = await fetch(edgeFunctionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+          'x-report-secret': reportEmailSecret,
         },
         body: JSON.stringify({
           userId: data.user_id,
@@ -78,6 +124,9 @@ export async function submitReportAction(
           createdAt: data.created_at,
         }),
       });
+      if (!emailRes.ok) {
+        console.error('[report] 이메일 발송 실패 status:', emailRes.status);
+      }
     } catch (emailError) {
       console.error('[report] 이메일 발송 실패:', emailError);
     }

@@ -1,6 +1,7 @@
 import { cache } from 'react';
 
 import type { Track } from '@/commons/types/routerun';
+import { isValidUuid } from '@/commons/utils/uuid';
 import { createClient } from '@/lib/supabase/server';
 import * as trackDetailRepository from '@/repositories/track/detail.repository';
 import * as userRepository from '@/repositories/user.repository';
@@ -14,6 +15,9 @@ export type TrackDetailPayload = {
 
 export const fetchTrackDetail = cache(
   async (trackId: string): Promise<TrackDetailPayload | null> => {
+    // uuid가 아닌 id는 DB가 에러를 내므로 조회 전에 "없음"으로 처리한다.
+    if (!isValidUuid(trackId)) return null;
+
     const supabase = createClient();
 
     const trackResult = await trackDetailRepository.getTrackById(supabase, trackId);

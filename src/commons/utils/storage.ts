@@ -2,6 +2,29 @@ import { createClient } from '@/lib/supabase/client';
 
 export const COURSE_IMAGES_BUCKET = 'course_images' as const;
 
+const PUBLIC_PATH_MARKER = `/storage/v1/object/public/${COURSE_IMAGES_BUCKET}/`;
+
+/**
+ * `uploadCourseImages`가 돌려준 public URL을 버킷 내 경로로 되돌린다.
+ * 본인 폴더(`userId/`) 밖의 파일이면 null — 남의 파일은 지우지 않는다.
+ */
+export function extractCourseImagePath(url: string, userId: string): string | null {
+  const index = url.indexOf(PUBLIC_PATH_MARKER);
+  if (index === -1) return null;
+
+  const path = url.slice(index + PUBLIC_PATH_MARKER.length).split('?')[0];
+  return path.startsWith(`${userId}/`) && !path.includes('..') ? path : null;
+}
+
+/** 이 프로젝트 Storage의 본인 폴더에 올린 이미지 URL인지 — 외부 URL·남의 파일을 글에 저장하지 않는다. */
+export function isOwnCourseImageUrl(url: string, userId: string): boolean {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/+$/, '');
+  if (!supabaseUrl) return false;
+  const prefix = `${supabaseUrl}${PUBLIC_PATH_MARKER}${userId}/`;
+  // 업로드 파일명은 sanitizeFileSegment를 거치므로, `/`·`%`(인코딩된 ..)·`.`으로 시작하는 이름은 위조다.
+  return url.startsWith(prefix) && /^[\w-][\w.-]*$/.test(url.slice(prefix.length));
+}
+
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const MAX_FILE_SIZE_MB = 5;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;

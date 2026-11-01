@@ -19,8 +19,9 @@ const VALID_TYPES: ReportType[] = ['bug', 'inconvenience', 'suggestion'];
 // shortcut: 조회 후 insert라 동시 요청은 한도를 조금 넘을 수 있음, 악용되면 DB 트리거로 강제.
 const REPORT_LIMIT_COUNT = 3;
 const REPORT_LIMIT_WINDOW_MS = 10 * 60 * 1000;
-// 게스트 세션을 계속 새로 만들면 유저당 한도는 우회되므로, 하루 전체 접수량도 막아 메일 쿼터를 지킨다.
-const REPORT_GLOBAL_DAILY_LIMIT = 50;
+// 게스트 세션을 계속 새로 만들면 유저당 한도는 우회되므로, 하루 전체 메일 발송량도 막아 쿼터를 지킨다.
+// 접수(DB 저장)까지 막으면 한도를 채우는 것만으로 정상 제보가 차단되므로 메일만 건너뛴다.
+const REPORT_EMAIL_DAILY_LIMIT = 50;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export async function submitReportAction(
@@ -79,13 +80,6 @@ export async function submitReportAction(
       message: '제보는 10분에 3건까지 가능합니다. 잠시 후 다시 시도해주세요.',
     };
   }
-  if (globalResult.count >= REPORT_GLOBAL_DAILY_LIMIT) {
-    console.warn('[report] 하루 전체 제보 한도 도달');
-    return {
-      success: false,
-      message: '지금은 제보가 많이 몰려 접수할 수 없습니다. 내일 다시 시도해주세요.',
-    };
-  }
 
   const { data, error } = await reportRepository.createReport(serviceSupabase, {
     user_id: user.id,
@@ -107,10 +101,14 @@ export async function submitReportAction(
 
   const edgeFunctionUrl = process.env.REPORT_EDGE_FUNCTION_URL;
   const reportEmailSecret = process.env.REPORT_EMAIL_SECRET;
+  const emailQuotaReached = globalResult.count >= REPORT_EMAIL_DAILY_LIMIT;
   if (edgeFunctionUrl && !reportEmailSecret) {
     console.error('[report] REPORT_EMAIL_SECRET 미설정으로 이메일 발송 생략');
   }
-  if (edgeFunctionUrl && reportEmailSecret) {
+  if (emailQuotaReached) {
+    console.warn('[report] 하루 메일 발송 한도 도달로 이메일 발송 생략 (제보는 저장됨)');
+  }
+  if (edgeFunctionUrl && reportEmailSecret && !emailQuotaReached) {
     try {
       const emailRes = await fetch(edgeFunctionUrl, {
         method: 'POST',

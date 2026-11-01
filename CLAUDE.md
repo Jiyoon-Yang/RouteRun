@@ -59,7 +59,7 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
 
 미들웨어 (`middleware.ts`)는 모든 요청에서 세션을 갱신하고 비공개 라우트를 보호합니다. 세션이 없는 경우(완전 미로그인)만 차단하고 `/login`으로 리다이렉트합니다. 익명(게스트) 세션은 라우트를 통과합니다. 게스트는 좋아요·제보·본인 글 수정/삭제가 가능하고, 코스·트랙 작성만 합산 1개로 제한됩니다 (`isGuestWriteLimitReached`, 등록 페이지와 등록 Action 양쪽에서 검사).
 
-**비공개 라우트:** `/courses/new`, `/courses/[id]/edit`, `/tracks/new`, `/tracks/[id]/edit`, `/mypage`
+**비공개 라우트:** `/courses/new`, `/courses/[id]/edit`, `/tracks/new`, `/tracks/[id]/edit`, `/mypage`, `/report` (정의: `src/commons/constants/url.ts`의 `PRIVATE_ROUTES`·`PRIVATE_DYNAMIC_PATTERNS`)
 
 ## DB 스키마 (Supabase Postgres)
 
@@ -68,7 +68,11 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
 - `route_likes`: 복합키 `(user_id, route_id)`
 - `tracks`: `id, user_id, title, description, distance_meters, start_lat, start_lng, start_address_region, image_urls, likes_count, created_at` (routes와 달리 `path_data` 없음)
 - `track_likes`: 복합키 `(user_id, track_id)`
+- `reports`: `id, user_id, type ('bug'|'inconvenience'|'suggestion'), content, created_at` — Service Role 클라이언트로만 insert
 - 스토리지 버킷: `course_images` (공개)
+
+`supabase/migrations/`에는 likes_count 트리거만 있다. 나머지 테이블 구조는 위 목록과 `src/repositories/{course,track}/*-row.ts`를 기준으로 본다.
+`supabase/functions/send-report-email/` — 제보 메일 Edge Function (Deno + Resend). 함수 secrets: `RESEND_API_KEY`, `REPORT_EMAIL_TO`, `REPORT_EMAIL_SECRET`
 
 ## 환경 변수
 

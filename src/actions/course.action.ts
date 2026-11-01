@@ -84,7 +84,7 @@ export async function toggleCourseLikeAction(
 
 /**
  * 클라이언트 폼에서 전달한 코스 데이터로 새 코스를 등록한다.
- * 성공 시 홈 캐시를 갱신한 뒤 `/`로 이동한다.
+ * 성공 시 홈 캐시를 갱신하고 새 코스 id를 반환한다.
  */
 export async function createCourseAction(
   input: SubmitCourseInput,

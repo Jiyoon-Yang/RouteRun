@@ -34,7 +34,7 @@ export function useRequireAuthModal() {
         title,
         confirmText: '확인',
         onConfirm: () => {
-          const loginPath = `${ROUTES.LOGIN}?redirect_to=${encodeURIComponent(redirectTo)}`;
+          const loginPath = `${ROUTES.LOGIN}?next=${encodeURIComponent(redirectTo)}`;
           router.push(loginPath);
         },
       });

@@ -47,6 +47,20 @@ export async function getMypagePageData(
   };
 }
 
+/**
+ * 게스트 작성 제한(코스·트랙 합산 1개)에 걸렸는지 확인한다.
+ * 집계에 실패하면 우회를 막기 위해 제한에 걸린 것으로 본다. (실패 로그는 각 집계 함수가 남긴다)
+ */
+export async function isGuestWriteLimitReached(userId: string): Promise<boolean> {
+  const [courseResult, trackResult] = await Promise.all([
+    courseService.getUserRouteWriteCount(userId),
+    trackService.getUserTrackWriteCount(userId),
+  ]);
+
+  if (courseResult.count === null || trackResult.count === null) return true;
+  return courseResult.count + trackResult.count >= 1;
+}
+
 export async function checkNicknameAvailable(nickname: string): Promise<boolean> {
   const validation = validateNickname(nickname);
 

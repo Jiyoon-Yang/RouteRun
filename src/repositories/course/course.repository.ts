@@ -4,60 +4,9 @@
 import type { Route } from '@/commons/types/routerun';
 import { createClient } from '@/lib/supabase/server';
 
+import { ROUTE_SELECT, toRoute, normalizeRouteRows, type RouteRow } from './route-row';
+
 import type { SupabaseClient } from '@supabase/supabase-js';
-
-type RouteRow = {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string | null;
-  distance_meters: number | null;
-  path_data: Record<string, unknown> | null;
-  start_lat: number | null;
-  start_lng: number | null;
-  start_address_region: string | null;
-  image_urls: string[] | null;
-  likes_count: number | null;
-  is_round_trip: boolean | null;
-  created_at: string | null;
-};
-
-const ROUTE_SELECT =
-  'id, user_id, title, description, distance_meters, path_data, start_lat, start_lng, start_address_region, image_urls, likes_count, is_round_trip, created_at';
-
-function toRoute(row: RouteRow): Route | null {
-  if (
-    !row.id ||
-    !row.user_id ||
-    !row.title ||
-    row.distance_meters === null ||
-    row.start_lat === null ||
-    row.start_lng === null ||
-    !row.created_at
-  ) {
-    return null;
-  }
-
-  return {
-    id: row.id,
-    user_id: row.user_id,
-    title: row.title,
-    description: row.description ?? undefined,
-    distance_meters: row.distance_meters,
-    path_data: row.path_data ?? {},
-    start_lat: row.start_lat,
-    start_lng: row.start_lng,
-    start_address_region: row.start_address_region,
-    image_urls: row.image_urls ?? [],
-    likes_count: row.likes_count ?? 0,
-    is_round_trip: row.is_round_trip ?? false,
-    created_at: row.created_at,
-  };
-}
-
-function normalizeRouteRows(rows: RouteRow[] | null): Route[] {
-  return (rows ?? []).map(toRoute).filter((route): route is Route => route !== null);
-}
 
 /** `routes` 테이블 insert 시 사용 (스키마: public.routes) */
 export interface InsertRouteParams {
@@ -94,8 +43,6 @@ export async function createRoute(
   return { data: toRoute(data), error: null };
 }
 
-export const createCourse = createRoute;
-
 /** `routes` 테이블에서 제목·설명·이미지 등 메타데이터만 갱신할 때 사용 */
 export interface UpdateCourseParams {
   courseId: string;
@@ -103,6 +50,26 @@ export interface UpdateCourseParams {
   title: string;
   description: string | null;
   image_urls: string[];
+}
+
+/** 본인 코스의 현재 `image_urls` (수정 시 빠진 이미지를 Storage에서 지우기 위해 조회) */
+export async function getRouteImageUrls(
+  supabase: SupabaseClient,
+  routeId: string,
+  userId: string,
+): Promise<{ data: string[] | null; error: Error | null }> {
+  const { data, error } = await supabase
+    .from('routes')
+    .select('image_urls')
+    .eq('id', routeId)
+    .eq('user_id', userId)
+    .maybeSingle<{ image_urls: string[] | null }>();
+
+  if (error) {
+    return { data: null, error: new Error(error.message) };
+  }
+
+  return { data: data?.image_urls ?? [], error: null };
 }
 
 /**
@@ -262,7 +229,8 @@ export async function getRouteLikesCount(
   return { count: data?.likes_count ?? 0, error: null };
 }
 
-export async function deleteRoute(routeId: string, userId: string): Promise<void> {
+/** 본인 코스를 삭제하고, 삭제된 행의 `image_urls`를 돌려준다 (Storage 정리용). */
+export async function deleteRoute(routeId: string, userId: string): Promise<string[]> {
   const supabase = createClient();
 
   const { data, error } = await supabase
@@ -270,8 +238,8 @@ export async function deleteRoute(routeId: string, userId: string): Promise<void
     .delete()
     .eq('id', routeId)
     .eq('user_id', userId)
-    .select('id')
-    .returns<{ id: string }[]>();
+    .select('id, image_urls')
+    .returns<{ id: string; image_urls: string[] | null }[]>();
 
   if (error) {
     throw new Error(error.message);
@@ -280,4 +248,6 @@ export async function deleteRoute(routeId: string, userId: string): Promise<void
   if (!data || data.length === 0) {
     throw new Error('삭제할 코스를 찾을 수 없거나 삭제 권한이 없습니다.');
   }
+
+  return data[0].image_urls ?? [];
 }

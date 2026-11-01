@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { createCourseAction, updateCourseAction } from '@/actions/course.action';
 import { useToast } from '@/commons/providers/toast/toast.provider';
+import { MAX_POST_IMAGES } from '@/commons/utils/post-input';
 import { uploadCourseImages } from '@/commons/utils/storage';
 import type { SaveRoutePayload } from '@/components/tmap/courses-submit/hooks/useCourseMap';
 import { reverseGeocodeRegion } from '@/repositories/map.repository';
@@ -12,7 +13,7 @@ import type { CourseDetailPayload } from '@/services/course/courseDetailService'
 
 import type { ChangeEvent } from 'react';
 
-export const MAX_COURSE_SUBMIT_IMAGES = 5;
+export const MAX_COURSE_SUBMIT_IMAGES = MAX_POST_IMAGES;
 
 export type UseCourseSubmitParams = {
   mode: 'new' | 'edit';

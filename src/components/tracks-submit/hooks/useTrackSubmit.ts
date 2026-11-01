@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { createTrackAction, updateTrackAction } from '@/actions/track.action';
 import { useToast } from '@/commons/providers/toast/toast.provider';
+import { MAX_POST_IMAGES } from '@/commons/utils/post-input';
 import { uploadCourseImages } from '@/commons/utils/storage';
 import type { SaveTrackPayload } from '@/components/tmap/tracks-submit/hooks/useTrackMap';
 import { reverseGeocodeRegion } from '@/repositories/map.repository';
@@ -12,7 +13,7 @@ import type { TrackDetailPayload } from '@/services/track/trackDetailService';
 
 import type { ChangeEvent } from 'react';
 
-export const MAX_TRACK_SUBMIT_IMAGES = 5;
+export const MAX_TRACK_SUBMIT_IMAGES = MAX_POST_IMAGES;
 
 export type UseTrackSubmitParams = {
   mode: 'new' | 'edit';

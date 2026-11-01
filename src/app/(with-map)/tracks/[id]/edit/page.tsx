@@ -21,7 +21,7 @@ export default async function TrackEditPage({ params }: TrackEditPageProps) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect(`/login?redirect_to=/tracks/${params.id}/edit`);
+    redirect(`/login?next=${encodeURIComponent(`/tracks/${params.id}/edit`)}`);
   }
 
   if (user.id !== fetchedData.track.user_id) {

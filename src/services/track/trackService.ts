@@ -1,5 +1,6 @@
 import type { MypageTrackCardData } from '@/commons/types/mypage';
 import type { Track } from '@/commons/types/routerun';
+import * as storageRepository from '@/repositories/storage.repository';
 import * as trackRepository from '@/repositories/track/track.repository';
 import type { InsertTrackParams, UpdateTrackParams } from '@/repositories/track/track.repository';
 
@@ -35,7 +36,8 @@ export async function submitNewTrack(
 }
 
 export async function deleteTrack(trackId: string, userId: string): Promise<void> {
-  await trackRepository.deleteTrack(trackId, userId);
+  const imageUrls = await trackRepository.deleteTrack(trackId, userId);
+  await storageRepository.removeCourseImages(imageUrls, userId);
 }
 
 export async function updateTrack(
@@ -43,7 +45,15 @@ export async function updateTrack(
   data: Omit<UpdateTrackParams, 'userId'>,
   userId: string,
 ): Promise<{ data: Track | null; error: Error | null }> {
-  return trackRepository.updateTrack(supabase, { ...data, userId });
+  const previous = await trackRepository.getTrackImageUrls(supabase, data.trackId, userId);
+  const result = await trackRepository.updateTrack(supabase, { ...data, userId });
+
+  // 수정에 성공했을 때만 빠진 이미지를 Storage에서 지운다.
+  if (result.data && previous.data) {
+    const removed = previous.data.filter((url) => !data.image_urls.includes(url));
+    await storageRepository.removeCourseImages(removed, userId);
+  }
+  return result;
 }
 
 export async function getUserTrackWriteCount(userId: string): Promise<{

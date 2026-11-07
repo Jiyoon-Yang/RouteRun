@@ -9,6 +9,8 @@ export function RoutePreview({
   path: PathPoint[]
   className?: string
 }) {
+  if (path.length === 0) return null
+
   const points = path.map(([x, y]) => `${x * 100},${y * 100}`).join(" ")
   const [startX, startY] = path[0]
 

@@ -6,15 +6,15 @@
 // - https://apis.openapi.sk.com: TMap SDK 및 API 호출
 // - https://*.tmap.co.kr: TMap 벡터 타일 CDN
 // - wss://*.supabase.co: Supabase Realtime 웹소켓
+// - *.googletagmanager.com, *.google-analytics.com, *.analytics.google.com: GA4 (app/layout.tsx)
 // - 'unsafe-eval': 개발 환경에서만 허용 (Next.js Fast Refresh가 eval() 사용)
 const isDev = process.env.NODE_ENV === 'development';
 const CSP = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://apis.openapi.sk.com https://*.tmap.co.kr`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://apis.openapi.sk.com https://*.tmap.co.kr https://*.googletagmanager.com`,
   "style-src 'self' 'unsafe-inline' https://*.tmap.co.kr",
-  "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://*.tmap.co.kr",
-  // 개발 중엔 로컬 Java 백엔드(Spring Boot, localhost:8080) 호출을 허용한다. (배포 CSP에는 포함하지 않음)
-  `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://apis.openapi.sk.com https://*.tmap.co.kr https://*.tmapmp.com https://*.onestore.co.kr${isDev ? ' http://localhost:8080' : ''}`,
+  "img-src 'self' data: blob: https://*.supabase.co https://*.googleusercontent.com https://*.tmap.co.kr https://*.google-analytics.com https://*.googletagmanager.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://apis.openapi.sk.com https://*.tmap.co.kr https://*.tmapmp.com https://*.onestore.co.kr https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
   "font-src 'self' data:",
   "worker-src 'self' blob: https://*.tmap.co.kr",
   "frame-ancestors 'none'",

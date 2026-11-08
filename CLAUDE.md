@@ -66,7 +66,7 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
 - `users`: `id, nickname, profile_image_url, is_anonymous`
 - `routes`: `id, user_id, title, description, distance_meters, path_data (JSON), is_round_trip (boolean), start_lat, start_lng, start_address_region, image_urls, likes_count, created_at, updated_at`
 - `route_likes`: 복합키 `(user_id, route_id)`
-- `tracks`: `id, user_id, title, description, distance_meters, start_lat, start_lng, start_address_region, image_urls, likes_count, created_at` (routes와 달리 `path_data` 없음)
+- `tracks`: `id, user_id, title, description, distance_meters, start_lat, start_lng, start_address_region, image_urls, likes_count, created_at, updated_at` (routes와 달리 `path_data` 없음)
 - `track_likes`: 복합키 `(user_id, track_id)`
 - `reports`: `id, user_id, type ('bug'|'inconvenience'|'suggestion'), content, created_at` — Service Role 클라이언트로만 insert
 - 스토리지 버킷: `course_images` (공개)
@@ -86,6 +86,7 @@ SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 REPORT_EDGE_FUNCTION_URL=        # 선택. 제보 접수 시 이메일 발송용 Edge Function URL
 REPORT_EMAIL_SECRET=             # 선택. Edge Function 호출 인증용 비밀값. 함수 쪽 `supabase secrets set REPORT_EMAIL_SECRET=...`과 같은 값
+GA_ID=                           # 선택. GA4 측정 ID. Vercel Production에만 설정 (없으면 GA 스크립트를 넣지 않음)
 ```
 
 ## 코딩 컨벤션

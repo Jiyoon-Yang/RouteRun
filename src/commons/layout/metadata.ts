@@ -9,6 +9,10 @@ export async function generateMetadata(): Promise<Metadata> {
     title: '루트런 | 내 주변 러닝 코스',
     description: '전국의 러닝 코스를 찾고, 나만의 경로를 기록하여 러너들과 공유해보세요.',
     applicationName: '루트런',
+    // 네이버 서치어드바이저 소유확인 (구글 Search Console은 이미 확인된 소유자라 태그 불필요)
+    verification: {
+      other: { 'naver-site-verification': '1b47be242ec0f29985cee4687ca1f44d461fec06' },
+    },
     openGraph: {
       title: '루트런 | 내 주변 러닝 코스',
       description: '전국의 러닝 코스를 찾고, 나만의 경로를 기록하여 러너들과 공유해보세요.',

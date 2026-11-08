@@ -251,3 +251,26 @@ export async function deleteRoute(routeId: string, userId: string): Promise<stri
 
   return data[0].image_urls ?? [];
 }
+
+/** sitemap용 전체 코스 id와 마지막 수정 시각 (`updated_at`이 없으면 `created_at`). */
+export async function getRouteSitemapEntries(): Promise<
+  { id: string; lastModified: string | null }[]
+> {
+  const supabase = createClient();
+
+  // shortcut: Supabase 기본 max-rows(1000)까지만 조회됨(최신순이라 오래된 코스부터 빠짐), 1000개를 넘으면 range()로 페이지네이션
+  const { data, error } = await supabase
+    .from('routes')
+    .select('id, updated_at, created_at')
+    .order('created_at', { ascending: false })
+    .returns<{ id: string; updated_at: string | null; created_at: string | null }[]>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    lastModified: row.updated_at ?? row.created_at,
+  }));
+}

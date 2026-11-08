@@ -101,7 +101,7 @@ REPORT_EMAIL_SECRET=             # 선택. Edge Function 호출 인증용 비밀
 ## Git 워크플로우
 
 - `main` — 프로덕션 전용, 직접 커밋 금지
-- `dev` — 통합 브랜치; 모든 기능은 PR + 1명 이상 승인 후 머지
+- `dev` — 통합 브랜치; 모든 기능은 PR로 머지
 - 기능 브랜치: `feat/<기능명>`
 
 ## PR 작성 규칙

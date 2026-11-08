@@ -30,7 +30,7 @@ src/
 │   ├── hooks/               use-mobile (shadcn 생성)
 │   ├── providers/theme/     다크 모드
 │   └── mocks/               목데이터. 실데이터 연결이 끝나면 삭제
-└── lib/utils.ts             cn (shadcn)
+└── lib/utils.ts             cn. clsx + tailwind-merge 대신 `cn` 패키지(shadcn-ui/cn)를 앱 생성 때부터 사용. Node 22 이상 필요
 ```
 
 데이터를 붙이면서 사용자 앱과 같은 `src/actions/`, `src/services/`, `src/repositories/`, `src/lib/supabase/`를 추가한다.

@@ -104,3 +104,8 @@ export async function fetchMypageTrackLists(
     likedTracks: likedResult.data.map(trackToMypageCard),
   };
 }
+
+/** sitemap용 전체 트랙 id·수정 시각 (Repository 얇은 래퍼) */
+export async function fetchTrackSitemapEntries() {
+  return trackRepository.getTrackSitemapEntries();
+}

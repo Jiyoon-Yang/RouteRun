@@ -17,12 +17,12 @@ Supabase(DB)와 TMap 외부 API에 대한 **유일한 통신 창구**다. 비즈
 repositories/
 ├── course/
 │   ├── route-row.ts           # RouteRow 타입, ROUTE_SELECT, toRoute (아래 3개 파일 공용)
-│   ├── course.repository.ts   # routes CRUD (create, update, delete, getByUser, getLiked, getCount)
+│   ├── course.repository.ts   # routes CRUD (create, update, delete, getByUser, getLiked, getCount) + sitemap용 id 목록
 │   ├── detail.repository.ts   # 코스 단건 조회 (getRouteById) — 상세 페이지 전용
 │   └── home.repository.ts     # 홈 지도용 뷰포트 조회 + 선택한 코스 경로(getHomeRoutePathData). 클라이언트 Supabase 사용
 ├── track/
 │   ├── track-row.ts           # TrackRow 타입, TRACK_SELECT, toTrack (아래 3개 파일 공용)
-│   ├── track.repository.ts    # tracks CRUD + track_likes (create, update, delete, getLiked, getCount)
+│   ├── track.repository.ts    # tracks CRUD + track_likes (create, update, delete, getLiked, getCount) + sitemap용 id 목록
 │   ├── detail.repository.ts   # 트랙 단건 조회 — 상세 페이지 전용
 │   └── home.repository.ts     # 홈 지도용 트랙 목록 (클라이언트 Supabase 사용)
 ├── map.repository.ts          # TMap API 호출 (역지오코딩, 보행자 경로)

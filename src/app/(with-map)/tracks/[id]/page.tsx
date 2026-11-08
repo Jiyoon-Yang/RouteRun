@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 
+import { ROUTES } from '@/commons/constants/url';
 import TracksDetail from '@/components/tracks-detail';
 import { createClient } from '@/lib/supabase/server';
 import { fetchTrackDetail } from '@/services/track/trackDetailService';
@@ -23,6 +24,7 @@ export async function generateMetadata({ params }: TrackDetailPageProps): Promis
   return {
     title: `${track.title} | 루트런`,
     description,
+    alternates: { canonical: ROUTES.TRACKS.DETAIL(params.id) },
     openGraph: {
       title: track.title,
       description,

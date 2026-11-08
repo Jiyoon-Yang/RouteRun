@@ -258,10 +258,11 @@ export async function getRouteSitemapEntries(): Promise<
 > {
   const supabase = createClient();
 
-  // shortcut: Supabase 기본 max-rows(1000)까지만 조회됨, 코스가 1000개를 넘으면 range()로 페이지네이션
+  // shortcut: Supabase 기본 max-rows(1000)까지만 조회됨(최신순이라 오래된 코스부터 빠짐), 1000개를 넘으면 range()로 페이지네이션
   const { data, error } = await supabase
     .from('routes')
     .select('id, updated_at, created_at')
+    .order('created_at', { ascending: false })
     .returns<{ id: string; updated_at: string | null; created_at: string | null }[]>();
 
   if (error) {

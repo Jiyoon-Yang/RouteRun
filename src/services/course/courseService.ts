@@ -116,3 +116,8 @@ export async function getUserRouteWriteCount(userId: string): Promise<{
     return { count: null, error };
   }
 }
+
+/** sitemap용 전체 코스 id·수정 시각 (Repository 얇은 래퍼) */
+export async function fetchCourseSitemapEntries() {
+  return courseRepository.getRouteSitemapEntries();
+}

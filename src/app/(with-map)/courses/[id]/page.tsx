@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 
+import { ROUTES } from '@/commons/constants/url';
 import CoursesWireframe from '@/components/courses-detail';
 import { createClient } from '@/lib/supabase/server';
 import { fetchCourseDetail } from '@/services/course/courseDetailService';
@@ -23,6 +24,7 @@ export async function generateMetadata({ params }: CourseDetailPageProps): Promi
   return {
     title: `${course.title} | 루트런`,
     description,
+    alternates: { canonical: ROUTES.COURSES.DETAIL(params.id) },
     openGraph: {
       title: course.title,
       description,

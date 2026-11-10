@@ -9,7 +9,7 @@
 
 ## 1. 기반: 로그인과 권한
 - [x] Supabase 서버 클라이언트
-- [ ] Service Role 클라이언트(`server-only`, 한 파일에만)
+- [x] Service Role 클라이언트(`server-only`, 한 파일에만) — `lib/supabase/admin.ts`. 대시보드 집계에서 먼저 사용
 - [x] 이메일 로그인·로그아웃, 미로그인 접근 차단(`proxy.ts`). 사이드바 `NavUser`의 로그아웃 링크와 하드코딩 이메일도 실제 세션으로 교체
 - [ ] `requireAdmin()`을 레이아웃과 모든 Server Action에서 호출 (레이아웃은 완료, Action은 만들 때마다)
 - [ ] 조치 기록 함수 `logAdminAction()`. 2단계부터 모든 조치가 기록되도록 지금 만든다
@@ -17,6 +17,13 @@
 - [ ] Vercel 새 프로젝트(Root Directory=`admin`). 인증 없는 화면이 공개되지 않도록 위 로그인 차단과 `requireAdmin()`이 들어간 뒤에 만든다
 - DB: `admins`, `admin_logs`
   - `admins`는 2026-11-10 SQL Editor로 반영. 관리자 추가: `insert into admins (user_id) values ('<auth.users id>')`
+
+## 검색 유입 카드 — 단계 순서와 별개
+DB 변경이 없어 단계를 기다리지 않는다. 설정 방법은 README의 "검색 유입 카드".
+- [x] 대시보드 카드: Search Console 클릭·노출·클릭률·평균 순위, 인기 검색어, GA4 검색엔진별 자연 검색 방문 (`feat/admin-search-stats`)
+- [ ] 콘솔 설정: Google Cloud API 2개 사용 설정, 서비스 계정 키 발급, Search Console "제한됨"·GA4 "뷰어" 권한 추가
+- [ ] 어드민 Vercel 프로젝트에 환경 변수 3개. 1단계의 Vercel 새 프로젝트를 만든 뒤에 한다
+- 네이버 서치어드바이저는 통계 API를 찾지 못해 콘솔 링크만 둔다. 네이버 유입은 GA4의 `naver / organic`으로 본다
 
 ## 2. 제보 처리함
 - [ ] 목록·상세 조회, 상태 변경, 내부 메모 저장
@@ -40,7 +47,9 @@
 
 ## 6. 작업 기록 + 대시보드
 - [ ] 작업 기록 조회 화면 (`admin_logs`는 1단계부터 쌓이는 중)
-- [ ] 대시보드 지표 집계 (읽기 전용)
+- [x] 대시보드 지표 집계 (읽기 전용). KPI·신규 가입·지역별 등록·최근 등록을 DB 집계로 바꿨다 (`feat/admin-dashboard`)
+  - 2단계에서 최근 등록 설명에 "미처리 제보 N건", 4단계에서 코스·트랙 KPI에 "숨김 N건 제외"와 숨김 글 제외를 다시 붙인다
+  - 지역·가입 집계는 행을 받아 JS로 센다. PostgREST 1000행 제한에 가까워지면 집계 RPC로 바꾼다
 
 ## 7. 정리
 - [ ] `src/commons/mocks` 삭제, 운영 배포

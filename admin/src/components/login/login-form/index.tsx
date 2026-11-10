@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useActionState } from "react"
 
+import { signInAction } from "@/actions/auth.action"
 import { Button } from "@/commons/components/ui/button"
 import {
   Field,
@@ -14,28 +14,13 @@ import {
 import { Input } from "@/commons/components/ui/input"
 import { Spinner } from "@/commons/components/ui/spinner"
 
-// 시안: 실제 구현은 Supabase signInWithPassword → admins 테이블 확인 → 아니면 signOut + 에러.
 export function LoginForm() {
-  const router = useRouter()
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const email = new FormData(event.currentTarget).get("email") as string
-    if (!email.endsWith("@example.com")) {
-      setError("관리자로 등록된 계정이 아닙니다.")
-      return
-    }
-    setError(null)
-    setPending(true)
-    setTimeout(() => router.push("/"), 600)
-  }
+  const [state, formAction, pending] = useActionState(signInAction, null)
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form action={formAction}>
       <FieldGroup>
-        <Field data-invalid={error ? true : undefined}>
+        <Field>
           <FieldLabel htmlFor="email">이메일</FieldLabel>
           <Input
             id="email"
@@ -43,11 +28,10 @@ export function LoginForm() {
             type="email"
             autoComplete="username"
             placeholder="admin@example.com"
-            defaultValue="admin@example.com"
-            aria-invalid={error ? true : undefined}
+            // 액션이 끝나면 React가 폼을 비우므로, 실패 시 입력한 이메일을 되살린다
+            defaultValue={state?.email}
             required
           />
-          {error && <FieldError>{error}</FieldError>}
         </Field>
         <Field>
           <FieldLabel htmlFor="password">비밀번호</FieldLabel>
@@ -56,7 +40,6 @@ export function LoginForm() {
             name="password"
             type="password"
             autoComplete="current-password"
-            defaultValue="password"
             required
           />
           <FieldDescription>
@@ -64,7 +47,8 @@ export function LoginForm() {
             관리자에게 요청하세요.
           </FieldDescription>
         </Field>
-        <Field>
+        <Field data-invalid={state ? true : undefined}>
+          {state && <FieldError>{state.error}</FieldError>}
           <Button type="submit" disabled={pending}>
             {pending && <Spinner data-icon="inline-start" />}
             로그인

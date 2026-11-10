@@ -23,7 +23,10 @@ import { reports } from "@/commons/mocks"
 
 const openReports = reports.filter((report) => report.status === "open").length
 
-export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  email,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { email: string }) {
   const pathname = usePathname()
 
   return (
@@ -68,7 +71,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser email="admin@example.com" />
+        <NavUser email={email} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

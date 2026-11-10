@@ -1,9 +1,9 @@
 "use client"
 
-import Link from "next/link"
 import { ChevronsUpDownIcon, LogOutIcon, MoonIcon } from "lucide-react"
 import { useTheme } from "next-themes"
 
+import { signOutAction } from "@/actions/auth.action"
 import { Avatar, AvatarFallback } from "@/commons/components/ui/avatar"
 import {
   DropdownMenu,
@@ -63,7 +63,7 @@ export function NavUser({ email }: { email: string }) {
                 <MoonIcon />
                 다크 모드 전환
               </DropdownMenuItem>
-              <DropdownMenuItem render={<Link href="/login" />}>
+              <DropdownMenuItem onClick={() => signOutAction()}>
                 <LogOutIcon />
                 로그아웃
               </DropdownMenuItem>

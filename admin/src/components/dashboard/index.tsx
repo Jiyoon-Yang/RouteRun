@@ -229,7 +229,18 @@ export function DashboardPage() {
                     width={56}
                     tickFormatter={(value: string) => value.split(" ").pop()!}
                   />
-                  <XAxis type="number" hide />
+                  {/* 자동 도메인이 누적 합계를 반영하지 않아 막대가 잘려서 직접 지정 */}
+                  <XAxis
+                    type="number"
+                    hide
+                    domain={[
+                      0,
+                      Math.max(
+                        1,
+                        ...stats.regions.map((row) => row.courses + row.tracks)
+                      ),
+                    ]}
+                  />
                   <ChartTooltip
                     cursor={false}
                     content={<ChartTooltipContent indicator="dot" />}

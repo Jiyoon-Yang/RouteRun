@@ -53,6 +53,8 @@ import {
   totals,
 } from "@/commons/mocks"
 
+import { SearchStatsCard } from "./search-stats"
+
 const signupConfig = {
   signups: { label: "구글", color: "var(--chart-1)" },
   guests: { label: "게스트", color: "var(--chart-2)" },
@@ -233,6 +235,8 @@ export function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <SearchStatsCard />
 
       <Card>
         <CardHeader>

@@ -86,3 +86,16 @@ export type ContentImage = {
   contentId: string
   uploadedAt: string
 }
+
+// 대시보드 검색 유입 카드. 구글 수치는 Search Console, 검색엔진별 방문은 GA4(네이버는 이걸로 본다).
+export type SearchStats = {
+  totals: { clicks: number; impressions: number; ctr: number; position: number }
+  daily: { date: string; clicks: number; impressions: number }[]
+  queries: {
+    query: string
+    clicks: number
+    impressions: number
+    position: number
+  }[]
+  organicSessions: { source: string; sessions: number }[]
+}

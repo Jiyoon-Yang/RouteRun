@@ -18,6 +18,13 @@
 - DB: `admins`, `admin_logs`
   - `admins`는 2026-11-10 SQL Editor로 반영. 관리자 추가: `insert into admins (user_id) values ('<auth.users id>')`
 
+## 검색 유입 카드 — 단계 순서와 별개
+DB 변경이 없어 단계를 기다리지 않는다. 설정 방법은 README의 "검색 유입 카드".
+- [x] 대시보드 카드: Search Console 클릭·노출·클릭률·평균 순위, 인기 검색어, GA4 검색엔진별 자연 검색 방문 (`feat/admin-search-stats`)
+- [ ] 콘솔 설정: Google Cloud API 2개 사용 설정, 서비스 계정 키 발급, Search Console "제한됨"·GA4 "뷰어" 권한 추가
+- [ ] 어드민 Vercel 프로젝트에 환경 변수 3개. 1단계의 Vercel 새 프로젝트를 만든 뒤에 한다
+- 네이버 서치어드바이저는 통계 API를 찾지 못해 콘솔 링크만 둔다. 네이버 유입은 GA4의 `naver / organic`으로 본다
+
 ## 2. 제보 처리함
 - [ ] 목록·상세 조회, 상태 변경, 내부 메모 저장
 - DB: `reports.status`, `admin_note`, `handled_at`
@@ -40,7 +47,7 @@
 
 ## 6. 작업 기록 + 대시보드
 - [ ] 작업 기록 조회 화면 (`admin_logs`는 1단계부터 쌓이는 중)
-- [ ] 대시보드 지표 집계 (읽기 전용)
+- [ ] 대시보드 지표 집계 (읽기 전용). 검색 유입 카드는 위에서 따로 연결했고, 나머지 KPI·차트를 DB 집계로 바꾼다
 
 ## 7. 정리
 - [ ] `src/commons/mocks` 삭제, 운영 배포

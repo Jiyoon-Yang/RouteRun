@@ -38,7 +38,7 @@ export async function signInAction(
   }
 
   if (!(await isAdmin(supabase, data.user.id))) {
-    await supabase.auth.signOut()
+    await supabase.auth.signOut({ scope: "local" })
     return { error: "관리자로 등록된 계정이 아닙니다.", email }
   }
 
@@ -47,6 +47,6 @@ export async function signInAction(
 
 export async function signOutAction() {
   const supabase = await createClient()
-  await supabase.auth.signOut()
+  await supabase.auth.signOut({ scope: "local" })
   redirect("/login")
 }

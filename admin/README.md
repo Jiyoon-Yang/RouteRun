@@ -58,3 +58,5 @@ src/
 - 루트에도 `package-lock.json`이 있어서 `next.config.ts`의 `turbopack.root`로 이 폴더를 루트로 고정했다. 빼면 사용자 앱 `middleware.ts`까지 빌드하려다 깨진다.
 - 루트 `tsconfig.json`은 `admin`을 exclude한다. 사용자 앱 타입체크·빌드에 admin이 섞이지 않게.
 - `d` 키는 테마 전환 단축키(`commons/providers/theme`)라 다른 단축키로 쓰지 않는다.
+- 로컬에서는 쿠키가 포트를 구분하지 않아 사용자 앱(3000)과 어드민(3001)이 같은 Supabase 세션 쿠키를 쓴다. 어드민에 로그인하거나 로그아웃하면 사용자 앱의 로컬 세션이 바뀐다. 운영은 도메인이 달라 상관없다.
+- Server Action과 `requireAdmin()`은 Service 없이 Repository를 바로 호출해도 된다(사용자 앱의 좋아요 액션과 같은 예외). 조합이나 도메인 규칙이 생기면 Service로 뺀다.

@@ -6,6 +6,7 @@
 ```bash
 cd admin
 npm install
+cp .env.example .env.local   # 값은 루트 .env.local의 Supabase URL·anon 키와 같다
 npm run dev -- -p 3001   # 사용자 앱(3000)과 같이 띄울 때
 npm run lint && npm run typecheck
 ```
@@ -38,7 +39,7 @@ src/
 
 ## 화면
 
-화면은 2026-11-04에 시안 A/B 중에서 확정했다. 데이터는 아직 전부 `commons/mocks` 목데이터이고, 로그인도 동작하지 않는다.
+화면은 2026-11-04에 시안 A/B 중에서 확정했다. 데이터는 아직 전부 `commons/mocks` 목데이터다. 로그인은 Supabase 대시보드에서 만든 이메일 계정 중 `admins`에 등록된 계정만 통과한다.
 
 | 화면 | 경로 | 고른 시안 | 연결에 필요한 DB 변경 |
 | --- | --- | --- | --- |

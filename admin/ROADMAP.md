@@ -8,13 +8,15 @@
 - [x] 사용자 앱과 같은 `src/` 폴더 구조
 
 ## 1. 기반: 로그인과 권한
-- [ ] Supabase 클라이언트: 서버용, Service Role용(`server-only`, 한 파일에만)
-- [ ] 이메일 로그인·로그아웃, 미로그인 접근 차단(`proxy.ts`). 사이드바 `NavUser`의 로그아웃 링크와 하드코딩 이메일도 실제 세션으로 교체
-- [ ] `requireAdmin()`을 레이아웃과 모든 Server Action에서 호출
+- [x] Supabase 서버 클라이언트
+- [ ] Service Role 클라이언트(`server-only`, 한 파일에만)
+- [x] 이메일 로그인·로그아웃, 미로그인 접근 차단(`proxy.ts`). 사이드바 `NavUser`의 로그아웃 링크와 하드코딩 이메일도 실제 세션으로 교체
+- [ ] `requireAdmin()`을 레이아웃과 모든 Server Action에서 호출 (레이아웃은 완료, Action은 만들 때마다)
 - [ ] 조치 기록 함수 `logAdminAction()`. 2단계부터 모든 조치가 기록되도록 지금 만든다
 - [ ] 기존 Vercel 프로젝트는 `admin/` 변경 시 빌드 건너뛰기
 - [ ] Vercel 새 프로젝트(Root Directory=`admin`). 인증 없는 화면이 공개되지 않도록 위 로그인 차단과 `requireAdmin()`이 들어간 뒤에 만든다
 - DB: `admins`, `admin_logs`
+  - `admins`는 2026-11-10 SQL Editor로 반영. 관리자 추가: `insert into admins (user_id) values ('<auth.users id>')`
 
 ## 2. 제보 처리함
 - [ ] 목록·상세 조회, 상태 변경, 내부 메모 저장

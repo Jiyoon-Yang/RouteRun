@@ -87,6 +87,29 @@ export type ContentImage = {
   uploadedAt: string
 }
 
+// 대시보드 지표. weekly는 최근 7일 증가분, daily는 최근 30일(KST 날짜별).
+export type DashboardStats = {
+  totals: {
+    users: number
+    guests: number
+    courses: number
+    tracks: number
+    likes: number
+  }
+  weekly: { users: number; courses: number; tracks: number; likes: number }
+  daily: { date: string; signups: number; guests: number }[]
+  regions: { region: string; courses: number; tracks: number }[]
+  recent: {
+    id: string
+    kind: ContentKind
+    title: string
+    region: string | null
+    likes: number
+    createdAt: string
+    author: { nickname: string; isAnonymous: boolean }
+  }[]
+}
+
 // 대시보드 검색 유입 카드. 구글 수치는 Search Console, 검색엔진별 방문은 GA4(네이버는 이걸로 본다).
 export type SearchStats = {
   totals: { clicks: number; impressions: number; ctr: number; position: number }

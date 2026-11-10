@@ -19,7 +19,6 @@ import {
   CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/commons/components/ui/card"
@@ -61,19 +60,12 @@ const regionConfig = {
 } satisfies ChartConfig
 
 // 숨김 제외(4단계)·미처리 제보(2단계) 문구는 해당 컬럼이 생기면 다시 붙인다.
-const KPIS: {
-  label: string
-  key: keyof DashboardStats["weekly"]
-  note?: (stats: DashboardStats) => string
-}[] = [
-  {
-    label: "전체 유저",
-    key: "users",
-    note: (stats) => `게스트 ${formatNumber(stats.totals.guests)}명 포함`,
-  },
+const KPIS: { label: string; key: keyof DashboardStats["weekly"] }[] = [
+  { label: "전체 유저", key: "users" },
+  { label: "구글 유저", key: "google" },
+  { label: "게스트", key: "guests" },
   { label: "코스", key: "courses" },
   { label: "트랙", key: "tracks" },
-  { label: "누적 좋아요", key: "likes", note: () => "코스·트랙 합산" },
 ]
 
 export function DashboardPage() {
@@ -102,7 +94,7 @@ export function DashboardPage() {
 
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
         {KPIS.map((kpi) => (
           <Card key={kpi.label}>
             <CardHeader>
@@ -122,11 +114,6 @@ export function DashboardPage() {
                 </CardAction>
               )}
             </CardHeader>
-            {stats && kpi.note && (
-              <CardFooter className="text-sm text-muted-foreground">
-                {kpi.note(stats)}
-              </CardFooter>
-            )}
           </Card>
         ))}
       </div>

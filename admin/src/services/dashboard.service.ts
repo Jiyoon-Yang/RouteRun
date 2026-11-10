@@ -21,12 +21,13 @@ const kstDate = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" })
 const toKstDate = (time: string | number) => kstDate.format(new Date(time))
 
 async function countTotals(supabase: SupabaseClient, since?: string) {
-  const [users, courses, tracks, routeLikes, trackLikes] = await Promise.all(
-    ["users", "routes", "tracks", "route_likes", "track_likes"].map((table) =>
-      countRows(supabase, table, { since })
-    )
-  )
-  return { users, courses, tracks, likes: routeLikes + trackLikes }
+  const [google, guests, courses, tracks] = await Promise.all([
+    countRows(supabase, "users", { since, isAnonymous: false }),
+    countRows(supabase, "users", { since, isAnonymous: true }),
+    countRows(supabase, "routes", { since }),
+    countRows(supabase, "tracks", { since }),
+  ])
+  return { users: google + guests, google, guests, courses, tracks }
 }
 
 /** 대시보드 KPI·차트·최근 등록. Service Role로 읽으므로 호출 전에 `requireAdmin()`을 거친다. */
@@ -37,7 +38,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const [
     totals,
     weekly,
-    guests,
     signups,
     routeRegions,
     trackRegions,
@@ -46,7 +46,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   ] = await Promise.all([
     countTotals(supabase),
     countTotals(supabase, new Date(now - 7 * DAY).toISOString()),
-    countRows(supabase, "users", { isAnonymous: true }),
     // 첫 버킷(29일 전 KST 날짜)의 0시부터 다 받도록 하루 더 넉넉히
     fetchSignupsSince(supabase, new Date(now - DAYS * DAY).toISOString()),
     fetchRegions(supabase, "routes"),
@@ -88,7 +87,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     .slice(0, RECENT)
 
   return {
-    totals: { ...totals, guests },
+    totals,
     weekly,
     daily: [...daily.values()],
     regions: [...regions.values()]

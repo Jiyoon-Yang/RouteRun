@@ -88,15 +88,18 @@ export type ContentImage = {
 }
 
 // 대시보드 지표. weekly는 최근 7일 증가분, daily는 최근 30일(KST 날짜별).
+// users = google + guests. google은 is_anonymous=false라 게스트가 구글로 전환하면 google로 옮겨 간다.
+type DashboardCounts = {
+  users: number
+  google: number
+  guests: number
+  courses: number
+  tracks: number
+}
+
 export type DashboardStats = {
-  totals: {
-    users: number
-    guests: number
-    courses: number
-    tracks: number
-    likes: number
-  }
-  weekly: { users: number; courses: number; tracks: number; likes: number }
+  totals: DashboardCounts
+  weekly: DashboardCounts
   daily: { date: string; signups: number; guests: number }[]
   regions: { region: string; courses: number; tracks: number }[]
   recent: {

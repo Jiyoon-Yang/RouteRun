@@ -68,10 +68,12 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
 - `route_likes`: 복합키 `(user_id, route_id)`, `created_at`
 - `tracks`: `id, user_id, title, description, distance_meters, start_lat, start_lng, start_address_region, image_urls, likes_count, created_at, updated_at` (routes와 달리 `path_data` 없음)
 - `track_likes`: 복합키 `(user_id, track_id)`, `created_at`
-- `reports`: `id, user_id, type ('bug'|'inconvenience'|'suggestion'), content, created_at` — Service Role 클라이언트로만 insert
+- `reports`: `id, user_id, type ('bug'|'inconvenience'|'suggestion'), content, status ('open'|'in_progress'|'resolved', 기본 'open'), admin_note, handled_at, created_at` — Service Role 클라이언트로만 insert. `status`·`admin_note`·`handled_at`은 어드민 제보 처리함이 쓴다
+- `admin_logs`: `id, admin_id (auth.users), action, target, reason, created_at` — 어드민 조치 기록. RLS 정책 없음(Service Role 전용)
+- `admins`: `user_id (auth.users), created_at` — 어드민 로그인 허용 명단. 본인 행만 조회 가능
 - 스토리지 버킷: `course_images` (공개)
 
-`supabase/migrations/`에는 likes_count 트리거만 있다. 나머지 테이블 구조는 위 목록과 `src/repositories/{course,track}/*-row.ts`를 기준으로 본다.
+`supabase/migrations/`에는 likes_count 트리거와 어드민용 변경(`admins`, `reports` 처리 컬럼, `admin_logs`)만 있다. 나머지 테이블 구조는 위 목록과 `src/repositories/{course,track}/*-row.ts`를 기준으로 본다.
 `supabase/functions/send-report-email/` — 제보 메일 Edge Function (Deno + Resend). 함수 secrets: `RESEND_API_KEY`, `REPORT_EMAIL_TO`, `REPORT_EMAIL_SECRET`
 
 ## 환경 변수

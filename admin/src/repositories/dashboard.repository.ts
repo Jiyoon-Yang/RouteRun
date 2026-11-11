@@ -15,6 +15,7 @@ export type AuthorRow = {
   id: string
   nickname: string | null
   is_anonymous: boolean
+  profile_image_url: string | null
 }
 
 /** 행은 받지 않고 개수만 센다. `since`가 있으면 그 시각 이후 `created_at`만. */
@@ -94,7 +95,7 @@ export async function fetchAuthors(
 ): Promise<AuthorRow[]> {
   const { data, error } = await supabase
     .from("users")
-    .select("id, nickname, is_anonymous")
+    .select("id, nickname, is_anonymous, profile_image_url")
     .in("id", ids)
 
   if (error) {

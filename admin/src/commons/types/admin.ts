@@ -48,7 +48,14 @@ export type Report = {
   createdAt: string
   status: ReportStatus
   adminNote: string
+  handledAt: string | null
 }
+
+// 제보 처리함에 보이는 신고자 정보. 제보 수는 화면이 목록에서 센다.
+export type Reporter = Pick<
+  User,
+  "nickname" | "isAnonymous" | "avatarUrl" | "courseCount" | "trackCount"
+>
 
 export type NoticeStatus = "published" | "draft"
 

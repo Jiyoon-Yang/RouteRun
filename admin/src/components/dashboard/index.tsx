@@ -59,7 +59,7 @@ const regionConfig = {
   tracks: { label: "트랙", color: "var(--chart-3)" },
 } satisfies ChartConfig
 
-// 숨김 제외(4단계)·미처리 제보(2단계) 문구는 해당 컬럼이 생기면 다시 붙인다.
+// 숨김 제외(4단계) 문구는 해당 컬럼이 생기면 다시 붙인다.
 const KPIS: { label: string; key: keyof DashboardStats["weekly"] }[] = [
   { label: "전체 유저", key: "users" },
   { label: "구글 유저", key: "google" },
@@ -263,7 +263,18 @@ export function DashboardPage() {
       <Card>
         <CardHeader>
           <CardTitle>최근 등록</CardTitle>
-          <CardDescription>코스·트랙 최신 6건</CardDescription>
+          <CardDescription>
+            코스·트랙 최신 6건
+            {stats && (
+              <>
+                {" "}
+                · 미처리 제보{" "}
+                <Link href="/reports" className="underline underline-offset-4">
+                  {formatNumber(stats.pendingReports)}건
+                </Link>
+              </>
+            )}
+          </CardDescription>
           <CardAction>
             <Button
               variant="outline"

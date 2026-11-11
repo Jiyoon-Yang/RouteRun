@@ -86,3 +86,42 @@ export type ContentImage = {
   contentId: string
   uploadedAt: string
 }
+
+// 대시보드 지표. weekly는 최근 7일 증가분, daily는 최근 30일(KST 날짜별).
+// users = google + guests. google은 is_anonymous=false라 게스트가 구글로 전환하면 google로 옮겨 간다.
+type DashboardCounts = {
+  users: number
+  google: number
+  guests: number
+  courses: number
+  tracks: number
+}
+
+export type DashboardStats = {
+  totals: DashboardCounts
+  weekly: DashboardCounts
+  daily: { date: string; signups: number; guests: number }[]
+  regions: { region: string; courses: number; tracks: number }[]
+  recent: {
+    id: string
+    kind: ContentKind
+    title: string
+    region: string | null
+    likes: number
+    createdAt: string
+    author: { nickname: string; isAnonymous: boolean }
+  }[]
+}
+
+// 대시보드 검색 유입 카드. 구글 수치는 Search Console, 검색엔진별 방문은 GA4(네이버는 이걸로 본다).
+export type SearchStats = {
+  totals: { clicks: number; impressions: number; ctr: number; position: number }
+  daily: { date: string; clicks: number; impressions: number }[]
+  queries: {
+    query: string
+    clicks: number
+    impressions: number
+    position: number
+  }[]
+  organicSessions: { source: string; sessions: number }[]
+}

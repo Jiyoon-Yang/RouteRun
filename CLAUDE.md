@@ -63,11 +63,11 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
 
 ## DB 스키마 (Supabase Postgres)
 
-- `users`: `id, nickname, profile_image_url, is_anonymous`
+- `users`: `id, nickname, profile_image_url, is_anonymous, created_at`
 - `routes`: `id, user_id, title, description, distance_meters, path_data (JSON), is_round_trip (boolean), start_lat, start_lng, start_address_region, image_urls, likes_count, created_at, updated_at`
-- `route_likes`: 복합키 `(user_id, route_id)`
+- `route_likes`: 복합키 `(user_id, route_id)`, `created_at`
 - `tracks`: `id, user_id, title, description, distance_meters, start_lat, start_lng, start_address_region, image_urls, likes_count, created_at, updated_at` (routes와 달리 `path_data` 없음)
-- `track_likes`: 복합키 `(user_id, track_id)`
+- `track_likes`: 복합키 `(user_id, track_id)`, `created_at`
 - `reports`: `id, user_id, type ('bug'|'inconvenience'|'suggestion'), content, created_at` — Service Role 클라이언트로만 insert
 - 스토리지 버킷: `course_images` (공개)
 

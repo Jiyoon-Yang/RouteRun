@@ -11,7 +11,6 @@ import {
   updateHidden,
   type ContentRow,
 } from "@/repositories/content.repository"
-import { fetchRegions } from "@/repositories/dashboard.repository"
 
 const TABLE = { course: "routes", track: "tracks" } as const
 const LABEL: Record<ContentKind, string> = { course: "코스", track: "트랙" }
@@ -46,14 +45,6 @@ export async function getContents({
     filters
   )
   return { items: rows.map(toContent(kind)), total }
-}
-
-/** 지역 필터 목록. 숨긴 글의 지역도 넣는다. */
-export async function getContentRegions(kind: ContentKind): Promise<string[]> {
-  const regions = await fetchRegions(createAdminClient(), TABLE[kind], {
-    includeHidden: true,
-  })
-  return [...new Set(regions)].sort()
 }
 
 /** 숨기거나 되돌리고, 실제로 바뀐 글마다 조치 기록을 남긴다. */

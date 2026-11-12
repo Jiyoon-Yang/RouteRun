@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import {
-  getContentRegionsAction,
   getContentsAction,
   setContentHiddenAction,
 } from "@/actions/content.action"
@@ -15,7 +14,7 @@ import type {
   ContentList,
 } from "@/commons/types/admin"
 
-/** 조건에 맞는 코스·트랙 한 페이지와 지역 목록을 불러오고, 숨김·해제하면 목록을 맞춘다. 실패 안내는 여기서 띄운다. */
+/** 조건에 맞는 코스·트랙 한 페이지를 불러오고, 숨김·해제하면 목록을 맞춘다. 실패 안내는 여기서 띄운다. */
 export function useContents({
   kind,
   region,
@@ -29,7 +28,6 @@ export function useContents({
     key: string
     list: ContentList | null
   } | null>(null)
-  const [regions, setRegions] = useState<string[]>([])
   // 숨김·해제 뒤 지금 페이지를 다시 받는다. key에 넣지 않아 스켈레톤 없이 행만 바뀐다.
   const [reload, setReload] = useState(0)
   const list = loaded?.list ?? null
@@ -52,26 +50,6 @@ export function useContents({
       cancelled = true
     }
   }, [key, kind, region, visibility, query, page, reload])
-
-  useEffect(() => {
-    let cancelled = false
-
-    // 지역 목록을 못 받아도 목록은 보이게 "모든 지역"만 남긴다.
-    getContentRegionsAction(kind)
-      .then((result) => {
-        if (!cancelled) setRegions(result ?? [])
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          console.error("[useContents] 지역 조회 실패:", error)
-          setRegions([])
-        }
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [kind])
 
   /** 반영에 성공하면 true. 숨길 때만 사유를 넘긴다. */
   async function setHidden(
@@ -106,7 +84,6 @@ export function useContents({
   return {
     contents: list?.items ?? null,
     total: list?.total ?? 0,
-    regions,
     isLoading: loaded?.key !== key,
     setHidden,
   }

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-import { CONTENT_PAGE_SIZE } from "@/commons/constants/content"
+import { CONTENT_PAGE_SIZE, REGION_GROUPS } from "@/commons/constants/content"
 import type { ContentFilters } from "@/commons/types/admin"
 import type { ContentTable } from "@/repositories/dashboard.repository"
 
@@ -27,11 +27,20 @@ export async function fetchContents(
   table: ContentTable,
   { region, visibility, query, page }: Omit<ContentFilters, "kind">
 ): Promise<{ rows: ContentRow[]; total: number }> {
+  // "all"이면 권역이 없어 거르지 않는다.
+  const prefixes = REGION_GROUPS.find(
+    (group) => group.label === region
+  )?.prefixes
+
   const filtered = (columns: string, options: { head?: boolean }) => {
     let request = supabase
       .from(table)
       .select(columns, { count: "exact", ...options })
-    if (region !== "all") request = request.eq("start_address_region", region)
+    // 권역에 속한 시·도 이름 중 하나로 시작하는 글. 이름은 고정 상수라 or 문법을 깨는 글자가 없다.
+    if (prefixes)
+      request = request.or(
+        prefixes.map((name) => `start_address_region.like.${name}*`).join(",")
+      )
     if (visibility !== "all")
       request = request.eq("is_hidden", visibility === "hidden")
     // 검색어의 %·_는 와일드카드가 아니라 글자로 찾는다.

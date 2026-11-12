@@ -93,7 +93,8 @@ export function ContentPage() {
       const next = input.trim()
       if (next === query) return
       setQuery(next)
-      resetView()
+      setPage(1)
+      setSelected([])
     }, 300)
     return () => clearTimeout(timer)
   }, [input, query])
@@ -104,6 +105,9 @@ export function ContentPage() {
     ...regions.map((region) => ({ label: region, value: region })),
   ]
   const pageCount = Math.ceil(total / CONTENT_PAGE_SIZE)
+  // 마지막 페이지 글을 모두 숨기거나 해제해 페이지가 사라지면, 남은 마지막 페이지로 옮긴다.
+  const lastPage = Math.max(1, pageCount)
+  if (contents && !isLoading && page > lastPage) setPage(lastPage)
   const allChecked =
     list.length > 0 && list.every((content) => selected.includes(content.id))
   const label = kind === "course" ? "코스" : "트랙"
@@ -301,8 +305,7 @@ export function ContentPage() {
           </TableBody>
         </Table>
       </div>
-      {/* 범위를 벗어난 빈 페이지에서도 앞으로 돌아갈 수 있게 page > 1이면 보인다. */}
-      {(pageCount > 1 || page > 1) && (
+      {pageCount > 1 && (
         <Pagination aria-label="페이지 이동">
           <PaginationContent>
             <PaginationItem>
@@ -326,7 +329,7 @@ export function ContentPage() {
               <PaginationNext
                 text="다음"
                 aria-label="다음 페이지"
-                {...pageLinkProps(page + 1, page >= pageCount)}
+                {...pageLinkProps(page + 1, page === pageCount)}
               />
             </PaginationItem>
           </PaginationContent>

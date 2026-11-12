@@ -30,6 +30,7 @@ DB 변경이 없어 단계를 기다리지 않는다. 설정 방법은 README의
 - [x] 목록·상세 조회, 상태 변경, 내부 메모 저장 (`feat/admin-reports`)
 - [x] 사이드바 배지·대시보드 "미처리 제보 N건"을 접수+처리중 실제 수로
 - DB: `reports.status`, `admin_note`, `handled_at` — 2026-11-11 운영 DB에 SQL Editor로 반영(`admin_logs` 포함). 기존 컬럼에 기본값만 붙인 추가라 사용자 앱 배포와 순서 상관없음
+- 리뷰 중 발견: `reports`에 authenticated용 `check true` INSERT 정책이 남아 있어 REST로 status·admin_note를 채워 넣을 수 있었다. `20261112000000_reports_service_role_only.sql`로 정책·권한을 걷는다(사용자 앱은 Service Role로만 insert)
 - 상태를 바꿀 때만 `admin_logs`에 `update_report`를 남긴다(메모만 저장하면 기록 안 함). 메모는 기록의 사유로 같이 남는다
 - 제보는 전부 받아 클라이언트에서 필터한다. 1000건에 가까워지면 페이지네이션
 

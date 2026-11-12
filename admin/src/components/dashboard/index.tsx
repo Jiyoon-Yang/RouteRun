@@ -265,7 +265,7 @@ export function DashboardPage() {
           <CardTitle>최근 등록</CardTitle>
           <CardDescription>
             코스·트랙 최신 6건
-            {stats && (
+            {stats?.pendingReports != null && (
               <>
                 {" "}
                 · 미처리 제보{" "}

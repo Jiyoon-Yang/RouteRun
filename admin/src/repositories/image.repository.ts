@@ -32,7 +32,7 @@ export async function fetchImagePosts(
   return data
 }
 
-/** 사진을 지우기 직전에 글의 현재 사진 목록과 작성자를 다시 읽는다. 없으면 null. */
+/** 사진을 지우기 직전에 글의 현재 사진 목록을 다시 읽는다. 없으면 null. */
 export async function fetchPostImages(
   supabase: SupabaseClient,
   table: ContentTable,
@@ -40,12 +40,11 @@ export async function fetchPostImages(
 ): Promise<{
   id: string
   title: string
-  user_id: string
   image_urls: string[] | null
 } | null> {
   const { data, error } = await supabase
     .from(table)
-    .select("id, title, user_id, image_urls")
+    .select("id, title, image_urls")
     .eq("id", id)
     .maybeSingle()
 

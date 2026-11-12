@@ -62,13 +62,16 @@ export async function fetchSignupsSince(
 // shortcut: PostgREST 기본 1000행 제한, 글이 1000개를 넘으면 집계 RPC로 바꾼다
 export async function fetchRegions(
   supabase: SupabaseClient,
-  table: ContentTable
+  table: ContentTable,
+  { includeHidden = false }: { includeHidden?: boolean } = {}
 ): Promise<string[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from(table)
     .select("start_address_region")
     .not("start_address_region", "is", null)
-    .eq("is_hidden", false)
+  if (!includeHidden) query = query.eq("is_hidden", false)
+
+  const { data, error } = await query
 
   if (error) {
     throw new Error(`${table}: ${error.message}`)

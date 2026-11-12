@@ -30,6 +30,8 @@ export function useContents({
     list: ContentList | null
   } | null>(null)
   const [regions, setRegions] = useState<string[]>([])
+  // 숨김·해제 뒤 지금 페이지를 다시 받는다. key에 넣지 않아 스켈레톤 없이 행만 바뀐다.
+  const [reload, setReload] = useState(0)
   const list = loaded?.list ?? null
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export function useContents({
     return () => {
       cancelled = true
     }
-  }, [key, kind, region, visibility, query, page])
+  }, [key, kind, region, visibility, query, page, reload])
 
   useEffect(() => {
     let cancelled = false
@@ -95,22 +97,8 @@ export function useContents({
       return false
     }
 
-    // 다시 조회하지 않고 지금 페이지의 배지만 바꾼다. 필터와 어긋난 행·총 개수는 다음 조회 때 맞춰진다.
-    setLoaded((current) =>
-      current?.list
-        ? {
-            ...current,
-            list: {
-              ...current.list,
-              items: current.list.items.map((content) =>
-                content.kind === kind && ids.includes(content.id)
-                  ? { ...content, isHidden }
-                  : content
-              ),
-            },
-          }
-        : current
-    )
+    // 배지만 바꾸면 "공개만"·"숨김만" 필터에서 필터와 어긋난 행이 남고, 다음 페이지가 한 칸씩 밀려 글을 놓친다.
+    setReload((count) => count + 1)
     toast.success(`${ids.length}개 ${isHidden ? "숨김" : "숨김 해제"}`)
     return true
   }

@@ -13,7 +13,8 @@ import {
 import { DASHBOARD_CACHE_TAG } from "@/services/dashboard.service"
 
 const MAX_REASON = 200
-const MAX_QUERY = 100
+// 검색어·지역 이름 길이 상한.
+const MAX_FILTER_TEXT = 100
 
 const isKind = (kind: unknown): kind is ContentKind =>
   kind === "course" || kind === "track"
@@ -27,10 +28,11 @@ export async function getContentsAction(filters: ContentFilters) {
   if (
     !isKind(kind) ||
     typeof region !== "string" ||
+    region.length > MAX_FILTER_TEXT ||
     !["all", "visible", "hidden"].includes(visibility) ||
     typeof query !== "string" ||
-    query.length > MAX_QUERY ||
-    !Number.isInteger(page) ||
+    query.length > MAX_FILTER_TEXT ||
+    !Number.isSafeInteger(page) ||
     page < 1
   ) {
     return null

@@ -39,6 +39,18 @@ export type Content = {
   author: { nickname: string; isAnonymous: boolean }
 }
 
+// 코스·트랙 목록 조회 조건. region·visibility의 "all"은 거르지 않는다는 뜻.
+export type ContentFilters = {
+  kind: ContentKind
+  region: string
+  visibility: "all" | "visible" | "hidden"
+  query: string
+  page: number
+}
+
+// 한 페이지 글과 조건에 맞는 전체 글 수.
+export type ContentList = { items: Content[]; total: number }
+
 export type Report = {
   id: string
   userId: string

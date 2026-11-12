@@ -11,13 +11,29 @@ import { logAdminAction } from "@/repositories/admin-log.repository"
 import {
   fetchImagePosts,
   fetchPostImages,
-  fetchSharedImageUrls,
   removeStorageFiles,
   updateImageUrls,
 } from "@/repositories/image.repository"
 
 const TABLE = { course: "routes", track: "tracks" } as const
 const LABEL: Record<ContentKind, string> = { course: "코스", track: "트랙" }
+const KINDS: ContentKind[] = ["course", "track"]
+
+/** 이 글을 뺀 모든 코스·트랙의 사진 URL. */
+async function fetchOtherImageUrls(
+  supabase: ReturnType<typeof createAdminClient>,
+  kind: ContentKind,
+  contentId: string
+): Promise<string[]> {
+  const posts = await Promise.all(
+    KINDS.map((other) => fetchImagePosts(supabase, TABLE[other]))
+  )
+  return KINDS.flatMap((other, index) =>
+    posts[index]
+      .filter((post) => other !== kind || post.id !== contentId)
+      .flatMap((post) => post.image_urls)
+  )
+}
 
 /** 사진을 한 장씩 펼쳐 최근 글 순으로 한 페이지. Service Role로 읽으므로 호출 전에 `requireAdmin()`을 거친다. */
 export async function getImages({
@@ -25,7 +41,7 @@ export async function getImages({
   page,
 }: ImageFilters): Promise<ImageList> {
   const supabase = createAdminClient()
-  const kinds: ContentKind[] = kind === "all" ? ["course", "track"] : [kind]
+  const kinds = kind === "all" ? KINDS : [kind]
   const posts = await Promise.all(
     kinds.map((kind) => fetchImagePosts(supabase, TABLE[kind]))
   )
@@ -78,28 +94,27 @@ export async function deleteImages(
       group.some((target) => target.url === url)
     )
     if (!post || urls.length === 0) continue
+    const remaining = current.filter((url) => !urls.includes(url))
+
+    // 다른 글이나 이 글의 남은 사진이 같은 파일을 쓰면 파일은 남기고 URL만 뺀다. 마지막 참조를 지울 때 파일도 지운다.
+    // 쿼리스트링·인코딩이 달라도 같은 파일일 수 있어 URL이 아니라 버킷 경로로 비교한다.
+    const inUse = new Set(
+      [
+        ...(await fetchOtherImageUrls(supabase, kind, contentId)),
+        ...remaining,
+      ].map(extractImagePath)
+    )
+    // 다른 호스트의 URL은 경로가 null이라 우리 버킷에서 지울 파일이 없다.
+    const paths = urls
+      .map(extractImagePath)
+      .filter((path): path is string => path !== null && !inUse.has(path))
 
     // 스토리지를 먼저 지운다. 아래 DB 갱신이 실패해도 URL이 글에 남아 다시 누르면 다시 시도된다.
     // 반대 순서면 스토리지 실패 시 어디에도 안 걸린 파일이 공개 URL로 남는다.
-    // 다른 호스트의 URL은 우리 버킷에 파일이 없어 글에서만 뺀다.
-    // 다른 글도 쓰는 파일은 남기고 이 글에서만 뺀다. 마지막으로 쓰는 글에서 지울 때 파일도 지운다.
-    const shared = await fetchSharedImageUrls(supabase, urls, {
-      table: TABLE[kind],
-      id: contentId,
-    })
-    const paths = urls
-      .filter((url) => !shared.has(url))
-      .map(extractImagePath)
-      .filter((path): path is string => path !== null)
     if (paths.length > 0) await removeStorageFiles(supabase, paths)
 
     // shortcut: 읽고 쓰는 사이에 작성자가 글을 수정하면 그 수정을 덮어쓴다, 조치가 잦아지면 array_remove RPC로 바꾼다
-    await updateImageUrls(
-      supabase,
-      TABLE[kind],
-      contentId,
-      current.filter((url) => !urls.includes(url))
-    )
+    await updateImageUrls(supabase, TABLE[kind], contentId, remaining)
     deleted += urls.length
 
     // 사진은 이미 지워졌으니 기록 실패로 화면에 실패를 띄우지 않는다. 빠진 기록을 되살릴 수 있게 서버 로그에 남긴다.

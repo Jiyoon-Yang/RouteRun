@@ -11,12 +11,12 @@ export type ImagePostRow = {
   created_at: string
 }
 
-/** 사진이 한 장 이상 있는 글. 숨긴 글도 포함한다. */
+/** 사진이 한 장 이상 있는 글. 숨긴 글도 포함한다. 갤러리와 삭제 시 공유 파일 확인이 같이 쓴다. */
 export async function fetchImagePosts(
   supabase: SupabaseClient,
   table: ContentTable
 ): Promise<ImagePostRow[]> {
-  // shortcut: PostgREST 기본 1000행까지만 온다, 사진 있는 글이 1000개에 가까워지면 페이지네이션
+  // shortcut: PostgREST 기본 1000행까지만 온다(넘으면 갤러리가 잘리고 공유 파일 확인이 다른 글을 놓친다), 사진 있는 글이 1000개에 가까워지면 image_urls를 펼친 view로 바꾼다
   const { data, error } = await supabase
     .from(table)
     .select("id, title, image_urls, is_hidden, created_at")
@@ -53,37 +53,6 @@ export async function fetchPostImages(
   }
 
   return data
-}
-
-/** 이 글 말고 다른 코스·트랙도 쓰고 있는 사진 URL. */
-export async function fetchSharedImageUrls(
-  supabase: SupabaseClient,
-  urls: string[],
-  exclude: { table: ContentTable; id: string }
-): Promise<Set<string>> {
-  const tables: ContentTable[] = ["routes", "tracks"]
-  const rows = await Promise.all(
-    tables.map(async (table) => {
-      let request = supabase
-        .from(table)
-        .select("image_urls")
-        .overlaps("image_urls", urls)
-      if (table === exclude.table) request = request.neq("id", exclude.id)
-      const { data, error } = await request
-
-      if (error) {
-        throw new Error(`${table}: ${error.message}`)
-      }
-      return data as { image_urls: string[] }[]
-    })
-  )
-
-  return new Set(
-    rows
-      .flat()
-      .flatMap((row) => row.image_urls)
-      .filter((url) => urls.includes(url))
-  )
 }
 
 export async function updateImageUrls(

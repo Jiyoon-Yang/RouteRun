@@ -37,9 +37,10 @@ const nextConfig = {
   },
   images: {
     remotePatterns: [
+      // *.supabase.co로 열어 두면 다른 프로젝트 이미지도 우리 next/image 최적화로 변환되니 이 프로젝트 호스트만 연다.
       {
         protocol: 'https',
-        hostname: '*.supabase.co',
+        hostname: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname,
         pathname: '/storage/v1/object/public/**',
       },
       {

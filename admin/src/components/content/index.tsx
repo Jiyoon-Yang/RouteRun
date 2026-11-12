@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import { EyeIcon, EyeOffIcon, MoreHorizontalIcon } from "lucide-react"
 
+import { PageNav } from "@/commons/components/page-nav"
+import { ReasonDialog } from "@/commons/components/reason-dialog"
 import { SearchInput } from "@/commons/components/search-input"
 import { Badge } from "@/commons/components/ui/badge"
 import { Button } from "@/commons/components/ui/button"
@@ -20,14 +22,6 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/commons/components/ui/empty"
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/commons/components/ui/pagination"
 import {
   Select,
   SelectContent,
@@ -54,7 +48,6 @@ import type {
   Content,
 } from "@/commons/types/admin"
 
-import { HideDialog } from "./hide-dialog"
 import { useContents } from "./hooks/use-contents"
 
 const VISIBILITY = [
@@ -112,20 +105,6 @@ export function ContentPage() {
   const allChecked =
     list.length > 0 && list.every((content) => selected.includes(content.id))
   const label = kind === "course" ? "코스" : "트랙"
-
-  // shadcn 페이지 링크는 <a>라서 href가 있어야 키보드로 포커스·Enter가 된다. 주소는 바꾸지 않고 상태만 바꾼다.
-  const pageLinkProps = (target: number, disabled = false) => ({
-    href: "#",
-    "aria-disabled": disabled || undefined,
-    tabIndex: disabled ? -1 : undefined,
-    className: disabled ? "pointer-events-none opacity-50" : undefined,
-    onClick: (event: React.MouseEvent) => {
-      event.preventDefault()
-      if (disabled) return
-      setPage(target)
-      setSelected([])
-    },
-  })
 
   // 처리한 글만 선택에서 뺀다. 한 행만 해제해도 다른 체크가 풀리지 않게.
   const deselect = (ids: string[]) =>
@@ -305,45 +284,25 @@ export function ContentPage() {
           </TableBody>
         </Table>
       </div>
-      {pageCount > 1 && (
-        <Pagination aria-label="페이지 이동">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                text="이전"
-                aria-label="이전 페이지"
-                {...pageLinkProps(page - 1, page === 1)}
-              />
-            </PaginationItem>
-            {Array.from({ length: pageCount }, (_, index) => (
-              <PaginationItem key={index}>
-                <PaginationLink
-                  isActive={index + 1 === page}
-                  {...pageLinkProps(index + 1)}
-                >
-                  {index + 1}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-            <PaginationItem>
-              <PaginationNext
-                text="다음"
-                aria-label="다음 페이지"
-                {...pageLinkProps(page + 1, page === pageCount)}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      )}
+      <PageNav
+        page={page}
+        pageCount={pageCount}
+        onPageChange={(target) => {
+          setPage(target)
+          setSelected([])
+        }}
+      />
 
-      <HideDialog
-        target={
+      <ReasonDialog
+        open={hideTargets.length > 0}
+        title={`${
           hideTargets.length === 1
             ? `'${list.find((content) => content.id === hideTargets[0])?.title}'`
-            : hideTargets.length > 1
-              ? `${label} ${hideTargets.length}개`
-              : null
-        }
+            : `${label} ${hideTargets.length}개`
+        } 숨김`}
+        description="다른 사용자에게는 홈·상세·좋아요 목록에서 사라지고, 작성자에게는 마이페이지·상세에 '숨김됨'으로 보입니다. 데이터는 남아 있어 언제든 되돌릴 수 있어요."
+        confirmLabel="숨김"
+        placeholder="예: 홍보 링크 포함"
         onOpenChange={(open) => !open && setHideTargets([])}
         onConfirm={async (reason) => {
           const ids = hideTargets

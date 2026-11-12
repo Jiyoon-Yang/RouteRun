@@ -4,13 +4,12 @@
 import type {
   AuditLog,
   Content,
-  ContentImage,
   PathPoint,
   Report,
   User,
 } from "@/commons/types/admin"
 
-// 유저·이미지 시안이 아직 쓰는 옛 모양. 실제 코스·트랙 화면은 `Content`를 쓴다.
+// 유저 시안이 아직 쓰는 옛 모양. 실제 코스·트랙 화면은 `Content`를 쓴다.
 type MockContent = Omit<Content, "region" | "author"> & {
   region: string
   authorId: string
@@ -581,22 +580,6 @@ export const logs: AuditLog[] = [
     at: "2026-10-27T12:00:00+09:00",
   },
 ]
-
-// course_images 버킷 기준. 실제로는 contents.imageUrls를 펼쳐 업로드 시각순 정렬.
-export const images: ContentImage[] = contents
-  .flatMap((content) =>
-    content.imageUrls.map((url, index) => ({
-      id: `${content.id}-${index}`,
-      url,
-      contentId: content.id,
-      uploadedAt: content.createdAt,
-    }))
-  )
-  .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))
-
-export function findContent(id: string) {
-  return contents.find((content) => content.id === id)!
-}
 
 // 최근 30일 일별 추이. 사인파로 만든 고정값.
 export const dailyStats = Array.from({ length: 30 }, (_, i) => {

@@ -19,6 +19,8 @@ export interface Route {
   image_urls: string[];
   likes_count: number;
   is_round_trip: boolean;
+  /** 어드민이 숨긴 글. RLS로 작성자 본인에게만 내려온다 */
+  is_hidden: boolean;
   created_at: string;
 }
 
@@ -70,6 +72,8 @@ export interface Track {
   start_address_region?: string | null;
   image_urls: string[];
   likes_count: number;
+  /** 어드민이 숨긴 글. RLS로 작성자 본인에게만 내려온다 */
+  is_hidden: boolean;
   created_at: string;
 }
 

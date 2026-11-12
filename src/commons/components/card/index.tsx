@@ -20,6 +20,8 @@ type CardBaseProps = {
   distanceText?: string;
   likeCount?: number;
   thumbnailUrl?: string;
+  /** 어드민이 숨긴 글. 제목 앞에 빨간 '숨김' 배지를 붙인다 */
+  isHidden?: boolean;
   readonlyLike?: boolean;
   onLikeClick?: () => void;
   onPrimaryActionClick?: () => void;
@@ -53,6 +55,7 @@ export function Card({
   distanceText = '5km',
   likeCount = 234,
   thumbnailUrl,
+  isHidden = false,
   readonlyLike = false,
   onLikeClick,
   onPrimaryActionClick,
@@ -108,7 +111,10 @@ export function Card({
         <div className={styles.content}>
           <div className={styles.contentInfo}>
             <div className={styles.contentTop}>
-              <h3 className={styles.title}>{title}</h3>
+              <div className={styles.titleGroup}>
+                {isHidden && <Badge kind="hidden" />}
+                <h3 className={styles.title}>{title}</h3>
+              </div>
               {onLikeClick && !readonlyLike ? (
                 <button
                   type="button"

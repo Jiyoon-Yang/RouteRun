@@ -136,6 +136,11 @@ export function TracksDetail({
                 <span className={styles.location}>{location}</span>
               </span>
             </div>
+            {track.is_hidden && (
+              <p className={styles.hiddenNotice}>
+                운영 정책에 따라 숨겨진 트랙이에요. 나에게만 보여요.
+              </p>
+            )}
           </section>
 
           <section className={styles.descriptionSection} aria-label="설명">

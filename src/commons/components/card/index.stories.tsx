@@ -28,6 +28,7 @@ const meta = {
     location: { control: 'text' },
     distanceText: { control: 'text' },
     likeCount: { control: { type: 'number', min: 0, step: 1 } },
+    isHidden: { control: 'boolean' },
     className: { control: false },
     onPrimaryActionClick: { action: 'primary-action-click' },
     onSecondaryActionClick: { action: 'secondary-action-click' },
@@ -127,4 +128,18 @@ export const AllTypes: Story = {
       />
     </div>
   ),
+};
+
+/** 어드민이 숨긴 내 글. 작성자 마이페이지에서만 보인다 */
+export const MyCourseHidden: Story = {
+  args: {
+    type: 'my-course',
+    itemKind: 'course',
+    isLiked: false,
+    isHidden: true,
+    title: '장자호수공원 코스',
+    location: '경기도 구리시',
+    distanceText: '1.5km',
+    likeCount: 0,
+  },
 };

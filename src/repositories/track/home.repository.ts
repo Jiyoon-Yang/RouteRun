@@ -14,6 +14,8 @@ export async function getHomeTracksByViewport(viewport: RouteViewport): Promise<
   const { data, error } = await supabase
     .from('tracks')
     .select(TRACK_SELECT)
+    // RLS는 숨긴 글을 작성자 본인에게 내려주므로 홈 지도에서는 직접 뺀다.
+    .eq('is_hidden', false)
     .gte('start_lat', minLat)
     .lte('start_lat', maxLat)
     .gte('start_lng', minLng)

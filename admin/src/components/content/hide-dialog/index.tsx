@@ -43,8 +43,9 @@ export function HideDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>{target} 숨김</AlertDialogTitle>
           <AlertDialogDescription>
-            사용자 앱의 홈·목록·상세·마이페이지에서 모두 사라집니다. 데이터는
-            남아 있어 언제든 되돌릴 수 있어요.
+            다른 사용자에게는 홈·상세·좋아요 목록에서 사라지고, 작성자에게는
+            마이페이지·상세에 &apos;숨김됨&apos;으로 보입니다. 데이터는 남아 있어
+            언제든 되돌릴 수 있어요.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <Field>
@@ -53,6 +54,7 @@ export function HideDialog({
             id="hide-reason"
             rows={3}
             value={reason}
+            maxLength={200}
             onChange={(event) => setReason(event.target.value)}
             placeholder="예: 홍보 링크 포함"
           />

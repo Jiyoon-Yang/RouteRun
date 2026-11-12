@@ -64,9 +64,9 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
 ## DB 스키마 (Supabase Postgres)
 
 - `users`: `id, nickname, profile_image_url, is_anonymous, created_at`
-- `routes`: `id, user_id, title, description, distance_meters, path_data (JSON), is_round_trip (boolean), start_lat, start_lng, start_address_region, image_urls, likes_count, created_at, updated_at`
+- `routes`: `id, user_id, title, description, distance_meters, path_data (JSON), is_round_trip (boolean), start_lat, start_lng, start_address_region, image_urls, likes_count, is_hidden, created_at, updated_at`
 - `route_likes`: 복합키 `(user_id, route_id)`, `created_at`
-- `tracks`: `id, user_id, title, description, distance_meters, start_lat, start_lng, start_address_region, image_urls, likes_count, created_at, updated_at` (routes와 달리 `path_data` 없음)
+- `tracks`: `id, user_id, title, description, distance_meters, start_lat, start_lng, start_address_region, image_urls, likes_count, is_hidden, created_at, updated_at` (routes와 달리 `path_data` 없음)
 - `track_likes`: 복합키 `(user_id, track_id)`, `created_at`
 - `reports`: `id, user_id, type ('bug'|'inconvenience'|'suggestion'), content, status ('open'|'in_progress'|'resolved', 기본 'open'), admin_note, handled_at, created_at` — Service Role 클라이언트로만 읽고 쓴다(anon·authenticated 정책·권한 없음). `status`·`admin_note`·`handled_at`은 어드민 제보 처리함이 쓴다
 - `admin_logs`: `id, admin_id (auth.users), action, target, reason, created_at` — 어드민 조치 기록. RLS 정책 없음(Service Role 전용)
@@ -74,7 +74,7 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
 - `notices`: `id, title, body, status ('draft'|'published'), pinned, published_at, created_at, updated_at` — 공지. 누구나 게시된 공지만 읽고(RLS), 쓰기는 어드민 Service Role만. 고정은 초안 포함 전체 1개(partial unique index)
 - 스토리지 버킷: `course_images` (공개)
 
-`supabase/migrations/`에는 likes_count 트리거와 어드민용 변경(`admins`, `reports` 처리 컬럼과 권한 정리, `admin_logs`, `notices`)만 있다. 나머지 테이블 구조는 위 목록과 `src/repositories/{course,track}/*-row.ts`를 기준으로 본다.
+`supabase/migrations/`에는 likes_count 트리거와 어드민용 변경(`admins`, `reports` 처리 컬럼과 권한 정리, `admin_logs`, `notices`, 코스·트랙 숨김)만 있다. 나머지 테이블 구조는 위 목록과 `src/repositories/{course,track}/*-row.ts`를 기준으로 본다.
 `supabase/functions/send-report-email/` — 제보 메일 Edge Function (Deno + Resend). 함수 secrets: `RESEND_API_KEY`, `REPORT_EMAIL_TO`, `REPORT_EMAIL_SECRET`
 
 ## 환경 변수
@@ -155,3 +155,5 @@ PR을 생성할 때는 반드시 아래 템플릿 구조를 따릅니다.
 - **익명 세션 vs 미로그인:** 미들웨어는 세션 없는 경우만 차단. 익명 세션은 통과하며, 게스트 작성 제한(코스·트랙 합산 1개)만 `userService.isGuestWriteLimitReached`로 서버에서 강제한다. 좋아요는 게스트도 허용.
 - **`likes_count`는 애플리케이션 코드가 아닌 DB 트리거가 갱신한다:** `routes`/`tracks`의 RLS UPDATE 정책이 작성자 본인만 허용해서, 과거에는 다른 사용자가 좋아요를 눌러도 `likes_count`가 갱신되지 않는 버그가 있었다. `sync_route_likes_count`/`sync_track_likes_count` 트리거(SECURITY DEFINER, `route_likes`/`track_likes` insert·delete 시 실행)가 RLS와 무관하게 카운트를 동기화하므로, `toggleCourseLikeAction`/`toggleTrackLikeAction`은 `getRouteLikesCount`/`getTrackLikesCount`로 **읽기만** 한다. likes_count를 직접 `UPDATE`하는 코드를 추가하지 않는다.
 - **`Providers` 이중 역할:** `src/commons/layout/providers.tsx`는 Provider 래핑 외에 익명 유저의 작성 횟수(`getUserRouteWriteCount` + `getUserTrackWriteCount`)를 병렬 집계한다. 익명 유저 관련 UI 게이팅 이슈 발생 시 이 컴포넌트를 먼저 확인.
+- **숨긴 코스·트랙(`is_hidden`)은 작성자 본인에게만 보인다:** 어드민이 숨기면 RLS SELECT 정책(`not is_hidden or user_id = auth.uid()`)이 다른 사용자에게서 뺀다. 작성자는 마이페이지·상세에서 계속 보므로, 여러 사람의 글을 보여 주는 목록 쿼리를 새로 만들면 `.eq('is_hidden', false)`를 직접 넣는다(홈 지도 `getHome*ByViewport`처럼).
+- **routes·tracks UPDATE는 컬럼 단위로만 허용한다:** 작성자가 REST로 `is_hidden`을 풀지 못하게 `authenticated`에 `title, description, image_urls, updated_at`만 grant했다. 수정 화면에서 바꾸는 컬럼을 늘리면 마이그레이션으로 grant도 추가해야 한다(안 하면 `permission denied`).

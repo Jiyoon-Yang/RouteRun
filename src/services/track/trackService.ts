@@ -78,6 +78,7 @@ function trackToMypageCard(track: Track): MypageTrackCardData {
     distanceText: `${track.distance_meters}m`,
     likeCount: track.likes_count,
     thumbnailUrl: track.image_urls[0],
+    isHidden: track.is_hidden,
     createdAt: track.created_at,
   };
 }

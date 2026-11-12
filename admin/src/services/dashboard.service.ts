@@ -25,19 +25,23 @@ async function countTotals(supabase: SupabaseClient, since?: string) {
   const [google, guests, courses, tracks] = await Promise.all([
     countRows(supabase, "users", { since, isAnonymous: false }),
     countRows(supabase, "users", { since, isAnonymous: true }),
-    countRows(supabase, "routes", { since }),
-    countRows(supabase, "tracks", { since }),
+    countRows(supabase, "routes", { since, isHidden: false }),
+    countRows(supabase, "tracks", { since, isHidden: false }),
   ])
   return { users: google + guests, google, guests, courses, tracks }
 }
 
-// 관리자용 집계라 10분까지는 캐시를 써서 열 때마다 쿼리 13개를 다시 돌리지 않는다.
+// 관리자용 집계라 10분까지는 캐시를 써서 열 때마다 쿼리 15개를 다시 돌리지 않는다.
 const CACHE_TTL = 10 * 60 * 1000
+
+/** 코스·트랙 숨김처럼 숫자를 바꾸는 조치 뒤에 `updateTag`로 캐시를 비운다. */
+export const DASHBOARD_CACHE_TAG = "dashboard-stats"
 
 const getCachedDashboardStats = unstable_cache(
   async () => ({ stats: await fetchDashboardStats(), fetchedAt: Date.now() }),
-  ["dashboard-stats"],
-  { revalidate: CACHE_TTL / 1000 }
+  // 반환 모양이 바뀌면 키를 바꾼다. 배포 전에 쌓인 옛 모양 캐시를 읽지 않게.
+  ["dashboard-stats", "v2"],
+  { revalidate: CACHE_TTL / 1000, tags: [DASHBOARD_CACHE_TAG] }
 )
 
 /** 대시보드 KPI·차트·최근 등록. Service Role로 읽으므로 호출 전에 `requireAdmin()`을 거친다. */
@@ -54,6 +58,8 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
   const [
     totals,
     weekly,
+    hiddenCourses,
+    hiddenTracks,
     signups,
     routeRegions,
     trackRegions,
@@ -62,6 +68,8 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
   ] = await Promise.all([
     countTotals(supabase),
     countTotals(supabase, new Date(now - 7 * DAY).toISOString()),
+    countRows(supabase, "routes", { isHidden: true }),
+    countRows(supabase, "tracks", { isHidden: true }),
     // 첫 버킷(29일 전 KST 날짜)의 0시부터 다 받도록 하루 더 넉넉히
     fetchSignupsSince(supabase, new Date(now - DAYS * DAY).toISOString()),
     fetchRegions(supabase, "routes"),
@@ -105,6 +113,7 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
   return {
     totals,
     weekly,
+    hidden: { courses: hiddenCourses, tracks: hiddenTracks },
     daily: [...daily.values()],
     regions: [...regions.values()]
       .sort((a, b) => b.courses + b.tracks - (a.courses + a.tracks))

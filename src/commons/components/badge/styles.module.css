@@ -28,3 +28,8 @@
 .track {
   background: var(--color-dark_grey-500);
 }
+
+/* 어드민이 숨긴 글. 작성자 본인에게만 보인다 */
+.hidden {
+  background: var(--color-red-500);
+}

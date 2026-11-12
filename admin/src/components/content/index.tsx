@@ -2,11 +2,8 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import Link from "next/link"
-import { EyeIcon, EyeOffIcon, MoreHorizontalIcon, UserIcon } from "lucide-react"
-import { toast } from "sonner"
+import { EyeIcon, EyeOffIcon, MoreHorizontalIcon } from "lucide-react"
 
-import { RoutePreview } from "@/commons/components/route-preview"
 import { SearchInput } from "@/commons/components/search-input"
 import { Badge } from "@/commons/components/ui/badge"
 import { Button } from "@/commons/components/ui/button"
@@ -14,11 +11,15 @@ import { Checkbox } from "@/commons/components/ui/checkbox"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/commons/components/ui/dropdown-menu"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/commons/components/ui/empty"
 import {
   Select,
   SelectContent,
@@ -27,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/commons/components/ui/select"
+import { Skeleton } from "@/commons/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -37,17 +39,10 @@ import {
 } from "@/commons/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/commons/components/ui/tabs"
 import { formatDate, formatDistance } from "@/commons/utils/format"
-import { contents as initialContents, findUser } from "@/commons/mocks"
 import type { ContentKind, Content } from "@/commons/types/admin"
 
 import { HideDialog } from "./hide-dialog"
-
-const REGIONS = [
-  { label: "모든 지역", value: "all" },
-  ...[...new Set(initialContents.map((content) => content.region))]
-    .sort()
-    .map((region) => ({ label: region, value: region })),
-]
+import { useContents } from "./hooks/use-contents"
 
 const VISIBILITY = [
   { label: "공개·숨김 전체", value: "all" },
@@ -56,7 +51,7 @@ const VISIBILITY = [
 ]
 
 export function ContentPage() {
-  const [contents, setContents] = useState(initialContents)
+  const { contents, isLoading, setHidden } = useContents()
   const [kind, setKind] = useState<ContentKind>("course")
   const [region, setRegion] = useState("all")
   const [visibility, setVisibility] = useState("all")
@@ -64,7 +59,20 @@ export function ContentPage() {
   const [selected, setSelected] = useState<string[]>([])
   const [hideTargets, setHideTargets] = useState<string[]>([])
 
-  const visible = contents.filter(
+  const list = contents ?? []
+  const regions = [
+    { label: "모든 지역", value: "all" },
+    ...[
+      ...new Set(
+        list.flatMap((content) =>
+          content.kind === kind && content.region ? [content.region] : []
+        )
+      ),
+    ]
+      .sort()
+      .map((region) => ({ label: region, value: region })),
+  ]
+  const visible = list.filter(
     (content) =>
       content.kind === kind &&
       (region === "all" || content.region === region) &&
@@ -77,14 +85,21 @@ export function ContentPage() {
     visible.every((content) => selected.includes(content.id))
   const label = kind === "course" ? "코스" : "트랙"
 
-  function setHidden(ids: string[], isHidden: boolean) {
-    setContents((list) =>
-      list.map((content) =>
-        ids.includes(content.id) ? { ...content, isHidden } : content
-      )
+  async function unhide(ids: string[]) {
+    if (await setHidden(kind, ids, false)) setSelected([])
+  }
+
+  if (!isLoading && !contents) {
+    return (
+      <Empty className="border">
+        <EmptyHeader>
+          <EmptyTitle>코스·트랙을 불러오지 못했습니다</EmptyTitle>
+          <EmptyDescription>
+            서버 로그와 SUPABASE_SERVICE_ROLE_KEY 설정을 확인하세요.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     )
-    setSelected([])
-    toast.success(`${ids.length}개 ${isHidden ? "숨김" : "숨김 해제"}`)
   }
 
   return (
@@ -94,6 +109,7 @@ export function ContentPage() {
           value={kind}
           onValueChange={(value) => {
             setKind(value as ContentKind)
+            setRegion("all")
             setSelected([])
           }}
         >
@@ -109,7 +125,7 @@ export function ContentPage() {
           onChange={(event) => setQuery(event.target.value)}
         />
         <Select
-          items={REGIONS}
+          items={regions}
           value={region}
           onValueChange={(value) => setRegion(value as string)}
         >
@@ -118,7 +134,7 @@ export function ContentPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              {REGIONS.map((item) => (
+              {regions.map((item) => (
                 <SelectItem key={item.value} value={item.value}>
                   {item.label}
                 </SelectItem>
@@ -152,7 +168,7 @@ export function ContentPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setHidden(selected, false)}
+              onClick={() => unhide(selected)}
             >
               <EyeIcon data-icon="inline-start" />
               숨김 해제
@@ -195,6 +211,25 @@ export function ContentPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
+            {isLoading &&
+              Array.from({ length: 6 }, (_, index) => (
+                <TableRow key={index}>
+                  <TableCell colSpan={9}>
+                    <Skeleton className="h-10 w-full" />
+                  </TableCell>
+                </TableRow>
+              ))}
+            {!isLoading && visible.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={9}>
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyTitle>해당하는 글이 없습니다</EmptyTitle>
+                    </EmptyHeader>
+                  </Empty>
+                </TableCell>
+              </TableRow>
+            )}
             {visible.map((content) => (
               <ContentRow
                 key={content.id}
@@ -208,28 +243,29 @@ export function ContentPage() {
                   )
                 }
                 onHide={() => setHideTargets([content.id])}
-                onUnhide={() => setHidden([content.id], false)}
+                onUnhide={() => unhide([content.id])}
               />
             ))}
           </TableBody>
         </Table>
       </div>
       <p className="text-sm text-muted-foreground">
-        {visible.length}개 · 실제 구현은 서버 페이지네이션(20개씩)
+        {visible.length}개
       </p>
 
       <HideDialog
         target={
           hideTargets.length === 1
-            ? `'${contents.find((content) => content.id === hideTargets[0])?.title}'`
+            ? `'${list.find((content) => content.id === hideTargets[0])?.title}'`
             : hideTargets.length > 1
               ? `${label} ${hideTargets.length}개`
               : null
         }
         onOpenChange={(open) => !open && setHideTargets([])}
-        onConfirm={() => {
-          setHidden(hideTargets, true)
+        onConfirm={async (reason) => {
+          const ids = hideTargets
           setHideTargets([])
+          if (await setHidden(kind, ids, true, reason)) setSelected([])
         }}
       />
     </>
@@ -249,8 +285,6 @@ function ContentRow({
   onHide: () => void
   onUnhide: () => void
 }) {
-  const author = findUser(content.authorId)
-
   return (
     <TableRow data-state={checked ? "selected" : undefined}>
       <TableCell>
@@ -263,9 +297,7 @@ function ContentRow({
       <TableCell>
         <div className="flex items-center gap-3">
           <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
-            {content.path ? (
-              <RoutePreview path={content.path} className="size-full" />
-            ) : content.imageUrls[0] ? (
+            {content.imageUrls[0] ? (
               <Image
                 src={content.imageUrls[0]}
                 alt=""
@@ -286,17 +318,12 @@ function ContentRow({
         </div>
       </TableCell>
       <TableCell>
-        {author.nickname}
-        {author.isAnonymous && (
+        {content.author.nickname}
+        {content.author.isAnonymous && (
           <span className="text-muted-foreground"> · 게스트</span>
         )}
-        {author.suspendedUntil && (
-          <Badge variant="destructive" className="ml-1">
-            정지
-          </Badge>
-        )}
       </TableCell>
-      <TableCell>{content.region}</TableCell>
+      <TableCell>{content.region ?? "—"}</TableCell>
       <TableCell className="text-right tabular-nums">
         {formatDistance(content.distanceMeters)}
       </TableCell>
@@ -319,26 +346,17 @@ function ContentRow({
             <MoreHorizontalIcon />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuGroup>
-              <DropdownMenuItem render={<Link href="/users" />}>
-                <UserIcon />
-                작성자 보기
+            {content.isHidden ? (
+              <DropdownMenuItem onClick={onUnhide}>
+                <EyeIcon />
+                숨김 해제
               </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              {content.isHidden ? (
-                <DropdownMenuItem onClick={onUnhide}>
-                  <EyeIcon />
-                  숨김 해제
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem variant="destructive" onClick={onHide}>
-                  <EyeOffIcon />
-                  숨김
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuGroup>
+            ) : (
+              <DropdownMenuItem variant="destructive" onClick={onHide}>
+                <EyeOffIcon />
+                숨김
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>

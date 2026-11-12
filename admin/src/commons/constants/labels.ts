@@ -19,5 +19,6 @@ export const LOG_ACTION_LABEL: Record<LogAction, string> = {
   unsuspend_user: "정지 해제",
   update_report: "제보 처리",
   publish_notice: "공지 게시",
+  delete_notice: "공지 삭제",
   delete_image: "이미지 삭제",
 }

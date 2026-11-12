@@ -69,6 +69,9 @@ export type Notice = {
   updatedAt: string
 }
 
+// 작성 다이얼로그가 다루는 값. 상태·게시일은 저장할 때 서버가 정한다.
+export type NoticeDraft = Pick<Notice, "title" | "body" | "pinned">
+
 export type LogAction =
   | "hide_content"
   | "unhide_content"
@@ -76,6 +79,7 @@ export type LogAction =
   | "unsuspend_user"
   | "update_report"
   | "publish_notice"
+  | "delete_notice"
   | "delete_image"
 
 export type AuditLog = {

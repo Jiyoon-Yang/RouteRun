@@ -38,6 +38,13 @@ import {
   DropdownMenuTrigger,
 } from "@/commons/components/ui/dropdown-menu"
 import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/commons/components/ui/empty"
+import { Skeleton } from "@/commons/components/ui/skeleton"
+import {
   Table,
   TableBody,
   TableCell,
@@ -46,23 +53,20 @@ import {
   TableRow,
 } from "@/commons/components/ui/table"
 import { formatDate, formatDateTime } from "@/commons/utils/format"
-import { MOCK_NOW, notices as initialNotices } from "@/commons/mocks"
-import type { Notice } from "@/commons/types/admin"
+import type { Notice, NoticeDraft, NoticeStatus } from "@/commons/types/admin"
 
-import {
-  EMPTY_NOTICE,
-  NoticeFields,
-  toDraft,
-  type NoticeDraft,
-} from "./notice-fields"
+import { useNotices } from "./hooks/use-notices"
+import { EMPTY_NOTICE, NoticeFields, toDraft } from "./notice-fields"
 
 export function NoticesPage() {
-  const [notices, setNotices] = useState(initialNotices)
+  const { notices: data, isLoading, save: saveNotice, remove } = useNotices()
   // null = 닫힘, "new" = 새 공지, 그 외 = 수정 중인 공지 id
   const [editing, setEditing] = useState<string | null>(null)
   const [draft, setDraft] = useState<NoticeDraft>(EMPTY_NOTICE)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
 
+  const notices = data ?? []
   const sorted = [...notices].sort(
     (a, b) =>
       Number(b.pinned) - Number(a.pinned) ||
@@ -74,30 +78,40 @@ export function NoticesPage() {
     setEditing(notice?.id ?? "new")
   }
 
-  function save(status: Notice["status"]) {
-    const id = editing === "new" ? crypto.randomUUID() : editing!
-    const previous = notices.find((notice) => notice.id === id)
-    const next: Notice = {
-      id,
-      ...draft,
-      status,
-      publishedAt:
-        status === "published" ? (previous?.publishedAt ?? MOCK_NOW) : null,
-      updatedAt: MOCK_NOW,
-    }
-    setNotices((list) => [
-      ...list
-        .filter((notice) => notice.id !== id)
-        .map((notice) =>
-          draft.pinned ? { ...notice, pinned: false } : notice
-        ),
-      next,
-    ])
+  async function save(status: NoticeStatus) {
+    setIsSaving(true)
+    const saved = await saveNotice(
+      editing === "new" ? null : editing,
+      draft,
+      status
+    )
+    setIsSaving(false)
+    if (!saved) return
+
     setEditing(null)
     toast.success(
       status === "published"
         ? "게시했어요. 사용자 앱 /notice에 바로 보입니다."
         : "초안 저장됨"
+    )
+  }
+
+  async function confirmDelete() {
+    const id = deleteId!
+    setDeleteId(null)
+    if (await remove(id)) toast("공지 삭제됨")
+  }
+
+  if (!isLoading && !data) {
+    return (
+      <Empty className="border">
+        <EmptyHeader>
+          <EmptyTitle>공지를 불러오지 못했습니다</EmptyTitle>
+          <EmptyDescription>
+            서버 로그와 SUPABASE_SERVICE_ROLE_KEY 설정을 확인하세요.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     )
   }
 
@@ -126,6 +140,24 @@ export function NoticesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
+            {isLoading &&
+              Array.from({ length: 4 }, (_, index) => (
+                <TableRow key={index}>
+                  <TableCell colSpan={5}>
+                    <Skeleton className="h-6 w-full" />
+                  </TableCell>
+                </TableRow>
+              ))}
+            {!isLoading && sorted.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  아직 공지가 없습니다
+                </TableCell>
+              </TableRow>
+            )}
             {sorted.map((notice) => (
               <TableRow
                 key={notice.id}
@@ -209,13 +241,13 @@ export function NoticesPage() {
           <DialogFooter>
             <Button
               variant="outline"
-              disabled={!draft.title.trim()}
+              disabled={isSaving || !draft.title.trim()}
               onClick={() => save("draft")}
             >
               초안 저장
             </Button>
             <Button
-              disabled={!draft.title.trim() || !draft.body.trim()}
+              disabled={isSaving || !draft.title.trim() || !draft.body.trim()}
               onClick={() => save("published")}
             >
               게시
@@ -238,16 +270,7 @@ export function NoticesPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={() => {
-                setNotices((list) =>
-                  list.filter((notice) => notice.id !== deleteId)
-                )
-                setDeleteId(null)
-                toast("공지 삭제됨")
-              }}
-            >
+            <AlertDialogAction variant="destructive" onClick={confirmDelete}>
               삭제
             </AlertDialogAction>
           </AlertDialogFooter>

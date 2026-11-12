@@ -68,6 +68,7 @@ export async function countPendingReports(
 }
 
 // shortcut: PostgREST 기본 1000행 제한, 신고자들의 글이 1000개를 넘으면 집계 RPC로 바꾼다
+// shortcut: `.in()`은 id를 URL에 싣는다, 신고자가 약 200명을 넘으면 URL 길이 한계에 걸리니 같은 RPC로 바꾼다
 /** 유저별 코스·트랙 수. 행의 `user_id`만 받아서 센다. */
 export async function fetchContentCounts(
   supabase: SupabaseClient,

@@ -26,6 +26,7 @@ repositories/
 │   ├── detail.repository.ts   # 트랙 단건 조회 — 상세 페이지 전용
 │   └── home.repository.ts     # 홈 지도용 트랙 목록 (클라이언트 Supabase 사용)
 ├── map.repository.ts          # TMap API 호출 (역지오코딩, 보행자 경로)
+├── notice.repository.ts       # notices 테이블 게시 공지 조회 (getPublishedNotices). 작성·수정은 어드민 앱
 ├── storage.repository.ts      # course_images 버킷 파일 삭제 (removeCourseImages, 본인 폴더만). 업로드는 commons/utils/storage.ts
 ├── report.repository.ts       # reports 테이블 (createReport, countReportsSince). Service Role 클라이언트를 주입받아 사용
 └── user.repository.ts         # users 테이블 CRUD (프로필 조회, 닉네임 중복·수정)

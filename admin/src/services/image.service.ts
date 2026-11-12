@@ -11,6 +11,7 @@ import { logAdminAction } from "@/repositories/admin-log.repository"
 import {
   fetchImagePosts,
   fetchPostImages,
+  fetchSharedImageUrls,
   removeStorageFiles,
   updateImageUrls,
 } from "@/repositories/image.repository"
@@ -81,7 +82,13 @@ export async function deleteImages(
     // 스토리지를 먼저 지운다. 아래 DB 갱신이 실패해도 URL이 글에 남아 다시 누르면 다시 시도된다.
     // 반대 순서면 스토리지 실패 시 어디에도 안 걸린 파일이 공개 URL로 남는다.
     // 다른 호스트의 URL은 우리 버킷에 파일이 없어 글에서만 뺀다.
+    // 다른 글도 쓰는 파일은 남기고 이 글에서만 뺀다. 마지막으로 쓰는 글에서 지울 때 파일도 지운다.
+    const shared = await fetchSharedImageUrls(supabase, urls, {
+      table: TABLE[kind],
+      id: contentId,
+    })
     const paths = urls
+      .filter((url) => !shared.has(url))
       .map(extractImagePath)
       .filter((path): path is string => path !== null)
     if (paths.length > 0) await removeStorageFiles(supabase, paths)

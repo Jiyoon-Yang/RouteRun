@@ -55,6 +55,37 @@ export async function fetchPostImages(
   return data
 }
 
+/** 이 글 말고 다른 코스·트랙도 쓰고 있는 사진 URL. */
+export async function fetchSharedImageUrls(
+  supabase: SupabaseClient,
+  urls: string[],
+  exclude: { table: ContentTable; id: string }
+): Promise<Set<string>> {
+  const tables: ContentTable[] = ["routes", "tracks"]
+  const rows = await Promise.all(
+    tables.map(async (table) => {
+      let request = supabase
+        .from(table)
+        .select("image_urls")
+        .overlaps("image_urls", urls)
+      if (table === exclude.table) request = request.neq("id", exclude.id)
+      const { data, error } = await request
+
+      if (error) {
+        throw new Error(`${table}: ${error.message}`)
+      }
+      return data as { image_urls: string[] }[]
+    })
+  )
+
+  return new Set(
+    rows
+      .flat()
+      .flatMap((row) => row.image_urls)
+      .filter((url) => urls.includes(url))
+  )
+}
+
 export async function updateImageUrls(
   supabase: SupabaseClient,
   table: ContentTable,

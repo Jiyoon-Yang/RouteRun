@@ -23,6 +23,7 @@ import {
 import { IMAGE_PAGE_SIZE } from "@/commons/constants/content"
 import type { ContentImage, ImageFilters } from "@/commons/types/admin"
 import { formatRelative } from "@/commons/utils/format"
+import { extractImagePath } from "@/commons/utils/storage"
 import { cn } from "@/lib/utils"
 
 import { useImages } from "./hooks/use-images"
@@ -147,6 +148,8 @@ export function ImagesPage() {
                       fill
                       sizes="(min-width: 1280px) 16vw, 25vw"
                       className="object-cover"
+                      // 작성자가 REST로 다른 호스트 URL을 넣을 수 있다. remotePatterns 밖이면 원본을 그대로 띄워 검수할 수 있게 한다.
+                      unoptimized={extractImagePath(image.url) === null}
                     />
                   </button>
                   <Checkbox

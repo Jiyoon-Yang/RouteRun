@@ -42,3 +42,6 @@ export function formatDistance(meters: number) {
 }
 
 export const formatNumber = (value: number) => value.toLocaleString("ko-KR")
+
+// 제보 id는 uuid라 앞 8자만 보여준다. 작업 기록의 target 문자열에도 같은 표기를 쓴다.
+export const formatReportId = (id: string) => `#${id.slice(0, 8)}`

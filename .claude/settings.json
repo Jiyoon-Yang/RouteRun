@@ -1,4 +1,8 @@
 {
+  "worktree": {
+    "baseRef": "head",
+    "symlinkDirectories": ["node_modules", "admin/node_modules"]
+  },
   "hooks": {
     "PreToolUse": [
       {

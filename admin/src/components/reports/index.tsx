@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import { toast } from "sonner"
 
 import { SearchInput } from "@/commons/components/search-input"
@@ -17,10 +16,15 @@ import {
 import { Badge } from "@/commons/components/ui/badge"
 import { Button } from "@/commons/components/ui/button"
 import { ButtonGroup } from "@/commons/components/ui/button-group"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/commons/components/ui/empty"
 import { Field, FieldGroup, FieldLabel } from "@/commons/components/ui/field"
 import {
   Item,
-  ItemActions,
   ItemContent,
   ItemDescription,
   ItemMedia,
@@ -42,11 +46,16 @@ import {
   SelectValue,
 } from "@/commons/components/ui/select"
 import { Separator } from "@/commons/components/ui/separator"
+import { Skeleton } from "@/commons/components/ui/skeleton"
 import { Textarea } from "@/commons/components/ui/textarea"
-import { formatDateTime, formatRelative } from "@/commons/utils/format"
+import {
+  formatDateTime,
+  formatRelative,
+  formatReportId,
+} from "@/commons/utils/format"
 import { REPORT_STATUS_LABEL } from "@/commons/constants/labels"
-import { findUser, reports as initialReports } from "@/commons/mocks"
-import type { ReportStatus } from "@/commons/types/admin"
+import type { Report, Reporter, ReportStatus } from "@/commons/types/admin"
+import { useReports } from "@/components/reports/hooks/use-reports"
 import { cn } from "@/lib/utils"
 
 const FILTERS = [
@@ -57,12 +66,15 @@ const FILTERS = [
   { label: "전체", value: "all" },
 ]
 
+type ReportPatch = { status?: ReportStatus; adminNote: string }
+
 export function ReportsPage() {
-  const [reports, setReports] = useState(initialReports)
+  const { data, isLoading, update } = useReports()
   const [filter, setFilter] = useState("pending")
   const [query, setQuery] = useState("")
-  const [selectedId, setSelectedId] = useState(initialReports[0].id)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
+  const reports = data?.reports ?? []
   const visible = reports.filter(
     (report) =>
       (filter === "all" ||
@@ -71,7 +83,10 @@ export function ReportsPage() {
           : report.status === filter)) &&
       report.content.includes(query)
   )
-  const selected = reports.find((report) => report.id === selectedId)
+  // 처음에는 목록 맨 위 제보를 연다.
+  const selected =
+    reports.find((report) => report.id === selectedId) ?? visible[0]
+  const now = new Date().toISOString()
 
   // ↑↓로 목록 이동. 입력 중일 때는 무시.
   useEffect(() => {
@@ -83,22 +98,24 @@ export function ReportsPage() {
         return
       if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return
       event.preventDefault()
-      const index = visible.findIndex((report) => report.id === selectedId)
+      const index = visible.findIndex((report) => report.id === selected?.id)
       const next = visible[index + (event.key === "ArrowDown" ? 1 : -1)]
       if (next) setSelectedId(next.id)
     }
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [visible, selectedId])
+  }, [visible, selected])
 
-  function update(
-    id: string,
-    patch: { status?: ReportStatus; adminNote?: string }
-  ) {
-    setReports((list) =>
-      list.map((report) =>
-        report.id === id ? { ...report, ...patch } : report
-      )
+  if (!isLoading && !data) {
+    return (
+      <Empty className="border">
+        <EmptyHeader>
+          <EmptyTitle>제보를 불러오지 못했습니다</EmptyTitle>
+          <EmptyDescription>
+            서버 로그와 SUPABASE_SERVICE_ROLE_KEY 설정을 확인하세요.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     )
   }
 
@@ -141,42 +158,54 @@ export function ReportsPage() {
           </div>
           <ScrollArea className="min-h-0 flex-1">
             <div className="flex flex-col">
-              {visible.map((report) => {
-                const user = findUser(report.userId)
-                return (
-                  <button
-                    key={report.id}
-                    type="button"
-                    onClick={() => setSelectedId(report.id)}
-                    className={cn(
-                      "flex flex-col gap-1 border-b px-4 py-3 text-left text-sm transition-colors hover:bg-muted/50",
-                      report.id === selectedId && "bg-muted"
+              {isLoading &&
+                Array.from({ length: 6 }, (_, index) => (
+                  <div key={index} className="border-b px-4 py-3">
+                    <Skeleton className="h-16 w-full" />
+                  </div>
+                ))}
+              {!isLoading && visible.length === 0 && (
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyTitle>해당하는 제보가 없습니다</EmptyTitle>
+                  </EmptyHeader>
+                </Empty>
+              )}
+              {visible.map((report) => (
+                <button
+                  key={report.id}
+                  type="button"
+                  onClick={() => setSelectedId(report.id)}
+                  className={cn(
+                    "flex flex-col gap-1 border-b px-4 py-3 text-left text-sm transition-colors hover:bg-muted/50",
+                    report.id === selected?.id && "bg-muted"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    {report.status === "open" && (
+                      <span
+                        className="size-2 rounded-full bg-primary"
+                        aria-label="새 제보"
+                      />
                     )}
-                  >
-                    <div className="flex items-center gap-2">
-                      {report.status === "open" && (
-                        <span
-                          className="size-2 rounded-full bg-primary"
-                          aria-label="새 제보"
-                        />
-                      )}
-                      <span className="font-medium">{user.nickname}</span>
-                      <span className="ml-auto text-xs text-muted-foreground">
-                        {formatRelative(report.createdAt)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <ReportTypeBadge type={report.type} />
-                      {report.status !== "open" && (
-                        <ReportStatusBadge status={report.status} />
-                      )}
-                    </div>
-                    <p className="line-clamp-2 text-muted-foreground">
-                      {report.content}
-                    </p>
-                  </button>
-                )
-              })}
+                    <span className="font-medium">
+                      {data?.reporters[report.userId].nickname}
+                    </span>
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {formatRelative(report.createdAt, now)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ReportTypeBadge type={report.type} />
+                    {report.status !== "open" && (
+                      <ReportStatusBadge status={report.status} />
+                    )}
+                  </div>
+                  <p className="line-clamp-2 text-muted-foreground">
+                    {report.content}
+                  </p>
+                </button>
+              ))}
             </div>
           </ScrollArea>
           <div className="flex items-center gap-1 border-t px-3 py-2 text-xs text-muted-foreground">
@@ -188,12 +217,20 @@ export function ReportsPage() {
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize="62%" minSize="40%">
-        {selected ? (
+        {selected && data ? (
           <ReportDetail
             key={selected.id}
-            reportId={selected.id}
-            reports={reports}
-            onUpdate={update}
+            report={selected}
+            reporter={data.reporters[selected.userId]}
+            reportCount={
+              reports.filter((report) => report.userId === selected.userId)
+                .length
+            }
+            onUpdate={(id, patch) => {
+              // 자동으로 열린 제보도 처리 후 필터에서 빠질 때 다음 제보로 넘어가지 않게 고정한다.
+              setSelectedId(id)
+              return update(id, patch)
+            }}
           />
         ) : null}
       </ResizablePanel>
@@ -202,26 +239,33 @@ export function ReportsPage() {
 }
 
 function ReportDetail({
-  reportId,
-  reports,
+  report,
+  reporter,
+  reportCount,
   onUpdate,
 }: {
-  reportId: string
-  reports: typeof initialReports
-  onUpdate: (
-    id: string,
-    patch: { status?: ReportStatus; adminNote?: string }
-  ) => void
+  report: Report
+  reporter: Reporter
+  reportCount: number
+  onUpdate: (id: string, patch: ReportPatch) => Promise<boolean>
 }) {
-  const report = reports.find((item) => item.id === reportId)!
-  const user = findUser(report.userId)
   const [note, setNote] = useState(report.adminNote)
+  const [isSaving, setIsSaving] = useState(false)
 
-  function setStatus(status: ReportStatus) {
-    onUpdate(report.id, { status, adminNote: note })
-    toast.success(
-      `제보 #${report.id.slice(2)} → ${REPORT_STATUS_LABEL[status]}`
-    )
+  // 저장 중에는 버튼을 막아 같은 조치가 두 번 기록되지 않게 한다.
+  async function save(status?: ReportStatus) {
+    setIsSaving(true)
+    const ok = await onUpdate(report.id, { status, adminNote: note })
+    setIsSaving(false)
+    return ok
+  }
+
+  async function setStatus(status: ReportStatus) {
+    if (await save(status)) {
+      toast.success(
+        `제보 ${formatReportId(report.id)} → ${REPORT_STATUS_LABEL[status]}`
+      )
+    }
   }
 
   return (
@@ -230,20 +274,23 @@ function ReportDetail({
         <ReportTypeBadge type={report.type} />
         <ReportStatusBadge status={report.status} />
         <span className="text-sm text-muted-foreground">
-          제보 #{report.id.slice(2)}
+          제보 {formatReportId(report.id)}
+          {report.status === "resolved" &&
+            report.handledAt &&
+            ` · ${formatDateTime(report.handledAt)} 완료`}
         </span>
         <ButtonGroup className="ml-auto">
           <Button
             variant="outline"
             size="sm"
-            disabled={report.status === "in_progress"}
+            disabled={isSaving || report.status === "in_progress"}
             onClick={() => setStatus("in_progress")}
           >
             처리중으로
           </Button>
           <Button
             size="sm"
-            disabled={report.status === "resolved"}
+            disabled={isSaving || report.status === "resolved"}
             onClick={() => setStatus("resolved")}
           >
             완료
@@ -255,32 +302,24 @@ function ReportDetail({
           <Item variant="outline">
             <ItemMedia>
               <Avatar>
-                {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt="" />}
-                <AvatarFallback>{user.nickname.slice(0, 1)}</AvatarFallback>
+                {reporter.avatarUrl && (
+                  <AvatarImage src={reporter.avatarUrl} alt="" />
+                )}
+                <AvatarFallback>{reporter.nickname.slice(0, 1)}</AvatarFallback>
               </Avatar>
             </ItemMedia>
             <ItemContent>
               <ItemTitle>
-                {user.nickname}
+                {reporter.nickname}
                 <Badge variant="secondary">
-                  {user.isAnonymous ? "게스트" : "구글"}
+                  {reporter.isAnonymous ? "게스트" : "구글"}
                 </Badge>
               </ItemTitle>
               <ItemDescription>
-                {formatDateTime(report.createdAt)} · 코스 {user.courseCount} ·
-                트랙 {user.trackCount} · 제보 {user.reportCount}
+                {formatDateTime(report.createdAt)} · 코스 {reporter.courseCount}{" "}
+                · 트랙 {reporter.trackCount} · 제보 {reportCount}
               </ItemDescription>
             </ItemContent>
-            <ItemActions>
-              <Button
-                variant="ghost"
-                size="sm"
-                render={<Link href="/users" />}
-                nativeButton={false}
-              >
-                프로필
-              </Button>
-            </ItemActions>
           </Item>
           <p className="text-base leading-relaxed whitespace-pre-wrap">
             {report.content}
@@ -300,9 +339,9 @@ function ReportDetail({
             <Field orientation="horizontal">
               <Button
                 variant="outline"
-                onClick={() => {
-                  onUpdate(report.id, { adminNote: note })
-                  toast("메모 저장됨")
+                disabled={isSaving}
+                onClick={async () => {
+                  if (await save()) toast("메모 저장됨")
                 }}
               >
                 메모 저장

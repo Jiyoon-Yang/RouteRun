@@ -407,6 +407,7 @@ export const reports: Report[] = [
     createdAt: "2026-11-03T09:12:00+09:00",
     status: "open",
     adminNote: "",
+    handledAt: null,
   },
   {
     id: "r-30",
@@ -417,6 +418,7 @@ export const reports: Report[] = [
     createdAt: "2026-11-02T19:50:00+09:00",
     status: "open",
     adminNote: "",
+    handledAt: null,
   },
   {
     id: "r-29",
@@ -427,6 +429,7 @@ export const reports: Report[] = [
     createdAt: "2026-11-02T07:58:00+09:00",
     status: "in_progress",
     adminNote: "태그 기능 백로그에 추가. 다음 스프린트 검토.",
+    handledAt: null,
   },
   {
     id: "r-28",
@@ -437,6 +440,7 @@ export const reports: Report[] = [
     createdAt: "2026-11-01T21:33:00+09:00",
     status: "in_progress",
     adminNote: "홈 뷰포트 쿼리 경합 의심. 재현 중.",
+    handledAt: null,
   },
   {
     id: "r-27",
@@ -446,6 +450,7 @@ export const reports: Report[] = [
     createdAt: "2026-10-31T06:20:00+09:00",
     status: "open",
     adminNote: "",
+    handledAt: null,
   },
   {
     id: "r-26",
@@ -455,6 +460,7 @@ export const reports: Report[] = [
     createdAt: "2026-10-29T08:05:00+09:00",
     status: "resolved",
     adminNote: "likes_count 트리거 반영(6/23)으로 해결. 답장 완료.",
+    handledAt: null,
   },
   {
     id: "r-25",
@@ -464,6 +470,7 @@ export const reports: Report[] = [
     createdAt: "2026-10-27T13:10:00+09:00",
     status: "resolved",
     adminNote: "홈 목록 지역 필터로 대응.",
+    handledAt: null,
   },
 ]
 

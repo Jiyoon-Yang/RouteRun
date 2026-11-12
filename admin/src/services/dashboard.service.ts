@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { unstable_cache } from "next/cache"
 
 import type { DashboardStats } from "@/commons/types/admin"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -30,8 +31,23 @@ async function countTotals(supabase: SupabaseClient, since?: string) {
   return { users: google + guests, google, guests, courses, tracks }
 }
 
+// 관리자용 집계라 10분까지는 캐시를 써서 열 때마다 쿼리 13개를 다시 돌리지 않는다.
+const CACHE_TTL = 10 * 60 * 1000
+
+const getCachedDashboardStats = unstable_cache(
+  async () => ({ stats: await fetchDashboardStats(), fetchedAt: Date.now() }),
+  ["dashboard-stats"],
+  { revalidate: CACHE_TTL / 1000 }
+)
+
 /** 대시보드 KPI·차트·최근 등록. Service Role로 읽으므로 호출 전에 `requireAdmin()`을 거친다. */
 export async function getDashboardStats(): Promise<DashboardStats> {
+  const { stats, fetchedAt } = await getCachedDashboardStats()
+  // unstable_cache는 만료돼도 옛 값을 먼저 주므로, 오래됐으면 기다려서 새로 받는다
+  return Date.now() - fetchedAt > CACHE_TTL ? fetchDashboardStats() : stats
+}
+
+async function fetchDashboardStats(): Promise<DashboardStats> {
   const supabase = createAdminClient()
   const now = Date.now()
 

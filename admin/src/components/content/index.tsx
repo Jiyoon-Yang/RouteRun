@@ -396,7 +396,21 @@ function ContentRow({
             ) : (
               // 사진 없는 글이 대부분이라 사용자 앱 카드처럼 로고로 채운다.
               <div className="flex size-full items-center justify-center bg-muted">
-                <Image src="/logo.svg" alt="" width={24} height={24} />
+                <Image
+                  src="/logo.svg"
+                  alt=""
+                  width={24}
+                  height={24}
+                  className="dark:hidden"
+                />
+                {/* 로고 본체가 거의 검정이라 다크 모드 배경에 묻혀서 흰색 판을 쓴다. */}
+                <Image
+                  src="/logo-dark.svg"
+                  alt=""
+                  width={24}
+                  height={24}
+                  className="hidden dark:block"
+                />
               </div>
             )}
           </div>

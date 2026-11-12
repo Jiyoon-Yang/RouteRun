@@ -38,11 +38,16 @@ const nextConfig = {
   images: {
     remotePatterns: [
       // *.supabase.co로 열어 두면 다른 프로젝트 이미지도 우리 next/image 최적화로 변환되니 이 프로젝트 호스트만 연다.
-      {
-        protocol: 'https',
-        hostname: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname,
-        pathname: '/storage/v1/object/public/**',
-      },
+      // env가 없는 빌드(Storybook·CI 등)는 이 패턴만 빼고 빌드를 이어 간다.
+      ...(process.env.NEXT_PUBLIC_SUPABASE_URL
+        ? [
+            {
+              protocol: 'https',
+              hostname: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname,
+              pathname: '/storage/v1/object/public/**',
+            },
+          ]
+        : []),
       {
         protocol: 'https',
         hostname: 'apis.openapi.sk.com',

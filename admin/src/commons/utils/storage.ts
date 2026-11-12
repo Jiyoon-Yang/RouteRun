@@ -11,6 +11,12 @@ export function extractImagePath(url: string, userId: string): string | null {
   const index = url.indexOf(PUBLIC_PATH_MARKER)
   if (index === -1) return null
 
-  const path = url.slice(index + PUBLIC_PATH_MARKER.length).split("?")[0]
+  // getPublicUrl은 encodeURI로 URL을 만들어서, 버킷의 실제 파일 이름으로 되돌린 뒤 지운다. `%2e%2e`도 여기서 `..`가 된다.
+  let path: string
+  try {
+    path = decodeURI(url.slice(index + PUBLIC_PATH_MARKER.length).split("?")[0])
+  } catch {
+    return null
+  }
   return path.startsWith(`${userId}/`) && !path.includes("..") ? path : null
 }

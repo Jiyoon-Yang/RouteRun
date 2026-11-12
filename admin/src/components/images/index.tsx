@@ -56,9 +56,6 @@ export function ImagesPage() {
   const targets = list.filter((image) => selected.includes(keyOf(image)))
   const now = new Date().toISOString()
   const pageCount = Math.ceil(total / IMAGE_PAGE_SIZE)
-  // 마지막 페이지 사진을 모두 지워 페이지가 사라지면, 남은 마지막 페이지로 옮긴다.
-  const lastPage = Math.max(1, pageCount)
-  if (images && !isLoading && page > lastPage) setPage(lastPage)
 
   // 페이지·종류를 바꾸면 선택을 비운다. 화면에 안 보이는 사진까지 지워지지 않게.
   const changeView = (next: Partial<ImageFilters>) => {
@@ -66,6 +63,11 @@ export function ImagesPage() {
     setPage(next.page ?? 1)
     setSelected([])
   }
+
+  // 마지막 페이지 사진을 모두 지워 페이지가 사라지면, 남은 마지막 페이지로 옮긴다.
+  // effect로 옮기면 빈 페이지가 한 번 그려져서 렌더 중에 바로 바꾼다.
+  const lastPage = Math.max(1, pageCount)
+  if (images && !isLoading && page > lastPage) changeView({ page: lastPage })
 
   function toggle(key: string) {
     setSelected((keys) =>

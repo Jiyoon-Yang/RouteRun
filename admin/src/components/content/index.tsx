@@ -46,7 +46,7 @@ import {
   TableRow,
 } from "@/commons/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/commons/components/ui/tabs"
-import { CONTENT_PAGE_SIZE } from "@/commons/constants/content"
+import { CONTENT_PAGE_SIZE, REGION_GROUPS } from "@/commons/constants/content"
 import { formatDate, formatDistance } from "@/commons/utils/format"
 import type {
   ContentFilters,
@@ -63,6 +63,11 @@ const VISIBILITY = [
   { label: "숨김만", value: "hidden" },
 ]
 
+const REGIONS = [
+  { label: "모든 지역", value: "all" },
+  ...REGION_GROUPS.map(({ label }) => ({ label, value: label })),
+]
+
 export function ContentPage() {
   const [kind, setKind] = useState<ContentKind>("course")
   const [region, setRegion] = useState("all")
@@ -73,7 +78,7 @@ export function ContentPage() {
   const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<string[]>([])
   const [hideTargets, setHideTargets] = useState<string[]>([])
-  const { contents, total, isLoading, regions, setHidden } = useContents({
+  const { contents, total, isLoading, setHidden } = useContents({
     kind,
     region,
     visibility,
@@ -100,10 +105,6 @@ export function ContentPage() {
   }, [input, query])
 
   const list = contents ?? []
-  const regionItems = [
-    { label: "모든 지역", value: "all" },
-    ...regions.map((region) => ({ label: region, value: region })),
-  ]
   const pageCount = Math.ceil(total / CONTENT_PAGE_SIZE)
   // 마지막 페이지 글을 모두 숨기거나 해제해 페이지가 사라지면, 남은 마지막 페이지로 옮긴다.
   const lastPage = Math.max(1, pageCount)
@@ -154,7 +155,6 @@ export function ContentPage() {
           value={kind}
           onValueChange={(value) => {
             setKind(value as ContentKind)
-            setRegion("all")
             resetView()
           }}
         >
@@ -171,7 +171,7 @@ export function ContentPage() {
           onChange={(event) => setInput(event.target.value)}
         />
         <Select
-          items={regionItems}
+          items={REGIONS}
           value={region}
           onValueChange={(value) => {
             setRegion(value as string)
@@ -183,7 +183,7 @@ export function ContentPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              {regionItems.map((item) => (
+              {REGIONS.map((item) => (
                 <SelectItem key={item.value} value={item.value}>
                   {item.label}
                 </SelectItem>

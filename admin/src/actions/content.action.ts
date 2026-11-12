@@ -2,19 +2,14 @@
 
 import { updateTag } from "next/cache"
 
-import { MAX_BULK_CONTENT } from "@/commons/constants/content"
+import { MAX_BULK_CONTENT, REGION_GROUPS } from "@/commons/constants/content"
 import type { ContentFilters, ContentKind } from "@/commons/types/admin"
 import { requireAdmin } from "@/lib/require-admin"
-import {
-  getContentRegions,
-  getContents,
-  setContentHidden,
-} from "@/services/content.service"
+import { getContents, setContentHidden } from "@/services/content.service"
 import { DASHBOARD_CACHE_TAG } from "@/services/dashboard.service"
 
 const MAX_REASON = 200
-// 검색어·지역 이름 길이 상한.
-const MAX_FILTER_TEXT = 100
+const MAX_QUERY = 100
 
 const isKind = (kind: unknown): kind is ContentKind =>
   kind === "course" || kind === "track"
@@ -27,11 +22,11 @@ export async function getContentsAction(filters: ContentFilters) {
   const { kind, region, visibility, query, page } = filters
   if (
     !isKind(kind) ||
-    typeof region !== "string" ||
-    region.length > MAX_FILTER_TEXT ||
+    (region !== "all" &&
+      !REGION_GROUPS.some((group) => group.label === region)) ||
     !["all", "visible", "hidden"].includes(visibility) ||
     typeof query !== "string" ||
-    query.length > MAX_FILTER_TEXT ||
+    query.length > MAX_QUERY ||
     !Number.isSafeInteger(page) ||
     page < 1
   ) {
@@ -42,20 +37,6 @@ export async function getContentsAction(filters: ContentFilters) {
     return await getContents({ kind, region, visibility, query, page })
   } catch (error) {
     console.error("[getContentsAction]", error)
-    return null
-  }
-}
-
-/** 지역 필터 목록. 실패하면 null. */
-export async function getContentRegionsAction(kind: ContentKind) {
-  await requireAdmin()
-
-  if (!isKind(kind)) return null
-
-  try {
-    return await getContentRegions(kind)
-  } catch (error) {
-    console.error("[getContentRegionsAction]", error)
     return null
   }
 }

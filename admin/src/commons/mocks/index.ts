@@ -10,6 +10,14 @@ import type {
   User,
 } from "@/commons/types/admin"
 
+// 유저·이미지 시안이 아직 쓰는 옛 모양. 실제 코스·트랙 화면은 `Content`를 쓴다.
+type MockContent = Omit<Content, "region" | "author"> & {
+  region: string
+  authorId: string
+  isRoundTrip: boolean | null
+  path: PathPoint[] | null
+}
+
 export const MOCK_NOW = "2026-11-03T12:00:00+09:00"
 
 export const users: User[] = [
@@ -190,7 +198,7 @@ function river(amplitude: number, waves: number): PathPoint[] {
   })
 }
 
-export const contents: Content[] = [
+export const contents: MockContent[] = [
   {
     id: "c-101",
     kind: "course",

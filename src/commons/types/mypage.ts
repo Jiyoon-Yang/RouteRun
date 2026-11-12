@@ -14,6 +14,8 @@ export interface MypageRouteCardData {
   distanceText: string;
   likeCount: number;
   thumbnailUrl?: string;
+  /** 어드민이 숨긴 글. 작성자 본인 글에서만 true가 내려온다 */
+  isHidden: boolean;
   createdAt: string;
 }
 
@@ -25,6 +27,8 @@ export interface MypageTrackCardData {
   distanceText: string;
   likeCount: number;
   thumbnailUrl?: string;
+  /** 어드민이 숨긴 글. 작성자 본인 글에서만 true가 내려온다 */
+  isHidden: boolean;
   createdAt: string;
 }
 

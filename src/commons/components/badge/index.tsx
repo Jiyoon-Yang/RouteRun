@@ -1,19 +1,14 @@
 import styles from './styles.module.css';
 
+const BADGE_LABEL = { course: '코스', track: '트랙', hidden: '숨김' } as const;
+
 type BadgeProps = {
-  kind: 'course' | 'track';
+  kind: keyof typeof BADGE_LABEL;
   size?: 's' | 'm';
   className?: string;
 };
 
 export function Badge({ kind, size = 's', className }: BadgeProps) {
-  const cls = [
-    styles.badge,
-    styles[size],
-    kind === 'course' ? styles.course : styles.track,
-    className,
-  ]
-    .filter(Boolean)
-    .join(' ');
-  return <span className={cls}>{kind === 'course' ? '코스' : '트랙'}</span>;
+  const cls = [styles.badge, styles[size], styles[kind], className].filter(Boolean).join(' ');
+  return <span className={cls}>{BADGE_LABEL[kind]}</span>;
 }

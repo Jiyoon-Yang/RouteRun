@@ -59,7 +59,6 @@ const regionConfig = {
   tracks: { label: "트랙", color: "var(--chart-3)" },
 } satisfies ChartConfig
 
-// 숨김 제외(4단계) 문구는 해당 컬럼이 생기면 다시 붙인다.
 const KPIS: { label: string; key: keyof DashboardStats["weekly"] }[] = [
   { label: "전체 유저", key: "users" },
   { label: "구글 유저", key: "google" },
@@ -106,6 +105,13 @@ export function DashboardPage() {
                   <Skeleton className="h-9 w-24" />
                 )}
               </CardTitle>
+              {stats &&
+                (kpi.key === "courses" || kpi.key === "tracks") &&
+                stats.hidden[kpi.key] > 0 && (
+                  <CardDescription>
+                    숨김 {formatNumber(stats.hidden[kpi.key])}건 제외
+                  </CardDescription>
+                )}
               {stats && (
                 <CardAction>
                   <Badge variant="outline">

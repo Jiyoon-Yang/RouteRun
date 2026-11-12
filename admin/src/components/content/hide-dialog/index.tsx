@@ -27,9 +27,11 @@ export function HideDialog({
 }: {
   target: string | null
   onOpenChange: (open: boolean) => void
-  onConfirm: (reason: string) => void
+  /** 반영에 성공하면 true. 실패하면 사유를 지우지 않는다. */
+  onConfirm: (reason: string) => Promise<boolean>
 }) {
   const [reason, setReason] = useState("")
+  const [isPending, setIsPending] = useState(false)
 
   return (
     <AlertDialog
@@ -43,8 +45,9 @@ export function HideDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>{target} 숨김</AlertDialogTitle>
           <AlertDialogDescription>
-            사용자 앱의 홈·목록·상세·마이페이지에서 모두 사라집니다. 데이터는
-            남아 있어 언제든 되돌릴 수 있어요.
+            다른 사용자에게는 홈·상세·좋아요 목록에서 사라지고, 작성자에게는
+            마이페이지·상세에 &apos;숨김됨&apos;으로 보입니다. 데이터는 남아 있어
+            언제든 되돌릴 수 있어요.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <Field>
@@ -53,6 +56,7 @@ export function HideDialog({
             id="hide-reason"
             rows={3}
             value={reason}
+            maxLength={200}
             onChange={(event) => setReason(event.target.value)}
             placeholder="예: 홍보 링크 포함"
           />
@@ -62,10 +66,13 @@ export function HideDialog({
           <AlertDialogCancel>취소</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
-            disabled={!reason.trim()}
-            onClick={() => {
-              onConfirm(reason.trim())
-              setReason("")
+            disabled={!reason.trim() || isPending}
+            onClick={async () => {
+              setIsPending(true)
+              const ok = await onConfirm(reason.trim()).finally(() =>
+                setIsPending(false)
+              )
+              if (ok) setReason("")
             }}
           >
             숨김

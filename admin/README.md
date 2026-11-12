@@ -23,7 +23,7 @@ src/
 ├── components/<기능>/        화면. index.tsx + 하위 컴포넌트 폴더(hide-dialog/ 등) + utils/
 ├── commons/
 │   ├── components/ui/       shadcn 컴포넌트 (npx shadcn add가 여기로 설치)
-│   ├── components/<이름>/    공용 컴포넌트 (route-preview, search-input, status-badge)
+│   ├── components/<이름>/    공용 컴포넌트 (search-input, status-badge)
 │   ├── layout/              AdminLayout, sidebar/, header/, providers.tsx
 │   ├── constants/           nav.ts(사이드바 메뉴), labels.ts(상태·유형 표시명)
 │   ├── types/admin.ts       도메인 타입
@@ -39,14 +39,14 @@ src/
 
 ## 화면
 
-화면은 2026-11-04에 시안 A/B 중에서 확정했다. 대시보드·제보 처리함·공지 관리는 실데이터(Service Role)이고, 나머지 화면은 아직 `commons/mocks` 목데이터다. 로그인은 Supabase 대시보드에서 만든 이메일 계정 중 `admins`에 등록된 계정만 통과한다.
+화면은 2026-11-04에 시안 A/B 중에서 확정했다. 대시보드·제보 처리함·공지 관리·코스·트랙 관리는 실데이터(Service Role)이고, 나머지 화면은 아직 `commons/mocks` 목데이터다. 로그인은 Supabase 대시보드에서 만든 이메일 계정 중 `admins`에 등록된 계정만 통과한다.
 
 | 화면 | 경로 | 고른 시안 | 연결에 필요한 DB 변경 |
 | --- | --- | --- | --- |
 | 관리자 로그인 | `/login` | 중앙 카드 | `admins` 테이블 |
 | 대시보드 | `/` | 지표 중심 | 없음 |
 | 제보 처리함 | `/reports` | 메일함 2단 | `reports.status`, `admin_note`, `handled_at` |
-| 코스·트랙 관리 | `/content` | 데이터 테이블 | `routes`·`tracks`.`is_hidden` + 사용자 앱 조회 필터 |
+| 코스·트랙 관리 | `/content` | 데이터 테이블 | `routes`·`tracks`.`is_hidden` + RLS SELECT 정책 |
 | 유저 관리 | `/users` | 목록 + 프로필 패널 | `users.suspended_until`, `suspend_reason` |
 | 공지 관리 | `/notices` | 목록 + 작성 다이얼로그 | `notices` 테이블 |
 | 이미지 검수 | `/images` | 갤러리 그리드 | 없음 |

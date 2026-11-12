@@ -11,11 +11,12 @@ export type TrackRow = {
   start_address_region: string | null;
   image_urls: string[] | null;
   likes_count: number | null;
+  is_hidden: boolean | null;
   created_at: string | null;
 };
 
 export const TRACK_SELECT =
-  'id, user_id, title, description, distance_meters, start_lat, start_lng, start_address_region, image_urls, likes_count, created_at';
+  'id, user_id, title, description, distance_meters, start_lat, start_lng, start_address_region, image_urls, likes_count, is_hidden, created_at';
 
 export function toTrack(row: TrackRow | null): Track | null {
   if (!row) return null;
@@ -43,6 +44,7 @@ export function toTrack(row: TrackRow | null): Track | null {
     start_address_region: row.start_address_region ?? null,
     image_urls: row.image_urls ?? [],
     likes_count: row.likes_count ?? 0,
+    is_hidden: row.is_hidden ?? false,
     created_at: row.created_at,
   };
 }

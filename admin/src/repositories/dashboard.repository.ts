@@ -22,11 +22,16 @@ export type AuthorRow = {
 export async function countRows(
   supabase: SupabaseClient,
   table: string,
-  { since, isAnonymous }: { since?: string; isAnonymous?: boolean } = {}
+  {
+    since,
+    isAnonymous,
+    isHidden,
+  }: { since?: string; isAnonymous?: boolean; isHidden?: boolean } = {}
 ): Promise<number> {
   let query = supabase.from(table).select("*", { count: "exact", head: true })
   if (since) query = query.gte("created_at", since)
   if (isAnonymous !== undefined) query = query.eq("is_anonymous", isAnonymous)
+  if (isHidden !== undefined) query = query.eq("is_hidden", isHidden)
 
   const { count, error } = await query
 
@@ -63,6 +68,7 @@ export async function fetchRegions(
     .from(table)
     .select("start_address_region")
     .not("start_address_region", "is", null)
+    .eq("is_hidden", false)
 
   if (error) {
     throw new Error(`${table}: ${error.message}`)
@@ -79,6 +85,7 @@ export async function fetchRecentContents(
   const { data, error } = await supabase
     .from(table)
     .select("id, user_id, title, start_address_region, likes_count, created_at")
+    .eq("is_hidden", false)
     .order("created_at", { ascending: false })
     .limit(limit)
 

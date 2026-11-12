@@ -94,6 +94,13 @@
   gap: 0.5rem;
 }
 
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
 .title {
   margin: 0;
   min-width: 0;

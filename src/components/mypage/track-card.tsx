@@ -51,6 +51,7 @@ export function TrackCard({
       distanceText={track.distanceText}
       likeCount={likeCount}
       thumbnailUrl={track.thumbnailUrl}
+      isHidden={track.isHidden}
       primaryActionLabel={isMyTrack ? '상세보기' : undefined}
       onPrimaryActionClick={() => {
         router.push(ROUTES.TRACKS.DETAIL(track.id));

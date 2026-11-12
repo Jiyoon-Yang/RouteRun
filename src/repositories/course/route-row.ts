@@ -13,11 +13,12 @@ export type RouteRow = {
   image_urls: string[] | null;
   likes_count: number | null;
   is_round_trip: boolean | null;
+  is_hidden: boolean | null;
   created_at: string | null;
 };
 
 export const ROUTE_SELECT =
-  'id, user_id, title, description, distance_meters, path_data, start_lat, start_lng, start_address_region, image_urls, likes_count, is_round_trip, created_at';
+  'id, user_id, title, description, distance_meters, path_data, start_lat, start_lng, start_address_region, image_urls, likes_count, is_round_trip, is_hidden, created_at';
 
 export function toRoute(row: RouteRow | null): Route | null {
   if (!row) return null;
@@ -47,6 +48,7 @@ export function toRoute(row: RouteRow | null): Route | null {
     image_urls: row.image_urls ?? [],
     likes_count: row.likes_count ?? 0,
     is_round_trip: row.is_round_trip ?? false,
+    is_hidden: row.is_hidden ?? false,
     created_at: row.created_at,
   };
 }

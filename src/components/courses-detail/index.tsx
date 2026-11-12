@@ -150,6 +150,11 @@ export function Courses({ course, authorNickname, location, canEdit = false }: C
                 <span className={styles.location}>{location}</span>
               </span>
             </div>
+            {course.is_hidden && (
+              <p className={styles.hiddenNotice}>
+                운영 정책에 따라 숨겨진 코스예요. 나에게만 보여요.
+              </p>
+            )}
           </section>
           <section className={styles.descriptionSection} aria-label="설명">
             <h3 className={styles.sectionTitle}>설명</h3>

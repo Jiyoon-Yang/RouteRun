@@ -35,6 +35,7 @@ function routeToMypageCard(route: Route): MypageRouteCardData {
     distanceText: `${(route.distance_meters / 1000).toFixed(1)}km`,
     likeCount: route.likes_count,
     thumbnailUrl: route.image_urls[0],
+    isHidden: route.is_hidden,
     createdAt: route.created_at,
   };
 }

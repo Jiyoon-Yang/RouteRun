@@ -24,20 +24,19 @@ export type PathPoint = [number, number]
 
 export type ContentKind = "course" | "track"
 
+// 코스·트랙 관리 목록 한 행. 작성자는 users 임베드로 같이 받는다.
 export type Content = {
   id: string
   kind: ContentKind
   title: string
   description: string
-  region: string
+  region: string | null
   distanceMeters: number
   likes: number
   imageUrls: string[]
-  authorId: string
   createdAt: string
   isHidden: boolean
-  isRoundTrip: boolean | null
-  path: PathPoint[] | null
+  author: { nickname: string; isAnonymous: boolean }
 }
 
 export type Report = {
@@ -99,6 +98,7 @@ export type ContentImage = {
 }
 
 // 대시보드 지표. weekly는 최근 7일 증가분, daily는 최근 30일(KST 날짜별).
+// 코스·트랙 수·지역·최근 등록은 숨긴 글을 빼고 세고, 숨긴 수는 hidden에 따로 둔다.
 // users = google + guests. google은 is_anonymous=false라 게스트가 구글로 전환하면 google로 옮겨 간다.
 type DashboardCounts = {
   users: number
@@ -111,6 +111,7 @@ type DashboardCounts = {
 export type DashboardStats = {
   totals: DashboardCounts
   weekly: DashboardCounts
+  hidden: { courses: number; tracks: number }
   daily: { date: string; signups: number; guests: number }[]
   regions: { region: string; courses: number; tracks: number }[]
   recent: {

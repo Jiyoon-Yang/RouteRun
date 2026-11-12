@@ -1,4 +1,9 @@
-import type { Content, ContentKind } from "@/commons/types/admin"
+import type {
+  Content,
+  ContentFilters,
+  ContentKind,
+  ContentList,
+} from "@/commons/types/admin"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { logAdminAction } from "@/repositories/admin-log.repository"
 import {
@@ -6,6 +11,7 @@ import {
   updateHidden,
   type ContentRow,
 } from "@/repositories/content.repository"
+import { fetchRegions } from "@/repositories/dashboard.repository"
 
 const TABLE = { course: "routes", track: "tracks" } as const
 const LABEL: Record<ContentKind, string> = { course: "코스", track: "트랙" }
@@ -29,14 +35,25 @@ const toContent =
     },
   })
 
-/** 숨긴 글을 포함한 전체 코스·트랙. Service Role로 읽으므로 호출 전에 `requireAdmin()`을 거친다. */
-export async function getContents(): Promise<Content[]> {
-  const supabase = createAdminClient()
-  const [routes, tracks] = await Promise.all([
-    fetchContents(supabase, TABLE.course),
-    fetchContents(supabase, TABLE.track),
-  ])
-  return [...routes.map(toContent("course")), ...tracks.map(toContent("track"))]
+/** 숨긴 글을 포함해 조건에 맞는 코스·트랙 한 페이지. Service Role로 읽으므로 호출 전에 `requireAdmin()`을 거친다. */
+export async function getContents({
+  kind,
+  ...filters
+}: ContentFilters): Promise<ContentList> {
+  const { rows, total } = await fetchContents(
+    createAdminClient(),
+    TABLE[kind],
+    filters
+  )
+  return { items: rows.map(toContent(kind)), total }
+}
+
+/** 지역 필터 목록. 숨긴 글의 지역도 넣는다. */
+export async function getContentRegions(kind: ContentKind): Promise<string[]> {
+  const regions = await fetchRegions(createAdminClient(), TABLE[kind], {
+    includeHidden: true,
+  })
+  return [...new Set(regions)].sort()
 }
 
 /** 숨기거나 되돌리고, 실제로 바뀐 글마다 조치 기록을 남긴다. */

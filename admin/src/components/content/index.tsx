@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import { EyeIcon, EyeOffIcon, MoreHorizontalIcon } from "lucide-react"
 
@@ -21,6 +21,14 @@ import {
   EmptyTitle,
 } from "@/commons/components/ui/empty"
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/commons/components/ui/pagination"
+import {
   Select,
   SelectContent,
   SelectGroup,
@@ -38,8 +46,13 @@ import {
   TableRow,
 } from "@/commons/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/commons/components/ui/tabs"
+import { CONTENT_PAGE_SIZE } from "@/commons/constants/content"
 import { formatDate, formatDistance } from "@/commons/utils/format"
-import type { ContentKind, Content } from "@/commons/types/admin"
+import type {
+  ContentFilters,
+  ContentKind,
+  Content,
+} from "@/commons/types/admin"
 
 import { HideDialog } from "./hide-dialog"
 import { useContents } from "./hooks/use-contents"
@@ -51,39 +64,63 @@ const VISIBILITY = [
 ]
 
 export function ContentPage() {
-  const { contents, isLoading, setHidden } = useContents()
   const [kind, setKind] = useState<ContentKind>("course")
   const [region, setRegion] = useState("all")
-  const [visibility, setVisibility] = useState("all")
+  const [visibility, setVisibility] =
+    useState<ContentFilters["visibility"]>("all")
+  const [input, setInput] = useState("")
   const [query, setQuery] = useState("")
+  const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<string[]>([])
   const [hideTargets, setHideTargets] = useState<string[]>([])
+  const { contents, total, isLoading, regions, setHidden } = useContents({
+    kind,
+    region,
+    visibility,
+    query,
+    page,
+  })
+
+  // 조건을 바꾸면 첫 페이지로 가고 선택을 비운다. 화면에 안 보이는 글까지 일괄 처리되지 않게.
+  const resetView = () => {
+    setPage(1)
+    setSelected([])
+  }
+
+  // 글자마다 서버를 부르지 않게 입력이 멈춘 뒤 검색한다.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const next = input.trim()
+      if (next === query) return
+      setQuery(next)
+      resetView()
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [input, query])
 
   const list = contents ?? []
-  const regions = [
+  const regionItems = [
     { label: "모든 지역", value: "all" },
-    ...[
-      ...new Set(
-        list.flatMap((content) =>
-          content.kind === kind && content.region ? [content.region] : []
-        )
-      ),
-    ]
-      .sort()
-      .map((region) => ({ label: region, value: region })),
+    ...regions.map((region) => ({ label: region, value: region })),
   ]
-  const visible = list.filter(
-    (content) =>
-      content.kind === kind &&
-      (region === "all" || content.region === region) &&
-      (visibility === "all" ||
-        content.isHidden === (visibility === "hidden")) &&
-      content.title.includes(query)
-  )
+  const pageCount = Math.ceil(total / CONTENT_PAGE_SIZE)
   const allChecked =
-    visible.length > 0 &&
-    visible.every((content) => selected.includes(content.id))
+    list.length > 0 && list.every((content) => selected.includes(content.id))
   const label = kind === "course" ? "코스" : "트랙"
+
+  // shadcn 페이지 링크는 <a>라서 href가 있어야 키보드로 포커스·Enter가 된다. 주소는 바꾸지 않고 상태만 바꾼다.
+  const pageLinkProps = (target: number, disabled = false) => ({
+    href: "#",
+    "aria-disabled": disabled || undefined,
+    tabIndex: disabled ? -1 : undefined,
+    className: disabled ? "pointer-events-none opacity-50" : undefined,
+    onClick: (event: React.MouseEvent) => {
+      event.preventDefault()
+      if (disabled) return
+      setPage(target)
+      setSelected([])
+    },
+  })
 
   // 처리한 글만 선택에서 뺀다. 한 행만 해제해도 다른 체크가 풀리지 않게.
   const deselect = (ids: string[]) =>
@@ -114,7 +151,7 @@ export function ContentPage() {
           onValueChange={(value) => {
             setKind(value as ContentKind)
             setRegion("all")
-            setSelected([])
+            resetView()
           }}
         >
           <TabsList>
@@ -125,19 +162,16 @@ export function ContentPage() {
         <SearchInput
           className="w-64"
           placeholder={`${label} 제목 검색`}
-          value={query}
-          onChange={(event) => {
-            // 필터·검색을 바꾸면 선택을 비운다. 화면에 안 보이는 글까지 일괄 처리되지 않게.
-            setQuery(event.target.value)
-            setSelected([])
-          }}
+          value={input}
+          maxLength={100}
+          onChange={(event) => setInput(event.target.value)}
         />
         <Select
-          items={regions}
+          items={regionItems}
           value={region}
           onValueChange={(value) => {
             setRegion(value as string)
-            setSelected([])
+            resetView()
           }}
         >
           <SelectTrigger className="w-36">
@@ -145,7 +179,7 @@ export function ContentPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              {regions.map((item) => (
+              {regionItems.map((item) => (
                 <SelectItem key={item.value} value={item.value}>
                   {item.label}
                 </SelectItem>
@@ -157,8 +191,8 @@ export function ContentPage() {
           items={VISIBILITY}
           value={visibility}
           onValueChange={(value) => {
-            setVisibility(value as string)
-            setSelected([])
+            setVisibility(value as ContentFilters["visibility"])
+            resetView()
           }}
         >
           <SelectTrigger className="w-36">
@@ -199,6 +233,9 @@ export function ContentPage() {
         )}
       </div>
 
+      {contents && (
+        <p className="text-sm text-muted-foreground">총 {total}개</p>
+      )}
       <div className="rounded-lg border">
         <Table>
           <TableHeader>
@@ -209,7 +246,7 @@ export function ContentPage() {
                   checked={allChecked}
                   onCheckedChange={(checked) =>
                     setSelected(
-                      checked ? visible.map((content) => content.id) : []
+                      checked ? list.map((content) => content.id) : []
                     )
                   }
                 />
@@ -233,7 +270,7 @@ export function ContentPage() {
                   </TableCell>
                 </TableRow>
               ))}
-            {!isLoading && visible.length === 0 && (
+            {!isLoading && list.length === 0 && (
               <TableRow>
                 <TableCell colSpan={9}>
                   <Empty>
@@ -244,28 +281,57 @@ export function ContentPage() {
                 </TableCell>
               </TableRow>
             )}
-            {visible.map((content) => (
-              <ContentRow
-                key={content.id}
-                content={content}
-                checked={selected.includes(content.id)}
-                onCheckedChange={(checked) =>
-                  setSelected((ids) =>
-                    checked
-                      ? [...ids, content.id]
-                      : ids.filter((id) => id !== content.id)
-                  )
-                }
-                onHide={() => setHideTargets([content.id])}
-                onUnhide={() => unhide([content.id])}
-              />
-            ))}
+            {!isLoading &&
+              list.map((content) => (
+                <ContentRow
+                  key={content.id}
+                  content={content}
+                  checked={selected.includes(content.id)}
+                  onCheckedChange={(checked) =>
+                    setSelected((ids) =>
+                      checked
+                        ? [...ids, content.id]
+                        : ids.filter((id) => id !== content.id)
+                    )
+                  }
+                  onHide={() => setHideTargets([content.id])}
+                  onUnhide={() => unhide([content.id])}
+                />
+              ))}
           </TableBody>
         </Table>
       </div>
-      <p className="text-sm text-muted-foreground">
-        {visible.length}개
-      </p>
+      {/* 범위를 벗어난 빈 페이지에서도 앞으로 돌아갈 수 있게 page > 1이면 보인다. */}
+      {(pageCount > 1 || page > 1) && (
+        <Pagination aria-label="페이지 이동">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                text="이전"
+                aria-label="이전 페이지"
+                {...pageLinkProps(page - 1, page === 1)}
+              />
+            </PaginationItem>
+            {Array.from({ length: pageCount }, (_, index) => (
+              <PaginationItem key={index}>
+                <PaginationLink
+                  isActive={index + 1 === page}
+                  {...pageLinkProps(index + 1)}
+                >
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                text="다음"
+                aria-label="다음 페이지"
+                {...pageLinkProps(page + 1, page >= pageCount)}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
 
       <HideDialog
         target={

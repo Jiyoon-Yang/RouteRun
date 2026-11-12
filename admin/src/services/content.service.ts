@@ -51,16 +51,25 @@ export async function setContentHidden(
   const changed = await updateHidden(supabase, TABLE[kind], ids, isHidden)
 
   // 숨김은 이미 반영됐으니 기록 실패로 화면에 실패를 띄우지 않는다(다시 누르면 바뀐 행이 없어 기록도 안 남는다).
-  await Promise.all(
+  // 대신 빠진 기록을 서버 로그로 되살릴 수 있게 글 id를 남긴다.
+  const results = await Promise.allSettled(
     changed.map((row) =>
       logAdminAction(supabase, {
         adminId,
         action: isHidden ? "hide_content" : "unhide_content",
-        target: `${LABEL[kind]} '${row.title}'`,
+        // 같은 제목을 구분하려고 제보 기록과 같은 8자리 id를 붙인다.
+        target: `${LABEL[kind]} '${row.title}' (#${row.id.slice(0, 8)})`,
         reason,
       })
     )
-  ).catch((error) =>
-    console.error("[setContentHidden] 조치 기록 실패:", error)
   )
+  results.forEach((result, index) => {
+    if (result.status === "rejected") {
+      console.error(
+        "[setContentHidden] 조치 기록 실패:",
+        { kind, id: changed[index].id, isHidden, reason },
+        result.reason
+      )
+    }
+  })
 }

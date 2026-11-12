@@ -7,6 +7,7 @@ import {
   getContentsAction,
   setContentHiddenAction,
 } from "@/actions/content.action"
+import { MAX_BULK_CONTENT } from "@/commons/constants/content"
 import type { Content, ContentKind } from "@/commons/types/admin"
 
 /** 코스·트랙 목록을 불러오고, 숨김·해제하면 목록을 맞춘다. 실패 안내는 여기서 띄운다. */
@@ -40,6 +41,11 @@ export function useContents() {
     isHidden: boolean,
     reason: string | null = null
   ) {
+    if (ids.length > MAX_BULK_CONTENT) {
+      toast.error(`한 번에 ${MAX_BULK_CONTENT}개까지 처리할 수 있어요.`)
+      return false
+    }
+
     const ok = await setContentHiddenAction(kind, ids, isHidden, reason).catch(
       (error) => {
         console.error("[useContents] 숨김 변경 실패:", error)

@@ -2,12 +2,12 @@
 
 import { updateTag } from "next/cache"
 
+import { MAX_BULK_CONTENT } from "@/commons/constants/content"
 import type { ContentKind } from "@/commons/types/admin"
 import { requireAdmin } from "@/lib/require-admin"
 import { getContents, setContentHidden } from "@/services/content.service"
 import { DASHBOARD_CACHE_TAG } from "@/services/dashboard.service"
 
-const MAX_IDS = 100
 const MAX_REASON = 200
 
 /** 숨긴 글을 포함한 전체 코스·트랙. 실패하면 null을 돌려 화면에 안내만 띄운다. */
@@ -36,7 +36,7 @@ export async function setContentHiddenAction(
     (kind !== "course" && kind !== "track") ||
     !Array.isArray(ids) ||
     ids.length === 0 ||
-    ids.length > MAX_IDS ||
+    ids.length > MAX_BULK_CONTENT ||
     !ids.every((id) => typeof id === "string") ||
     typeof isHidden !== "boolean"
   ) {

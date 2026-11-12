@@ -1,0 +1,125 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  background: var(--color-white-500);
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 8px 16px 32px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.item {
+  border-bottom: 1px solid var(--color-grey-100);
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary:focus-visible {
+  outline: 2px solid var(--color-blue-500);
+  outline-offset: 2px;
+}
+
+.pinned {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-blue-50);
+  color: var(--color-blue-500);
+  font-family: var(--typography-caption-1-ko-desktop-font-family);
+  font-size: var(--typography-caption-1-ko-desktop-font-size);
+  font-weight: var(--typography-caption-1-ko-desktop-font-weight);
+  line-height: var(--typography-caption-1-ko-desktop-line-height);
+  letter-spacing: var(--typography-caption-1-ko-desktop-letter-spacing);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-black-500);
+  font-family: var(--typography-body-2-ko-desktop-semibold-font-family);
+  font-size: var(--typography-body-2-ko-desktop-semibold-font-size);
+  font-weight: var(--typography-body-2-ko-desktop-semibold-font-weight);
+  line-height: var(--typography-body-2-ko-desktop-semibold-line-height);
+  letter-spacing: var(--typography-body-2-ko-desktop-semibold-letter-spacing);
+}
+
+.date {
+  flex-shrink: 0;
+  color: var(--color-dark_grey-400);
+  font-family: var(--typography-caption-1-ko-desktop-font-family);
+  font-size: var(--typography-caption-1-ko-desktop-font-size);
+  font-weight: var(--typography-caption-1-ko-desktop-font-weight);
+  line-height: var(--typography-caption-1-ko-desktop-line-height);
+  letter-spacing: var(--typography-caption-1-ko-desktop-letter-spacing);
+}
+
+.chevronDown,
+.chevronUp {
+  flex-shrink: 0;
+  color: var(--color-dark_grey-400);
+}
+
+/* 아이콘 기본 display(.iconBase)보다 우선하도록 .summary를 붙인다 */
+.summary .chevronUp,
+details[open] .summary .chevronDown {
+  display: none;
+}
+
+details[open] .summary .chevronUp {
+  display: inline-flex;
+}
+
+.body {
+  margin: 0 0 16px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  color: var(--color-dark_grey-500);
+  font-family: var(--typography-body-2-ko-desktop-regular-font-family);
+  font-size: var(--typography-body-2-ko-desktop-regular-font-size);
+  font-weight: var(--typography-body-2-ko-desktop-regular-font-weight);
+  line-height: var(--typography-body-2-ko-desktop-regular-line-height);
+  letter-spacing: var(--typography-body-2-ko-desktop-regular-letter-spacing);
+}
+
+/* 펼칠 때 본문이 위에서 살짝 내려오며 서서히 나타난다. 접을 때는 바로 닫힌다 */
+details[open] .body {
+  animation: bodyIn 300ms ease-out;
+}
+
+@keyframes bodyIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  details[open] .body {
+    animation: none;
+  }
+}

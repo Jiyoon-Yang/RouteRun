@@ -22,6 +22,15 @@ export interface Route {
   created_at: string;
 }
 
+/** 공지사항 페이지에 보이는 게시된 공지. 작성·수정은 어드민 앱이 한다 */
+export interface Notice {
+  id: string;
+  title: string;
+  body: string;
+  pinned: boolean;
+  published_at: string;
+}
+
 export type ReferenceLocationType = 'CURRENT_USER_LOCATION' | 'SEOUL_CITY_HALL_DEFAULT';
 
 export interface ReferenceLocation {

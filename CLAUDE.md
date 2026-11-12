@@ -106,6 +106,7 @@ GA_ID=                           # 선택. GA4 측정 ID. Vercel Production에�
 - `main` — 프로덕션 전용, 직접 커밋 금지
 - `dev` — 통합 브랜치; 모든 기능은 PR로 머지
 - 기능 브랜치: `feat/<기능명>`
+- **Claude 작업은 워크트리에서:** 새 작업(세션)마다 `EnterWorktree`로 `.claude/worktrees/`에 워크트리를 만들어 작업한다. 메인 체크아웃은 여러 세션이 같이 쓰므로 거기서 `git checkout`하지 않는다. 워크트리는 메인 체크아웃의 HEAD에서 갈라지니(`worktree.baseRef: "head"`), 만든 직후 `git fetch origin dev && git branch -m feat/<기능명> && git reset --hard origin/dev`로 최신 dev에 맞춘다. `.env.local`·`admin/.env.local`은 `.worktreeinclude`로 복사되고, `node_modules`·`admin/node_modules`는 메인 체크아웃 것을 심볼릭 링크로 공유한다(`worktree.symlinkDirectories`, 워크트리에서 `npm install`하면 메인 쪽도 바뀐다).
 
 ## PR 작성 규칙
 

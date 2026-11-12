@@ -394,7 +394,10 @@ function ContentRow({
                 className="object-cover"
               />
             ) : (
-              <div className="size-full bg-muted" />
+              // 사진 없는 글이 대부분이라 사용자 앱 카드처럼 로고로 채운다.
+              <div className="flex size-full items-center justify-center bg-muted">
+                <Image src="/logo.svg" alt="" width={24} height={24} />
+              </div>
             )}
           </div>
           <div className="flex max-w-72 flex-col">

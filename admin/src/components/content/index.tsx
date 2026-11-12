@@ -85,8 +85,12 @@ export function ContentPage() {
     visible.every((content) => selected.includes(content.id))
   const label = kind === "course" ? "코스" : "트랙"
 
+  // 처리한 글만 선택에서 뺀다. 한 행만 해제해도 다른 체크가 풀리지 않게.
+  const deselect = (ids: string[]) =>
+    setSelected((current) => current.filter((id) => !ids.includes(id)))
+
   async function unhide(ids: string[]) {
-    if (await setHidden(kind, ids, false)) setSelected([])
+    if (await setHidden(kind, ids, false)) deselect(ids)
   }
 
   if (!isLoading && !contents) {
@@ -122,12 +126,19 @@ export function ContentPage() {
           className="w-64"
           placeholder={`${label} 제목 검색`}
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => {
+            // 필터·검색을 바꾸면 선택을 비운다. 화면에 안 보이는 글까지 일괄 처리되지 않게.
+            setQuery(event.target.value)
+            setSelected([])
+          }}
         />
         <Select
           items={regions}
           value={region}
-          onValueChange={(value) => setRegion(value as string)}
+          onValueChange={(value) => {
+            setRegion(value as string)
+            setSelected([])
+          }}
         >
           <SelectTrigger className="w-36">
             <SelectValue />
@@ -145,7 +156,10 @@ export function ContentPage() {
         <Select
           items={VISIBILITY}
           value={visibility}
-          onValueChange={(value) => setVisibility(value as string)}
+          onValueChange={(value) => {
+            setVisibility(value as string)
+            setSelected([])
+          }}
         >
           <SelectTrigger className="w-36">
             <SelectValue />
@@ -264,8 +278,13 @@ export function ContentPage() {
         onOpenChange={(open) => !open && setHideTargets([])}
         onConfirm={async (reason) => {
           const ids = hideTargets
-          setHideTargets([])
-          if (await setHidden(kind, ids, true, reason)) setSelected([])
+          const ok = await setHidden(kind, ids, true, reason)
+          // 실패하면 다이얼로그와 입력한 사유를 그대로 두고 다시 시도하게 한다.
+          if (ok) {
+            deselect(ids)
+            setHideTargets([])
+          }
+          return ok
         }}
       />
     </>

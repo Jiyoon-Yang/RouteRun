@@ -27,9 +27,11 @@ export function HideDialog({
 }: {
   target: string | null
   onOpenChange: (open: boolean) => void
-  onConfirm: (reason: string) => void
+  /** 반영에 성공하면 true. 실패하면 사유를 지우지 않는다. */
+  onConfirm: (reason: string) => Promise<boolean>
 }) {
   const [reason, setReason] = useState("")
+  const [isPending, setIsPending] = useState(false)
 
   return (
     <AlertDialog
@@ -64,10 +66,13 @@ export function HideDialog({
           <AlertDialogCancel>취소</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
-            disabled={!reason.trim()}
-            onClick={() => {
-              onConfirm(reason.trim())
-              setReason("")
+            disabled={!reason.trim() || isPending}
+            onClick={async () => {
+              setIsPending(true)
+              const ok = await onConfirm(reason.trim()).finally(() =>
+                setIsPending(false)
+              )
+              if (ok) setReason("")
             }}
           >
             숨김

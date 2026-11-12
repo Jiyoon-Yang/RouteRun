@@ -1,0 +1,14 @@
+import type { Notice } from '@/commons/types/routerun';
+import { getPublishedNotices } from '@/repositories/notice.repository';
+
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+/** 공지사항 페이지용 게시 공지. 조회에 실패하면 null을 돌려 "공지 없음"과 구분한다 */
+export async function fetchNotices(supabase: SupabaseClient): Promise<Notice[] | null> {
+  const { data, error } = await getPublishedNotices(supabase);
+  if (error) {
+    console.error('[fetchNotices]', error.message);
+    return null;
+  }
+  return data ?? [];
+}

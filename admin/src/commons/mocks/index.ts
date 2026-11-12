@@ -5,7 +5,6 @@ import type {
   AuditLog,
   Content,
   ContentImage,
-  Notice,
   PathPoint,
   Report,
   User,
@@ -471,45 +470,6 @@ export const reports: Report[] = [
     status: "resolved",
     adminNote: "홈 목록 지역 필터로 대응.",
     handledAt: null,
-  },
-]
-
-export const notices: Notice[] = [
-  {
-    id: "n-5",
-    title: "게스트 작성 제한 안내",
-    body: "게스트(로그인 없이 시작)로는 코스·트랙을 합쳐 1개까지 등록할 수 있어요.\n구글로 로그인하면 제한 없이 등록할 수 있습니다.",
-    status: "published",
-    pinned: true,
-    publishedAt: "2026-11-01T10:00:00+09:00",
-    updatedAt: "2026-11-01T10:00:00+09:00",
-  },
-  {
-    id: "n-4",
-    title: "11월 서버 점검 안내 (11/10 새벽 2~4시)",
-    body: "더 안정적인 서비스를 위해 11월 10일 새벽 2시부터 4시까지 점검을 진행합니다.\n점검 중에는 코스 등록·좋아요가 잠시 멈춥니다.",
-    status: "draft",
-    pinned: false,
-    publishedAt: null,
-    updatedAt: "2026-11-02T23:30:00+09:00",
-  },
-  {
-    id: "n-3",
-    title: "트랙 등록 기능이 추가됐어요",
-    body: "이제 동네 트랙도 등록할 수 있어요. 홈 지도에서 트랙 탭을 눌러보세요.",
-    status: "published",
-    pinned: false,
-    publishedAt: "2026-05-21T09:00:00+09:00",
-    updatedAt: "2026-05-21T09:00:00+09:00",
-  },
-  {
-    id: "n-2",
-    title: "좋아요 숫자가 늦게 반영되던 문제를 고쳤어요",
-    body: "다른 사람 코스에 좋아요를 눌러도 숫자가 바로 오르지 않던 문제를 수정했습니다.",
-    status: "published",
-    pinned: false,
-    publishedAt: "2026-06-23T18:00:00+09:00",
-    updatedAt: "2026-06-23T18:00:00+09:00",
   },
 ]
 

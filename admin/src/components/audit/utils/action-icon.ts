@@ -5,6 +5,7 @@ import {
   EyeOffIcon,
   ImageOffIcon,
   MegaphoneIcon,
+  MegaphoneOffIcon,
   UserCheckIcon,
   type LucideIcon,
 } from "lucide-react"
@@ -18,6 +19,7 @@ export const LOG_ACTION_ICON: Record<LogAction, LucideIcon> = {
   unsuspend_user: UserCheckIcon,
   update_report: CircleCheckIcon,
   publish_notice: MegaphoneIcon,
+  delete_notice: MegaphoneOffIcon,
   delete_image: ImageOffIcon,
 }
 
@@ -26,4 +28,5 @@ export const DESTRUCTIVE_ACTIONS: LogAction[] = [
   "hide_content",
   "suspend_user",
   "delete_image",
+  "delete_notice",
 ]

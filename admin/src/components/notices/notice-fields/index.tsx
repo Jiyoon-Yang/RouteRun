@@ -9,9 +9,7 @@ import {
 import { Input } from "@/commons/components/ui/input"
 import { Switch } from "@/commons/components/ui/switch"
 import { Textarea } from "@/commons/components/ui/textarea"
-import type { Notice } from "@/commons/types/admin"
-
-export type NoticeDraft = Pick<Notice, "title" | "body" | "pinned">
+import type { Notice, NoticeDraft } from "@/commons/types/admin"
 
 export const EMPTY_NOTICE: NoticeDraft = { title: "", body: "", pinned: false }
 

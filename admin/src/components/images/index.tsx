@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { TrashIcon } from "lucide-react"
+import { ImageOffIcon, TrashIcon } from "lucide-react"
 
 import { PageNav } from "@/commons/components/page-nav"
 import { ReasonDialog } from "@/commons/components/reason-dialog"
@@ -142,15 +142,24 @@ export function ImagesPage() {
                     aria-pressed={checked}
                     onClick={() => toggle(key)}
                   >
-                    <Image
-                      src={image.url}
-                      alt=""
-                      fill
-                      sizes="(min-width: 1280px) 16vw, 25vw"
-                      className="object-cover"
-                      // 작성자가 REST로 다른 호스트 URL을 넣을 수 있다. remotePatterns 밖이면 원본을 그대로 띄워 검수할 수 있게 한다.
-                      unoptimized={extractImagePath(image.url) === null}
-                    />
+                    {extractImagePath(image.url) ? (
+                      <Image
+                        src={image.url}
+                        alt=""
+                        fill
+                        sizes="(min-width: 1280px) 16vw, 25vw"
+                        className="object-cover"
+                      />
+                    ) : (
+                      // 작성자가 REST로 넣은 다른 호스트 URL. 불러오면 관리자 IP가 그 서버에 남아서 주소만 보여 준다.
+                      <span className="flex size-full flex-col items-center justify-center gap-1 bg-muted p-3 pb-14 text-xs text-muted-foreground">
+                        <ImageOffIcon />
+                        외부 이미지
+                        <span className="line-clamp-2 break-all">
+                          {image.url}
+                        </span>
+                      </span>
+                    )}
                   </button>
                   <Checkbox
                     checked={checked}

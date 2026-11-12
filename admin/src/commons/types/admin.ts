@@ -102,12 +102,24 @@ export type AuditLog = {
   at: string
 }
 
+// 이미지 검수 갤러리 한 장. 글의 image_urls를 펼친 것이라 업로드 시각 대신 글 등록 시각을 쓴다.
 export type ContentImage = {
-  id: string
   url: string
+  kind: ContentKind
   contentId: string
-  uploadedAt: string
+  title: string
+  isHidden: boolean
+  createdAt: string
 }
+
+// 이미지 검수 조회 조건. kind의 "all"은 코스·트랙을 같이 본다는 뜻.
+export type ImageFilters = { kind: ContentKind | "all"; page: number }
+
+// 한 페이지 사진과 조건에 맞는 전체 사진 수.
+export type ImageList = { items: ContentImage[]; total: number }
+
+// 삭제할 사진. 같은 URL이 두 글에 있을 수 있어서 글까지 짚는다.
+export type ImageTarget = Pick<ContentImage, "kind" | "contentId" | "url">
 
 // 대시보드 지표. weekly는 최근 7일 증가분, daily는 최근 30일(KST 날짜별).
 // 코스·트랙 수·지역·최근 등록은 숨긴 글을 빼고 세고, 숨긴 수는 hidden에 따로 둔다.

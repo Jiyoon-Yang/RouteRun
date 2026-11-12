@@ -18,14 +18,23 @@ import {
   FieldLabel,
 } from "@/commons/components/ui/field"
 import { Textarea } from "@/commons/components/ui/textarea"
+import { MAX_REASON } from "@/commons/constants/content"
 
-// 숨김은 사유 필수. 사유는 admin_logs.reason으로 저장한다.
-export function HideDialog({
-  target,
+// 사유가 필요한 조치(숨김·사진 삭제)의 확인창. 사유는 admin_logs.reason으로 저장한다.
+export function ReasonDialog({
+  open,
+  title,
+  description,
+  confirmLabel,
+  placeholder,
   onOpenChange,
   onConfirm,
 }: {
-  target: string | null
+  open: boolean
+  title: string
+  description: string
+  confirmLabel: string
+  placeholder: string
   onOpenChange: (open: boolean) => void
   /** 반영에 성공하면 true. 실패하면 사유를 지우지 않는다. */
   onConfirm: (reason: string) => Promise<boolean>
@@ -35,7 +44,7 @@ export function HideDialog({
 
   return (
     <AlertDialog
-      open={target !== null}
+      open={open}
       onOpenChange={(open) => {
         if (!open) setReason("")
         onOpenChange(open)
@@ -43,22 +52,18 @@ export function HideDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{target} 숨김</AlertDialogTitle>
-          <AlertDialogDescription>
-            다른 사용자에게는 홈·상세·좋아요 목록에서 사라지고, 작성자에게는
-            마이페이지·상세에 &apos;숨김됨&apos;으로 보입니다. 데이터는 남아 있어
-            언제든 되돌릴 수 있어요.
-          </AlertDialogDescription>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <Field>
-          <FieldLabel htmlFor="hide-reason">사유</FieldLabel>
+          <FieldLabel htmlFor="action-reason">사유</FieldLabel>
           <Textarea
-            id="hide-reason"
+            id="action-reason"
             rows={3}
             value={reason}
-            maxLength={200}
+            maxLength={MAX_REASON}
             onChange={(event) => setReason(event.target.value)}
-            placeholder="예: 홍보 링크 포함"
+            placeholder={placeholder}
           />
           <FieldDescription>작업 기록에 남습니다.</FieldDescription>
         </Field>
@@ -75,7 +80,7 @@ export function HideDialog({
               if (ok) setReason("")
             }}
           >
-            숨김
+            {confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

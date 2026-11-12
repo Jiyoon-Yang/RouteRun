@@ -2,13 +2,16 @@
 
 import { updateTag } from "next/cache"
 
-import { MAX_BULK_CONTENT, REGION_GROUPS } from "@/commons/constants/content"
+import {
+  MAX_BULK_CONTENT,
+  MAX_REASON,
+  REGION_GROUPS,
+} from "@/commons/constants/content"
 import type { ContentFilters, ContentKind } from "@/commons/types/admin"
 import { requireAdmin } from "@/lib/require-admin"
 import { getContents, setContentHidden } from "@/services/content.service"
 import { DASHBOARD_CACHE_TAG } from "@/services/dashboard.service"
 
-const MAX_REASON = 200
 const MAX_QUERY = 100
 
 const isKind = (kind: unknown): kind is ContentKind =>

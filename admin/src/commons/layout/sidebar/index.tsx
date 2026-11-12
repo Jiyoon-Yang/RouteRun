@@ -19,15 +19,14 @@ import {
   SidebarRail,
 } from "@/commons/components/ui/sidebar"
 import { NAV_GROUPS, isActive } from "@/commons/constants/nav"
-import { reports } from "@/commons/mocks"
-
-const openReports = reports.filter((report) => report.status === "open").length
+import { usePendingReportCount } from "@/commons/layout/sidebar/hooks/use-pending-report-count"
 
 export function AppSidebar({
   email,
   ...props
 }: React.ComponentProps<typeof Sidebar> & { email: string }) {
   const pathname = usePathname()
+  const pendingReports = usePendingReportCount(pathname)
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -61,8 +60,8 @@ export function AppSidebar({
                     <item.icon />
                     <span>{item.title}</span>
                   </SidebarMenuButton>
-                  {item.href === "/reports" && (
-                    <SidebarMenuBadge>{openReports}</SidebarMenuBadge>
+                  {item.href === "/reports" && !!pendingReports && (
+                    <SidebarMenuBadge>{pendingReports}</SidebarMenuBadge>
                   )}
                 </SidebarMenuItem>
               ))}

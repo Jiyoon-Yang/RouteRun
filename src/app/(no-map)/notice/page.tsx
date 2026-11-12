@@ -7,6 +7,15 @@ import { fetchNotices } from '@/services/notice/noticeService';
 export default async function NoticePage() {
   const notices = await fetchNotices(createClient());
 
+  if (!notices) {
+    return (
+      <StaticInfoPage
+        title="공지사항"
+        description="공지를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요."
+      />
+    );
+  }
+
   if (notices.length === 0) {
     return <StaticInfoPage title="공지사항" description="등록된 공지가 없습니다." />;
   }

@@ -47,6 +47,12 @@ export function useNotices() {
 
     if (!saved) {
       toast.error("저장하지 못했습니다. 잠시 후 다시 시도해 주세요.")
+      // 서버가 기존 고정을 푼 뒤 저장이 실패했을 수 있어서 화면을 DB에 다시 맞춘다.
+      if (draft.pinned) {
+        getNoticesAction()
+          .then((result) => result && setNotices(result))
+          .catch((error) => console.error("[useNotices] 재조회 실패:", error))
+      }
       return false
     }
 

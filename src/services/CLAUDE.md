@@ -28,7 +28,7 @@ services/
 ├── map/
 │   └── mapService.ts           # 역지오코딩 등 지도 관련 로직 (Repository 얇은 래퍼)
 ├── notice/
-│   └── noticeService.ts        # 공지사항 페이지용 게시 공지 (실패 시 빈 목록)
+│   └── noticeService.ts        # 공지사항 페이지용 게시 공지 (실패 시 null → 페이지가 안내 문구)
 └── user/
     ├── authService.ts          # 인증 비즈니스 로직 (현재 미구현)
     ├── userService.ts          # 유저 프로필·닉네임 비즈니스 로직

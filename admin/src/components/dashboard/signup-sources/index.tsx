@@ -28,7 +28,9 @@ export function SignupSourcesCard() {
     <Card>
       <CardHeader>
         <CardTitle>가입 경로</CardTitle>
-        <CardDescription>최근 30일 · 처음 들어온 곳 (GA4)</CardDescription>
+        <CardDescription>
+          최근 30일 · 처음 들어온 곳 상위 7개 (GA4)
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (

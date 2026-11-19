@@ -23,10 +23,11 @@ export function GaSignupEvent() {
 
   useEffect(() => {
     const method = document.cookie.match(SIGNUP_PATTERN)?.[1];
-    if (!method) return;
+    // gtag가 아직 없으면 쿠키를 남겨 다음 경로 변경 때 다시 시도한다
+    if (!method || !window.gtag) return;
 
     document.cookie = `${SIGNUP_COOKIE}=; Max-Age=0; path=/`;
-    window.gtag?.('event', 'sign_up', { method });
+    window.gtag('event', 'sign_up', { method });
   }, [pathname]);
 
   return null;

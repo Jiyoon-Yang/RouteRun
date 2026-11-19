@@ -1,6 +1,9 @@
 import { unstable_cache } from "next/cache"
 
-import { fetchSearchStats } from "@/repositories/search-stats.repository"
+import {
+  fetchSearchStats,
+  fetchSignupSources,
+} from "@/repositories/search-stats.repository"
 
 // 구글 데이터는 하루 단위로 갱신되니 대시보드를 열 때마다 부르지 않는다.
 const getCachedSearchStats = unstable_cache(
@@ -22,4 +25,22 @@ export async function getSearchStats() {
   }
 
   return getCachedSearchStats(siteUrl, propertyId)
+}
+
+// 가입 수는 검색 지표보다 자주(1시간) 새로 받는다.
+const getCachedSignupSources = unstable_cache(
+  fetchSignupSources,
+  ["signup-sources"],
+  { revalidate: 60 * 60 }
+)
+
+/** 대시보드 가입 경로 카드 데이터. GA 환경 변수가 없으면 null. */
+export async function getSignupSources() {
+  const propertyId = process.env.GA4_PROPERTY_ID
+
+  if (!process.env.GOOGLE_SERVICE_ACCOUNT_JSON || !propertyId) {
+    return null
+  }
+
+  return getCachedSignupSources(propertyId)
 }

@@ -31,6 +31,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/commons/components/ui/toggle-group"
+import { SOURCE_LABEL } from "@/commons/constants/labels"
 import type { SearchStats } from "@/commons/types/admin"
 import { formatNumber } from "@/commons/utils/format"
 
@@ -42,13 +43,6 @@ const metricConfig = {
 } satisfies ChartConfig
 
 type Metric = keyof typeof metricConfig
-
-const SOURCE_LABEL: Record<string, string> = {
-  google: "구글",
-  naver: "네이버",
-  daum: "다음",
-  bing: "빙",
-}
 
 const CONSOLES = [
   { label: "Search Console", href: "https://search.google.com/search-console" },

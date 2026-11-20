@@ -52,6 +52,7 @@ cd admin && npm run lint && npm run typecheck
 - **Repositories**: DB 쿼리(`.from`, `.rpc`, `.storage`)를 두는 곳. 새 쿼리는 반드시 여기에 둔다. 아래 예외 외에 Page·Component·Service·Action에 쿼리를 새로 쓰지 않는다
   - 기존 예외(일부러 고치지 않는다): `courseLikeService`/`trackLikeService`의 좋아요 상태 조회, `commons/utils/storage.ts`의 이미지 업로드, `app/auth/callback/route.ts`의 `users.is_anonymous` 갱신, `auth.action.ts`의 게스트 계정 삭제(Service Role Admin API)
 - **Supabase 클라이언트 생성과 `auth.getUser()` 세션 확인**은 Page·Action·Route Handler·`Providers`에서 해도 된다. 만든 클라이언트는 Service/Repository에 주입한다. ESLint(`.eslintrc.json`·`admin/eslint.config.mjs`의 `no-restricted-imports`)가 그 밖의 Supabase import를 막는다. 허용·기존 예외 파일 목록은 거기 있고, 예외를 늘리지 않는다
+  - 클라이언트 생성 기존 예외(일부러 고치지 않는다): 위 쿼리 예외의 `courseLikeService`·`trackLikeService`·`commons/utils/storage.ts`, 그리고 서버 클라이언트를 직접 만드는 `courseDetailService`·`trackDetailService`·`userService`
 - **Server Actions**: 인증, 코스·트랙 CRUD, 좋아요, 제보 등 mutation 처리. 조합·도메인 규칙이 없으면 Service 없이 Repository를 바로 불러도 된다(`createCourseAction`, 좋아요 토글)
 - **Services**: 여러 Repository 결과 조합, 도메인 규칙, View Model 변환
 - 레이어별 세부 규칙은 `src/actions/CLAUDE.md`, `src/services/CLAUDE.md`, `src/repositories/CLAUDE.md`

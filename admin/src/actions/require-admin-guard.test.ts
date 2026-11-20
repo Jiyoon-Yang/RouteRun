@@ -39,22 +39,36 @@ function startsWithRequireAdmin(fn: ts.FunctionDeclaration): boolean {
   return false
 }
 
-const actionFiles = fs
-  .readdirSync(ACTIONS_DIR)
-  .filter((file) => file.endsWith(".action.ts"))
-
-describe("어드민 Server Action은 모두 첫 줄에서 requireAdmin()을 호출한다", () => {
-  it("검사할 액션 파일이 있다", () => {
-    expect(actionFiles.length).toBeGreaterThan(0)
-  })
-
-  it.each(actionFiles)("%s", (file) => {
-    const source = ts.createSourceFile(
+// 위치·파일 이름과 상관없이 파일 단위 'use server'가 붙은 모듈은 전부 검사한다
+// shortcut: 함수 안에 'use server'를 쓰는 인라인 액션은 못 잡는다. 생기면 여기서 함수 단위 지시문도 찾는다
+const SRC_DIR = path.join(ACTIONS_DIR, "..")
+const serverModules = (fs.readdirSync(SRC_DIR, { recursive: true }) as string[])
+  .filter((file) => /\.tsx?$/.test(file) && !file.endsWith(".test.ts"))
+  .map((file) => ({
+    file,
+    source: ts.createSourceFile(
       file,
-      fs.readFileSync(path.join(ACTIONS_DIR, file), "utf8"),
+      fs.readFileSync(path.join(SRC_DIR, file), "utf8"),
       ts.ScriptTarget.Latest,
       true
+    ),
+  }))
+  .filter(({ source }) => {
+    const first = source.statements[0]
+    return (
+      !!first &&
+      ts.isExpressionStatement(first) &&
+      ts.isStringLiteral(first.expression) &&
+      first.expression.text === "use server"
     )
+  })
+
+describe("어드민 Server Action은 모두 첫 줄에서 requireAdmin()을 호출한다", () => {
+  it("검사할 'use server' 파일이 있다", () => {
+    expect(serverModules.length).toBeGreaterThan(0)
+  })
+
+  it.each(serverModules)("$file", ({ source }) => {
     const problems: string[] = []
 
     for (const statement of source.statements) {

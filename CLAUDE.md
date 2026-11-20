@@ -64,8 +64,8 @@ cd admin && npm run lint && npm run typecheck
 사용자 앱과 별개인 Next.js 16 + Tailwind + shadcn/ui(Base UI) 앱. 규칙·주의는 `admin/CLAUDE.md`(README·ROADMAP 포함)에 있고, 깨지면 치명적인 것만 여기 적는다.
 
 - **데이터 흐름:** `page.tsx`는 `components/<기능>`을 렌더만 한다. 데이터는 컴포넌트 훅 → Server Action → Service → Repository. page에서 직접 조회하지 않는다
-- **권한:** 모든 Server Action은 첫 줄에서 `requireAdmin()`(`admin/src/lib/require-admin.ts`)을 호출한다. `(admin)` 레이아웃 검사만으로는 부족하다(클라이언트 이동 때 레이아웃은 다시 안 돌고, 액션은 직접 호출될 수 있다). 어드민 여부는 `admins` 테이블(`admin.repository.ts`의 `isAdmin`)로만 판단한다
-- **Service Role:** `createAdminClient()`는 `admin/src/lib/supabase/admin.ts` 한 곳(`server-only`)에서만 만든다. Service에서 만들어 Repository에 주입한다
+- **권한:** 로그인·로그아웃(`auth.action.ts`의 `signInAction`/`signOutAction`, 로그인 전에 불리므로 넣으면 로그인이 막힌다)을 뺀 모든 Server Action은 첫 줄에서 `requireAdmin()`(`admin/src/lib/require-admin.ts`)을 호출한다. `(admin)` 레이아웃 검사만으로는 부족하다(클라이언트 이동 때 레이아웃은 다시 안 돌고, 액션은 직접 호출될 수 있다). 어드민 여부는 `admins` 테이블(`admin.repository.ts`의 `isAdmin`)로만 판단한다
+- **Service Role:** `createAdminClient()`는 `admin/src/lib/supabase/admin.ts` 한 곳(`server-only`)에서만 만든다. 보통 Service에서 만들어 Repository에 주입하고, Action이 Service 없이 Repository를 바로 부를 때는 Action에서 만든다(`dashboard.action.ts`·`report.action.ts`의 `countPendingReports`. 어드민 README "주의"의 예외와 같다)
 - **조치 기록:** 숨김·삭제·상태 변경 같은 조치는 `logAdminAction()`으로 `admin_logs`에 남긴다(무엇을 기록하는지는 ROADMAP 단계별 메모)
 
 ## 인증

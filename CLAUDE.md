@@ -17,8 +17,15 @@ npx tsc --noEmit        # TypeScript 타입 체크 (빌드 없이)
 npm run storybook        # Storybook (localhost:6006)
 npm run build-storybook  # Storybook 정적 사이트 빌드
 npm test                 # 순수 로직 단위 테스트 (src/**/*.test.ts, Vitest node 모드)
-npx vitest               # Storybook 컴포넌트/인터랙션 테스트 (Vitest 브라우저 모드)
+npx vitest run --project storybook  # Storybook 컴포넌트/인터랙션·a11y 테스트 (Vitest 브라우저 모드, Playwright chromium)
+# 그냥 `npx vitest`는 unit·storybook 두 프로젝트를 watch 모드로 같이 돈다
+
+# 어드민 앱 (admin/, 별도 package.json·eslint·tsconfig. 루트 tsconfig는 admin을 exclude)
+cd admin && npm run lint && npm run typecheck
 ```
+
+**완료 보고 전 검증:** 서비스 앱을 고쳤으면 `npx tsc --noEmit`, `npm run lint`, `npm test`. UI·인터랙션을 고쳤으면 `npx vitest run --project storybook`도. 어드민을 고쳤으면 `cd admin && npm run lint && npm run typecheck`(어드민은 테스트 없음). 루트 명령은 어드민을 검사하지 않는다.
+- **Storybook 테스트:** Playwright 브라우저가 없다는 에러면 `npx playwright install chromium`. 워크트리의 심볼릭 링크 `node_modules`는 `vitest.config.ts`의 `server.fs.allow`가 실제 경로로 허용한다. 스토리에서 `useRouter`(next/navigation)를 쓰는 컴포넌트는 `parameters: { nextjs: { appDirectory: true } }`, `useAuth`·`useModal`을 쓰는 컴포넌트는 `AuthProvider`·`ModalProvider` 데코레이터가 필요하다(`navigation-bar` 스토리 참고). 반복되는 실수는 이 문서에 설명을 늘리기보다 ESLint 규칙·타입·테스트로 막는 쪽을 먼저 고려한다.
 
 ## 아키텍처
 
@@ -27,13 +34,17 @@ npx vitest               # Storybook 컴포넌트/인터랙션 테스트 (Vitest
 **데이터 흐름:**
 
 ```
-Page/Component → Server Action (src/actions/) → Service (src/services/) → Repository (src/repositories/) → Supabase
+변경(mutation): Client Component → Server Action (src/actions/) → Service (src/services/) → Repository (src/repositories/) → Supabase
+서버 조회:      Server Component(page) → Service → Repository
+클라이언트 조회: 훅 → Service/Repository (홈 지도 뷰포트, 좋아요 상태, TMap REST — 클라이언트 Supabase 사용)
 ```
 
-- **Server Actions**: 인증, 코스 CRUD, 폼 제출 등 mutation 처리
-- **Repositories**: Supabase를 직접 호출하는 유일한 레이어
-- **Services**: Actions와 Repositories 사이의 비즈니스 로직
-- **Server Components**: 데이터 패칭; Client Components (`'use client'`)는 인터랙션 상태 관리
+- **Repositories**: DB 쿼리(`.from`, `.rpc`, `.storage`)를 두는 곳. 새 쿼리는 반드시 여기에 둔다. 아래 예외 외에 Page·Component·Service·Action에 쿼리를 새로 쓰지 않는다
+  - 기존 예외(일부러 고치지 않는다): `courseLikeService`/`trackLikeService`의 좋아요 상태 조회, `commons/utils/storage.ts`의 이미지 업로드, `app/auth/callback/route.ts`의 `users.is_anonymous` 갱신, `auth.action.ts`의 게스트 계정 삭제(Service Role Admin API)
+- **Supabase 클라이언트 생성과 `auth.getUser()` 세션 확인**은 Page·Action·Route Handler·`Providers`에서 해도 된다. 만든 클라이언트는 Service/Repository에 주입한다
+- **Server Actions**: 인증, 코스·트랙 CRUD, 좋아요, 제보 등 mutation 처리. 조합·도메인 규칙이 없으면 Service 없이 Repository를 바로 불러도 된다(`createCourseAction`, 좋아요 토글)
+- **Services**: 여러 Repository 결과 조합, 도메인 규칙, View Model 변환
+- 레이어별 세부 규칙은 `src/actions/CLAUDE.md`, `src/services/CLAUDE.md`, `src/repositories/CLAUDE.md`
 
 **주요 디렉토리:**
 
@@ -46,6 +57,16 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
 - `src/repositories/` — 데이터 접근 (course, user, map 레포지토리)
 - `src/services/` — 비즈니스 로직 (course, user, map 서비스)
 - `src/lib/supabase/` — 서버, 클라이언트, 미들웨어용 Supabase 클라이언트 설정
+- `admin/` — 어드민 앱. 아래 "어드민 앱" 섹션과 `admin/CLAUDE.md`
+
+## 어드민 앱 (`admin/`)
+
+사용자 앱과 별개인 Next.js 16 + Tailwind + shadcn/ui(Base UI) 앱. 규칙·주의는 `admin/CLAUDE.md`(README·ROADMAP 포함)에 있고, 깨지면 치명적인 것만 여기 적는다.
+
+- **데이터 흐름:** `page.tsx`는 `components/<기능>`을 렌더만 한다. 데이터는 컴포넌트 훅 → Server Action → Service → Repository. page에서 직접 조회하지 않는다
+- **권한:** 모든 Server Action은 첫 줄에서 `requireAdmin()`(`admin/src/lib/require-admin.ts`)을 호출한다. `(admin)` 레이아웃 검사만으로는 부족하다(클라이언트 이동 때 레이아웃은 다시 안 돌고, 액션은 직접 호출될 수 있다). 어드민 여부는 `admins` 테이블(`admin.repository.ts`의 `isAdmin`)로만 판단한다
+- **Service Role:** `createAdminClient()`는 `admin/src/lib/supabase/admin.ts` 한 곳(`server-only`)에서만 만든다. Service에서 만들어 Repository에 주입한다
+- **조치 기록:** 숨김·삭제·상태 변경 같은 조치는 `logAdminAction()`으로 `admin_logs`에 남긴다(무엇을 기록하는지는 ROADMAP 단계별 메모)
 
 ## 인증
 
@@ -57,7 +78,7 @@ Page/Component → Server Action (src/actions/) → Service (src/services/) → 
 
 `Providers` (`src/commons/layout/providers.tsx`)는 `AuthProvider`, `ModalProvider`, `ToastProvider`를 한 번에 래핑하는 Server Component다. 단순 래퍼가 아니라 익명 유저의 코스·트랙 작성 횟수를 서버에서 집계해 `hasWrittenItem` 플래그로 레이아웃에 주입한다.
 
-미들웨어 (`middleware.ts`)는 모든 요청에서 세션을 갱신하고 비공개 라우트를 보호합니다. 세션이 없는 경우(완전 미로그인)만 차단하고 `/login`으로 리다이렉트합니다. 익명(게스트) 세션은 라우트를 통과합니다. 게스트는 좋아요·제보·본인 글 수정/삭제가 가능하고, 코스·트랙 작성만 합산 1개로 제한됩니다 (`isGuestWriteLimitReached`, 등록 페이지와 등록 Action 양쪽에서 검사).
+미들웨어 (`middleware.ts`)는 모든 요청에서 세션을 갱신하고 비공개 라우트를 보호합니다. 세션이 없는 경우(완전 미로그인)만 차단하고 `/login`으로 리다이렉트합니다. 익명(게스트) 세션은 라우트를 통과합니다. 이 보호 로직과 비공개 라우트 목록을 요청 없이 완화하지 않는다. 게스트는 좋아요·제보·본인 글 수정/삭제가 가능하고, 코스·트랙 작성만 합산 1개로 제한됩니다 (`isGuestWriteLimitReached`, 등록 페이지와 등록 Action 양쪽에서 검사).
 
 **비공개 라우트:** `/courses/new`, `/courses/[id]/edit`, `/tracks/new`, `/tracks/[id]/edit`, `/mypage`, `/report` (정의: `src/commons/constants/url.ts`의 `PRIVATE_ROUTES`·`PRIVATE_DYNAMIC_PATTERNS`)
 
@@ -100,11 +121,13 @@ GA_ID=                           # 선택. GA4 측정 ID. Vercel Production에�
 - **`console.log` 사용 금지** (ESLint 경고); `console.error/warn/info`는 허용.
 - **React Strict Mode** 비활성화 (`next.config.mjs`).
 - import 순서는 ESLint로 강제: 외부 → 내부 → 상대경로.
+- 위 `console.log`·import 순서 규칙은 서비스 앱(`.eslintrc.json`)에만 걸려 있다. 어드민(`admin/eslint.config.mjs`)은 next 기본 규칙뿐이니 같은 규칙을 손으로 지킨다.
+- `'use client'`는 상호작용이 필요한 가장 작은 컴포넌트에만 붙이고 상위로 끌어올리지 않는다.
 - **SVG:** `next.config.mjs` webpack 설정으로 `.svg`를 `import`로 사용 가능 (asset/resource로 처리됨).
 
 ## Git 워크플로우
 
-- `main` — 프로덕션 전용, 직접 커밋 금지
+- `main` — 프로덕션 전용, 직접 커밋 금지. main에 머지되면 Vercel 운영에 바로 배포된다
 - `dev` — 통합 브랜치; 모든 기능은 PR로 머지
 - 기능 브랜치: `feat/<기능명>`
 - **Claude 작업은 워크트리에서:** 새 작업(세션)마다 `EnterWorktree`로 `.claude/worktrees/`에 워크트리를 만들어 작업한다. 메인 체크아웃은 여러 세션이 같이 쓰므로 거기서 `git checkout`하지 않는다. 워크트리는 메인 체크아웃의 HEAD에서 갈라지니(`worktree.baseRef: "head"`), 만든 직후 `git fetch origin dev && git branch -m feat/<기능명> && git reset --hard origin/dev`로 최신 dev에 맞춘다. `.env.local`·`admin/.env.local`은 `.worktreeinclude`로 복사되고, `node_modules`·`admin/node_modules`는 메인 체크아웃 것을 심볼릭 링크로 공유한다(`worktree.symlinkDirectories`, 워크트리에서 `npm install`하면 메인 쪽도 바뀐다).
@@ -150,7 +173,8 @@ PR을 생성할 때는 반드시 아래 템플릿 구조를 따릅니다.
 
 ## Gotchas
 
-- **TMap SDK 로딩:** `(with-map)/layout.tsx`에서 인라인 스크립트로 로드. `document.write` 호환을 위한 우회 로직 포함. TMap 관련 이슈 발생 시 이 레이아웃을 먼저 확인.
+- **TMap SDK 로딩:** `(with-map)/layout.tsx`에서 인라인 스크립트로 로드. `document.write` 호환을 위한 우회 로직 포함. TMap 관련 이슈 발생 시 이 레이아웃을 먼저 확인. 지도 전체가 이 로직에 걸려 있으니 요청 없이 리팩터링하거나 `useEffect`로 옮기지 않는다.
+- **Service Role 키(`SUPABASE_SERVICE_ROLE_KEY`)는 서버에서만:** 서비스 앱은 `'use server'` Action 안에서만 Service Role 클라이언트를 만든다(`report.action.ts`의 제보 저장·집계, `auth.action.ts`의 게스트 계정 삭제). 어드민은 위 "어드민 앱" 섹션. `'use client'` 파일이나 클라이언트가 import하는 모듈에서 쓰지 않고, `NEXT_PUBLIC_` 접두사를 붙이지 않는다. `reports`·`admin_logs`는 anon·authenticated 권한이 없어 Service Role로만 읽고 쓴다.
 - **`redirect()` + try/catch 금지:** Next.js `redirect()`는 내부적으로 예외를 throw하므로 절대 try 블록 안에서 호출하지 않는다 (actions에서).
 - **익명 세션 vs 미로그인:** 미들웨어는 세션 없는 경우만 차단. 익명 세션은 통과하며, 게스트 작성 제한(코스·트랙 합산 1개)만 `userService.isGuestWriteLimitReached`로 서버에서 강제한다. 좋아요는 게스트도 허용.
 - **`likes_count`는 애플리케이션 코드가 아닌 DB 트리거가 갱신한다:** `routes`/`tracks`의 RLS UPDATE 정책이 작성자 본인만 허용해서, 과거에는 다른 사용자가 좋아요를 눌러도 `likes_count`가 갱신되지 않는 버그가 있었다. `sync_route_likes_count`/`sync_track_likes_count` 트리거(SECURITY DEFINER, `route_likes`/`track_likes` insert·delete 시 실행)가 RLS와 무관하게 카운트를 동기화하므로, `toggleCourseLikeAction`/`toggleTrackLikeAction`은 `getRouteLikesCount`/`getTrackLikesCount`로 **읽기만** 한다. likes_count를 직접 `UPDATE`하는 코드를 추가하지 않는다.

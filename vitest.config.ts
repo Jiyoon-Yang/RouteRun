@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -10,6 +11,8 @@ const dirname =
 
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
+  // Claude 워크트리는 node_modules가 메인 체크아웃 심볼릭 링크라, 실제 경로를 허용하지 않으면 브라우저 테스트가 setup-file을 못 불러온다
+  server: { fs: { allow: [dirname, fs.realpathSync(path.join(dirname, 'node_modules'))] } },
   test: {
     projects: [
       {

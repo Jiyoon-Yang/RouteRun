@@ -1,3 +1,6 @@
+import { AuthProvider } from '@/commons/providers/auth/auth.provider';
+import { ModalProvider } from '@/commons/providers/modal/modal.provider';
+
 import { NavigationBar, type NavigationBarLink, type NavigationBarProps } from './index';
 
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
@@ -58,6 +61,8 @@ const meta = {
   },
   parameters: {
     layout: 'centered',
+    // 컴포넌트가 next/navigation의 useRouter를 쓴다
+    nextjs: { appDirectory: true },
     docs: {
       description: {
         component:
@@ -67,9 +72,13 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div style={{ width: 375, maxWidth: '100%' }} onClickCapture={blockStoryAnchorNavigation}>
-        <Story />
-      </div>
+      <AuthProvider>
+        <ModalProvider>
+          <div style={{ width: 375, maxWidth: '100%' }} onClickCapture={blockStoryAnchorNavigation}>
+            <Story />
+          </div>
+        </ModalProvider>
+      </AuthProvider>
     ),
   ],
   render: withActiveHrefFromChoice,

@@ -17,7 +17,7 @@ npm run lint && npm run typecheck
 
 ```
 src/
-├── app/                     라우트만. page.tsx는 components/<기능>을 렌더 (데이터 조회도 여기서)
+├── app/                     라우트만. page.tsx는 components/<기능>을 렌더만 (데이터는 훅 → Server Action)
 │   ├── login/
 │   └── (admin)/             사이드바 레이아웃 아래 화면: / reports notices content images users audit
 ├── components/<기능>/        화면. index.tsx + 하위 컴포넌트 폴더(notice-fields/ 등) + hooks/ + utils/
@@ -35,7 +35,7 @@ src/
 ```
 
 데이터를 붙이면서 사용자 앱과 같은 `src/actions/`, `src/services/`, `src/repositories/`, `src/lib/supabase/`를 추가한다.
-흐름도 같다: Page → Server Action → Service → Repository → Supabase.
+흐름: 컴포넌트 훅 → Server Action(`requireAdmin()` 먼저) → Service → Repository → Supabase.
 
 ## 화면
 

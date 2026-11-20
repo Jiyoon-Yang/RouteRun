@@ -110,6 +110,8 @@ export function ContentPage() {
   const label = kind === "course" ? "코스" : "트랙"
   // 목록에서 찾아 숨김·해제 뒤 다시 받은 상태가 바로 보이게 한다. 필터에서 빠지면 패널이 닫힌다.
   const detail = list.find((content) => content.id === detailId) ?? null
+  // 빠진 글의 id를 남겨 두면, 조건을 바꿔 그 글이 다시 보일 때 패널이 저절로 열린다.
+  if (detailId && contents && !isLoading && !detail) setDetailId(null)
 
   // 처리한 글만 선택에서 뺀다. 한 행만 해제해도 다른 체크가 풀리지 않게.
   const deselect = (ids: string[]) =>
@@ -300,13 +302,10 @@ export function ContentPage() {
       />
 
       <ContentDetailSheet
-        content={detail}
+        // 패널 위에 확인창을 겹치면 포커스 잠금이 부딪혀서, 확인창이 떠 있는 동안만 패널을 내렸다가 닫히면 다시 연다.
+        content={hideTargets.length > 0 ? null : detail}
         onClose={() => setDetailId(null)}
-        onHide={(id) => {
-          // 패널 위에 확인창을 겹치면 패널의 포커스 잠금과 부딪혀서, 패널을 닫고 연다.
-          setDetailId(null)
-          setHideTargets([id])
-        }}
+        onHide={(id) => setHideTargets([id])}
         onUnhide={(id) => unhide([id])}
       />
 
@@ -328,6 +327,8 @@ export function ContentPage() {
           if (ok) {
             deselect(ids)
             setHideTargets([])
+            // 다시 받기 전 상태로 패널이 잠깐 열렸다 닫히지 않게, 숨기면 패널은 닫는다. 취소하면 패널로 돌아간다.
+            setDetailId(null)
           }
           return ok
         }}

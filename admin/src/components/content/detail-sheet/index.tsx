@@ -79,10 +79,11 @@ export function ContentDetailSheet({
 
               {content.imageUrls.length > 0 && (
                 <div className="grid grid-cols-2 gap-2">
-                  {content.imageUrls.map((url) =>
+                  {/* 한 글에 같은 URL이 두 번 들어 있을 수 있어 key에 순서를 섞는다. */}
+                  {content.imageUrls.map((url, index) =>
                     extractImagePath(url) ? (
                       <a
-                        key={url}
+                        key={`${index}-${url}`}
                         href={url}
                         target="_blank"
                         rel="noreferrer"
@@ -99,7 +100,7 @@ export function ContentDetailSheet({
                     ) : (
                       // 다른 호스트 URL은 불러오면 관리자 IP가 그 서버에 남아서 주소만 보여 준다(이미지 검수와 같은 규칙).
                       <span
-                        key={url}
+                        key={`${index}-${url}`}
                         className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg bg-muted p-3 text-xs text-muted-foreground"
                       >
                         <ImageOffIcon />

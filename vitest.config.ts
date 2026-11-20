@@ -46,6 +46,15 @@ export default defineConfig({
           include: ['src/**/*.test.ts'],
         },
       },
+      {
+        // 어드민 권한 가드 테스트. 어드민은 테스트 러너가 없어 루트 vitest로 돌린다(`npm test`에 포함)
+        resolve: { alias: { '@': path.join(dirname, 'admin/src') } },
+        test: {
+          name: 'admin',
+          environment: 'node',
+          include: ['admin/src/**/*.test.ts'],
+        },
+      },
     ],
   },
 });

@@ -35,10 +35,105 @@
         "newlines-between": "always",
         "alphabetize": { "order": "asc", "caseInsensitive": true }
       }
+    ],
+    // 레이어 규칙: Supabase 클라이언트를 아무 데서나 만들지 못하게 막는다. 허용 경로는 아래 overrides에서 연다
+    "@typescript-eslint/no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["@/lib/supabase/*", "**/lib/supabase/*", "@supabase/*"],
+            "allowTypeImports": true,
+            "message": "레이어 규칙(Page → Server Action → Service → Repository → Supabase) 위반. Supabase 클라이언트는 Page(page.tsx)·Server Action(src/actions)·Route Handler(route.ts)·Providers에서만 만들어 Service/Repository에 주입한다. 컴포넌트·훅·Service는 Server Action(변경)이나 Service/Repository(조회)를 부르고, 쿼리는 src/repositories/에 둔다. 타입만 필요하면 `import type`을 쓴다."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "MemberExpression[property.name=/SERVICE_ROLE/]",
+        "message": "SUPABASE_SERVICE_ROLE_KEY는 RLS를 우회하는 비밀 키라 클라이언트 번들에 들어가면 DB 전체가 열린다. 'use server' Action인 src/actions/report.action.ts·auth.action.ts에서만 읽는다(NEXT_PUBLIC_ 접두사 금지). 다른 곳은 그 Action을 호출한다."
+      },
+      {
+        "selector": "MemberExpression[property.value=/SERVICE_ROLE/]",
+        "message": "SUPABASE_SERVICE_ROLE_KEY는 RLS를 우회하는 비밀 키라 클라이언트 번들에 들어가면 DB 전체가 열린다. 'use server' Action인 src/actions/report.action.ts·auth.action.ts에서만 읽는다(NEXT_PUBLIC_ 접두사 금지). 다른 곳은 그 Action을 호출한다."
+      },
+      {
+        "selector": "ObjectPattern > Property[key.name=/SERVICE_ROLE/]",
+        "message": "SUPABASE_SERVICE_ROLE_KEY는 RLS를 우회하는 비밀 키라 클라이언트 번들에 들어가면 DB 전체가 열린다. 'use server' Action인 src/actions/report.action.ts·auth.action.ts에서만 읽는다(NEXT_PUBLIC_ 접두사 금지). 다른 곳은 그 Action을 호출한다."
+      },
+      {
+        "selector": "CallExpression[callee.property.name=/^(update|upsert|insert)$/] Property[key.name='likes_count']",
+        "message": "likes_count는 DB 트리거(sync_route_likes_count/sync_track_likes_count)가 좋아요 행 insert·delete 때 갱신한다. RLS UPDATE가 작성자 본인만 허용해서 앱이 직접 쓰면 다른 사람의 좋아요가 반영되지 않는다. 좋아요 행만 upsert/delete하고 getRouteLikesCount/getTrackLikesCount로 읽기만 한다."
+      },
+      {
+        "selector": "CallExpression[callee.property.name=/^(update|upsert|insert)$/] Property[key.value='likes_count']",
+        "message": "likes_count는 DB 트리거(sync_route_likes_count/sync_track_likes_count)가 좋아요 행 insert·delete 때 갱신한다. RLS UPDATE가 작성자 본인만 허용해서 앱이 직접 쓰면 다른 사람의 좋아요가 반영되지 않는다. 좋아요 행만 upsert/delete하고 getRouteLikesCount/getTrackLikesCount로 읽기만 한다."
+      }
     ]
   },
-  // 👇 스토리북 파일(*.stories.tsx 등)에만 적용되는 예외 처리 구역
   "overrides": [
+    {
+      // Supabase 클라이언트 생성이 허용된 곳: Page·Action·Route Handler·Providers·Repository·미들웨어
+      // "기존 예외"는 Service/유틸이 직접 만들던 코드다. 여기에 파일을 늘리지 말고 클라이언트를 주입한다
+      "files": [
+        "src/actions/**",
+        "src/app/**/page.tsx",
+        "src/app/**/route.ts",
+        "src/commons/layout/providers.tsx",
+        "src/commons/providers/auth/auth.provider.tsx",
+        "src/repositories/**",
+        "src/lib/supabase/**",
+        "middleware.ts",
+        // 기존 예외
+        "src/services/course/courseLikeService.ts",
+        "src/services/track/trackLikeService.ts",
+        "src/services/course/courseDetailService.ts",
+        "src/services/track/trackDetailService.ts",
+        "src/services/user/userService.ts",
+        "src/commons/utils/storage.ts"
+      ],
+      "rules": {
+        "@typescript-eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@supabase/supabase-js",
+                "importNames": ["createClient"],
+                "allowTypeImports": true,
+                "message": "이 앱에서 @supabase/supabase-js의 createClient는 Service Role(RLS 우회) 클라이언트용이고, src/actions/report.action.ts·auth.action.ts에서만 만든다. 세션 클라이언트는 @/lib/supabase/server(서버)나 @/lib/supabase/client(브라우저)를 쓴다."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Service Role 클라이언트를 만드는 'use server' Action (제보 저장·집계, 게스트 계정 삭제)
+      "files": ["src/actions/report.action.ts", "src/actions/auth.action.ts"],
+      "rules": {
+        "@typescript-eslint/no-restricted-imports": "off",
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "CallExpression[callee.property.name=/^(update|upsert|insert)$/] Property[key.name='likes_count']",
+            "message": "likes_count는 DB 트리거가 갱신한다. 직접 쓰지 말고 좋아요 행만 upsert/delete한다."
+          },
+          {
+            "selector": "CallExpression[callee.property.name=/^(update|upsert|insert)$/] Property[key.value='likes_count']",
+            "message": "likes_count는 DB 트리거가 갱신한다. 직접 쓰지 말고 좋아요 행만 upsert/delete한다."
+          }
+        ]
+      }
+    },
+    {
+      // 단위 테스트는 vi.mock 대상 모듈을 import해서 목을 설정한다
+      "files": ["src/**/*.test.ts"],
+      "rules": { "@typescript-eslint/no-restricted-imports": "off" }
+    },
+    // 👇 스토리북 파일(*.stories.tsx 등)에만 적용되는 예외 처리 구역
     {
       "files": ["*.stories.@(ts|tsx|js|jsx|mjs|cjs)"],
       "rules": {

@@ -16,7 +16,7 @@ npm run lint             # ESLint 실행
 npx tsc --noEmit        # TypeScript 타입 체크 (빌드 없이)
 npm run storybook        # Storybook (localhost:6006)
 npm run build-storybook  # Storybook 정적 사이트 빌드
-npm test                 # 순수 로직 단위 테스트 (src/**/*.test.ts, Vitest node 모드)
+npm test                 # 단위 테스트 (Vitest node 모드): unit(src/**/*.test.ts) + admin(admin/src/**/*.test.ts, 어드민 권한 가드)
 npx vitest run --project storybook  # Storybook 컴포넌트/인터랙션·a11y 테스트 (Vitest 브라우저 모드, Playwright chromium)
 # 그냥 `npx vitest`는 unit·storybook 두 프로젝트를 watch 모드로 같이 돈다
 
@@ -27,7 +27,7 @@ cd admin && npm run lint && npm run typecheck
 **완료 보고 전 검증:**
 
 - 서비스 앱: `npx tsc --noEmit`, `npm run lint`, `npm test`. UI·인터랙션을 고쳤으면 `npx vitest run --project storybook`도
-- 어드민: `cd admin && npm run lint && npm run typecheck`(테스트 없음). 루트 명령은 어드민을 검사하지 않는다
+- 어드민: `cd admin && npm run lint && npm run typecheck`, 테스트는 루트 `npm test`의 admin 프로젝트. 루트 tsc·lint는 어드민을 검사하지 않는다. 어드민 `*.test.ts`는 Vercel 빌드에 vitest가 없어 어드민 tsconfig에서 뺐으므로 **타입 검사를 받지 않는다**. 또 루트 vitest라 `next` 등이 루트(Next 14) 쪽으로 풀릴 수 있으니 어드민 테스트는 Next API를 mock해서 쓴다
 - 반복되는 실수는 이 문서에 설명을 늘리기보다 ESLint 규칙·타입·테스트로 막는 쪽을 먼저 고려한다
 
 **Storybook 테스트:**
@@ -51,7 +51,8 @@ cd admin && npm run lint && npm run typecheck
 
 - **Repositories**: DB 쿼리(`.from`, `.rpc`, `.storage`)를 두는 곳. 새 쿼리는 반드시 여기에 둔다. 아래 예외 외에 Page·Component·Service·Action에 쿼리를 새로 쓰지 않는다
   - 기존 예외(일부러 고치지 않는다): `courseLikeService`/`trackLikeService`의 좋아요 상태 조회, `commons/utils/storage.ts`의 이미지 업로드, `app/auth/callback/route.ts`의 `users.is_anonymous` 갱신, `auth.action.ts`의 게스트 계정 삭제(Service Role Admin API)
-- **Supabase 클라이언트 생성과 `auth.getUser()` 세션 확인**은 Page·Action·Route Handler·`Providers`에서 해도 된다. 만든 클라이언트는 Service/Repository에 주입한다
+- **Supabase 클라이언트 생성과 `auth.getUser()` 세션 확인**은 Page·Action·Route Handler·`Providers`에서 해도 된다. 만든 클라이언트는 Service/Repository에 주입한다. ESLint(`.eslintrc.json`·`admin/eslint.config.mjs`의 `no-restricted-imports`)가 그 밖의 Supabase import를 막는다. 허용·기존 예외 파일 목록은 거기 있고, 예외를 늘리지 않는다
+  - 클라이언트 생성 기존 예외(일부러 고치지 않는다): 위 쿼리 예외의 `courseLikeService`·`trackLikeService`·`commons/utils/storage.ts`, 그리고 서버 클라이언트를 직접 만드는 `courseDetailService`·`trackDetailService`·`userService`
 - **Server Actions**: 인증, 코스·트랙 CRUD, 좋아요, 제보 등 mutation 처리. 조합·도메인 규칙이 없으면 Service 없이 Repository를 바로 불러도 된다(`createCourseAction`, 좋아요 토글)
 - **Services**: 여러 Repository 결과 조합, 도메인 규칙, View Model 변환
 - 레이어별 세부 규칙은 `src/actions/CLAUDE.md`, `src/services/CLAUDE.md`, `src/repositories/CLAUDE.md`

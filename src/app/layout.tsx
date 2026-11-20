@@ -1,5 +1,6 @@
 import Script from 'next/script';
 
+import { GaSignupEvent } from '@/commons/layout/ga-signup-event';
 import { dynamic, generateMetadata, viewport } from '@/commons/layout/metadata';
 import { Providers } from '@/commons/layout/providers';
 
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Script id="ga4-init" strategy="afterInteractive">
               {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}');`}
             </Script>
+            <GaSignupEvent />
           </>
         )}
       </Providers>

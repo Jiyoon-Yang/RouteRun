@@ -48,6 +48,7 @@ import { formatNumber, formatRelative } from "@/commons/utils/format"
 
 import { useDashboardStats } from "./hooks/use-dashboard-stats"
 import { SearchStatsCard } from "./search-stats"
+import { SignupSourcesCard } from "./signup-sources"
 
 const signupConfig = {
   signups: { label: "구글", color: "var(--chart-1)" },
@@ -83,6 +84,7 @@ export function DashboardPage() {
             </CardDescription>
           </CardHeader>
         </Card>
+        <SignupSourcesCard />
         <SearchStatsCard />
       </>
     )
@@ -196,6 +198,91 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
+        <SignupSourcesCard />
+      </div>
+
+      <SearchStatsCard />
+
+      <div className="grid gap-4 xl:grid-cols-3">
+        <Card className="xl:col-span-2">
+          <CardHeader>
+            <CardTitle>최근 등록</CardTitle>
+            <CardDescription>
+              코스·트랙 최신 6건
+              {stats?.pendingReports != null && (
+                <>
+                  {" "}
+                  · 미처리 제보{" "}
+                  <Link
+                    href="/reports"
+                    className="underline underline-offset-4"
+                  >
+                    {formatNumber(stats.pendingReports)}건
+                  </Link>
+                </>
+              )}
+            </CardDescription>
+            <CardAction>
+              <Button
+                variant="outline"
+                size="sm"
+                render={<Link href="/content" />}
+                nativeButton={false}
+              >
+                전체 보기
+              </Button>
+            </CardAction>
+          </CardHeader>
+          <CardContent>
+            {stats ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>유형</TableHead>
+                    <TableHead>제목</TableHead>
+                    <TableHead>작성자</TableHead>
+                    <TableHead>지역</TableHead>
+                    <TableHead className="text-right">좋아요</TableHead>
+                    <TableHead className="text-right">등록</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {stats.recent.map((content) => (
+                    <TableRow key={`${content.kind}-${content.id}`}>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {content.kind === "course" ? "코스" : "트랙"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-64 truncate font-medium">
+                        {content.title}
+                      </TableCell>
+                      <TableCell>
+                        {content.author.nickname}
+                        {content.author.isAnonymous && (
+                          <span className="text-muted-foreground">
+                            {" "}
+                            · 게스트
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>{content.region ?? "-"}</TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatNumber(content.likes)}
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground">
+                        {formatRelative(content.createdAt, now)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <Skeleton className="h-64 w-full" />
+            )}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>지역별 등록</CardTitle>
@@ -263,81 +350,6 @@ export function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-
-      <SearchStatsCard />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>최근 등록</CardTitle>
-          <CardDescription>
-            코스·트랙 최신 6건
-            {stats?.pendingReports != null && (
-              <>
-                {" "}
-                · 미처리 제보{" "}
-                <Link href="/reports" className="underline underline-offset-4">
-                  {formatNumber(stats.pendingReports)}건
-                </Link>
-              </>
-            )}
-          </CardDescription>
-          <CardAction>
-            <Button
-              variant="outline"
-              size="sm"
-              render={<Link href="/content" />}
-              nativeButton={false}
-            >
-              전체 보기
-            </Button>
-          </CardAction>
-        </CardHeader>
-        <CardContent>
-          {stats ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>유형</TableHead>
-                  <TableHead>제목</TableHead>
-                  <TableHead>작성자</TableHead>
-                  <TableHead>지역</TableHead>
-                  <TableHead className="text-right">좋아요</TableHead>
-                  <TableHead className="text-right">등록</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {stats.recent.map((content) => (
-                  <TableRow key={`${content.kind}-${content.id}`}>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {content.kind === "course" ? "코스" : "트랙"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="max-w-64 truncate font-medium">
-                      {content.title}
-                    </TableCell>
-                    <TableCell>
-                      {content.author.nickname}
-                      {content.author.isAnonymous && (
-                        <span className="text-muted-foreground"> · 게스트</span>
-                      )}
-                    </TableCell>
-                    <TableCell>{content.region ?? "-"}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(content.likes)}
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground">
-                      {formatRelative(content.createdAt, now)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <Skeleton className="h-64 w-full" />
-          )}
-        </CardContent>
-      </Card>
     </>
   )
 }

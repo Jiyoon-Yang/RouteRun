@@ -43,3 +43,6 @@ export const REGION_GROUPS = [
   },
   { label: "제주", prefixes: ["제주특별자치도"] },
 ]
+
+// 상세 패널의 "사용자 앱에서 보기" 링크 주소. 운영 도메인 하나뿐이라 환경 변수로 빼지 않았다.
+export const USER_SITE_URL = "https://routerun.co.kr"

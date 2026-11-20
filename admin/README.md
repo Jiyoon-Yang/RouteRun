@@ -17,7 +17,7 @@ npm run lint && npm run typecheck
 
 ```
 src/
-├── app/                     라우트만. page.tsx는 components/<기능>을 렌더 (데이터 조회도 여기서)
+├── app/                     라우트만. page.tsx는 components/<기능>을 렌더만 (데이터는 훅 → Server Action)
 │   ├── login/
 │   └── (admin)/             사이드바 레이아웃 아래 화면: / reports notices content images users audit
 ├── components/<기능>/        화면. index.tsx + 하위 컴포넌트 폴더(notice-fields/ 등) + hooks/ + utils/
@@ -35,7 +35,7 @@ src/
 ```
 
 데이터를 붙이면서 사용자 앱과 같은 `src/actions/`, `src/services/`, `src/repositories/`, `src/lib/supabase/`를 추가한다.
-흐름도 같다: Page → Server Action → Service → Repository → Supabase.
+흐름: 컴포넌트 훅 → Server Action(`requireAdmin()` 먼저) → Service → Repository → Supabase.
 
 ## 화면
 
@@ -76,6 +76,8 @@ printf "GOOGLE_SERVICE_ACCOUNT_JSON='%s'\n" "$(node -p 'JSON.stringify(require(p
 ```
 
 키 파일은 레포 폴더에 두지 말고, Vercel에도 넣은 뒤 지운다.
+
+신규 가입 옆 "가입 경로" 카드도 같은 서비스 계정과 `GA4_PROPERTY_ID`로 읽는다(1시간 캐시). 사용자 앱이 가입 직후 보내는 GA `sign_up` 이벤트를 처음 들어온 소스(`firstUserSource`)와 가입 방식(`method`: `google`·`guest`)별로 센다. `method`는 GA4 기본 측정기준이라 맞춤 측정기준 등록이 필요 없다. 사용자 앱이 가입을 처리하면서 1분짜리 `ga_signup` 쿠키를 남기고, 다음 화면의 `GaSignupEvent`가 이벤트를 보낸 뒤 쿠키를 지운다. 구글은 계정이 만들어진 지 1분 안의 로그인만, 게스트 → 구글 연동은 세지 않는다. 사용자 앱 배포 이후 가입부터 쌓이고, 광고 차단을 쓰는 사람은 빠진다.
 
 네이버 서치어드바이저는 통계 API를 찾지 못해 카드에 콘솔 링크만 둔다. 네이버에서 들어온 방문은 GA4 기준(`naver / organic`)으로 "검색엔진별 방문"에 나온다. 네이버 앱 안의 브라우저에서 들어온 방문은 직접 방문으로 잡혀서 실제보다 적게 보일 수 있다.
 

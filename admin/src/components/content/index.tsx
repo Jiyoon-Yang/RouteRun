@@ -42,12 +42,14 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/commons/components/ui/tabs"
 import { CONTENT_PAGE_SIZE, REGION_GROUPS } from "@/commons/constants/content"
 import { formatDate, formatDistance } from "@/commons/utils/format"
+import { extractImagePath } from "@/commons/utils/storage"
 import type {
   ContentFilters,
   ContentKind,
   Content,
 } from "@/commons/types/admin"
 
+import { ContentDetailSheet } from "./detail-sheet"
 import { useContents } from "./hooks/use-contents"
 
 const VISIBILITY = [
@@ -71,6 +73,7 @@ export function ContentPage() {
   const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<string[]>([])
   const [hideTargets, setHideTargets] = useState<string[]>([])
+  const [detailId, setDetailId] = useState<string | null>(null)
   const { contents, total, isLoading, setHidden } = useContents({
     kind,
     region,
@@ -105,6 +108,8 @@ export function ContentPage() {
   const allChecked =
     list.length > 0 && list.every((content) => selected.includes(content.id))
   const label = kind === "course" ? "코스" : "트랙"
+  // 목록에서 찾아 숨김·해제 뒤 다시 받은 상태가 바로 보이게 한다. 필터에서 빠지면 패널이 닫힌다.
+  const detail = list.find((content) => content.id === detailId) ?? null
 
   // 처리한 글만 선택에서 뺀다. 한 행만 해제해도 다른 체크가 풀리지 않게.
   const deselect = (ids: string[]) =>
@@ -277,6 +282,7 @@ export function ContentPage() {
                         : ids.filter((id) => id !== content.id)
                     )
                   }
+                  onOpen={() => setDetailId(content.id)}
                   onHide={() => setHideTargets([content.id])}
                   onUnhide={() => unhide([content.id])}
                 />
@@ -291,6 +297,17 @@ export function ContentPage() {
           setPage(target)
           setSelected([])
         }}
+      />
+
+      <ContentDetailSheet
+        content={detail}
+        onClose={() => setDetailId(null)}
+        onHide={(id) => {
+          // 패널 위에 확인창을 겹치면 패널의 포커스 잠금과 부딪혀서, 패널을 닫고 연다.
+          setDetailId(null)
+          setHideTargets([id])
+        }}
+        onUnhide={(id) => unhide([id])}
       />
 
       <ReasonDialog
@@ -323,18 +340,28 @@ function ContentRow({
   content,
   checked,
   onCheckedChange,
+  onOpen,
   onHide,
   onUnhide,
 }: {
   content: Content
   checked: boolean
   onCheckedChange: (checked: boolean) => void
+  onOpen: () => void
   onHide: () => void
   onUnhide: () => void
 }) {
+  // 다른 호스트 URL은 next/image가 거부하고, 불러오면 관리자 IP도 남아서 로고로 대신한다.
+  const thumbnail = content.imageUrls.find((url) => extractImagePath(url))
+
   return (
-    <TableRow data-state={checked ? "selected" : undefined}>
-      <TableCell>
+    <TableRow
+      data-state={checked ? "selected" : undefined}
+      className="cursor-pointer"
+      onClick={onOpen}
+    >
+      {/* 체크·메뉴 칸을 누를 때는 패널을 열지 않는다. */}
+      <TableCell onClick={(event) => event.stopPropagation()}>
         <Checkbox
           aria-label={`${content.title} 선택`}
           checked={checked}
@@ -344,9 +371,9 @@ function ContentRow({
       <TableCell>
         <div className="flex items-center gap-3">
           <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
-            {content.imageUrls[0] ? (
+            {thumbnail ? (
               <Image
-                src={content.imageUrls[0]}
+                src={thumbnail}
                 alt=""
                 fill
                 sizes="40px"
@@ -374,7 +401,17 @@ function ContentRow({
             )}
           </div>
           <div className="flex max-w-72 flex-col">
-            <span className="truncate font-medium">{content.title}</span>
+            {/* 행 클릭과 같은 동작. 키보드로도 패널을 열 수 있게 버튼으로 둔다. */}
+            <button
+              type="button"
+              className="truncate text-left font-medium hover:underline"
+              onClick={(event) => {
+                event.stopPropagation()
+                onOpen()
+              }}
+            >
+              {content.title}
+            </button>
             <span className="truncate text-xs text-muted-foreground">
               {content.description || "설명 없음"}
             </span>
@@ -402,7 +439,7 @@ function ContentRow({
           <Badge variant="outline">공개</Badge>
         )}
       </TableCell>
-      <TableCell>
+      <TableCell onClick={(event) => event.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger
             render={<Button variant="ghost" size="icon-sm" aria-label="작업" />}

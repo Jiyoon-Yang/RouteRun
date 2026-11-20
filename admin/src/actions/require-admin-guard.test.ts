@@ -1,5 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
+import { fileURLToPath } from "node:url"
 
 import ts from "typescript"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -11,7 +12,7 @@ import { getReportsAction, updateReportAction } from "./report.action"
 
 // 로그인 전에 불려서 requireAdmin을 넣으면 로그인이 막히는 액션
 const PUBLIC_ACTIONS = new Set(["signInAction", "signOutAction"])
-const ACTIONS_DIR = path.dirname(new URL(import.meta.url).pathname)
+const ACTIONS_DIR = path.dirname(fileURLToPath(import.meta.url))
 
 function isAwaitRequireAdmin(node: ts.Node | undefined): boolean {
   return (
@@ -57,6 +58,17 @@ describe("어드민 Server Action은 모두 첫 줄에서 requireAdmin()을 호�
     const problems: string[] = []
 
     for (const statement of source.statements) {
+      // `export { x }`·`export * from`·`export default 식`은 아래 검사를 피해 가므로 막는다(타입 re-export만 허용)
+      if (
+        (ts.isExportDeclaration(statement) && !statement.isTypeOnly) ||
+        ts.isExportAssignment(statement)
+      ) {
+        problems.push(
+          `${statement.getText()}: re-export·default 식 대신 export async function으로 선언한다`
+        )
+        continue
+      }
+
       const exported = ts
         .getModifiers(statement as ts.HasModifiers)
         ?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)

@@ -27,7 +27,7 @@ cd admin && npm run lint && npm run typecheck
 **완료 보고 전 검증:**
 
 - 서비스 앱: `npx tsc --noEmit`, `npm run lint`, `npm test`. UI·인터랙션을 고쳤으면 `npx vitest run --project storybook`도
-- 어드민: `cd admin && npm run lint && npm run typecheck`, 테스트는 루트 `npm test`의 admin 프로젝트. 루트 tsc·lint는 어드민을 검사하지 않는다(어드민 `*.test.ts`는 Vercel 빌드에 vitest가 없어 어드민 tsconfig에서 뺐다)
+- 어드민: `cd admin && npm run lint && npm run typecheck`, 테스트는 루트 `npm test`의 admin 프로젝트. 루트 tsc·lint는 어드민을 검사하지 않는다. 어드민 `*.test.ts`는 Vercel 빌드에 vitest가 없어 어드민 tsconfig에서 뺐으므로 **타입 검사를 받지 않는다**. 또 루트 vitest라 `next` 등이 루트(Next 14) 쪽으로 풀릴 수 있으니 어드민 테스트는 Next API를 mock해서 쓴다
 - 반복되는 실수는 이 문서에 설명을 늘리기보다 ESLint 규칙·타입·테스트로 막는 쪽을 먼저 고려한다
 
 **Storybook 테스트:**

@@ -4,6 +4,7 @@ import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
+import { SIGNUP_COOKIE, SIGNUP_COOKIE_OPTIONS } from '@/commons/constants/analytics';
 import { createClient } from '@/lib/supabase/server';
 
 /** 게스트 계정 삭제 실패 시 서버 액션이 반환하는 형태 (성공 시에는 redirect로 응답이 끝나므로 반환되지 않음) */
@@ -106,6 +107,8 @@ export async function signInAnonymously(returnTo: string = '/'): Promise<{ error
   if (error) {
     return { error: error.message };
   }
+
+  cookies().set(SIGNUP_COOKIE, 'guest', SIGNUP_COOKIE_OPTIONS);
 
   const safeReturnTo = isRelativePath(returnTo) ? returnTo : '/';
   redirect(safeReturnTo);

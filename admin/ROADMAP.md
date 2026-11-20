@@ -22,6 +22,7 @@
 ## 검색 유입 카드 — 단계 순서와 별개
 DB 변경이 없어 단계를 기다리지 않는다. 설정 방법은 README의 "검색 유입 카드".
 - [x] 대시보드 카드: Search Console 클릭·노출·클릭률·평균 순위, 인기 검색어, GA4 검색엔진별 자연 검색 방문 (`feat/admin-search-stats`)
+- [x] 가입 경로 카드: 사용자 앱이 가입 직후 GA `sign_up`(method google·guest)을 보내고, 어드민이 처음 들어온 소스 × 방식으로 센다. 지역별 등록은 최근 등록 옆으로 옮김 (`feat/admin-signup-channels`)
 - [ ] 콘솔 설정: Google Cloud API 2개 사용 설정, 서비스 계정 키 발급, Search Console "제한됨"·GA4 "뷰어" 권한 추가
 - [ ] 어드민 Vercel 프로젝트에 환경 변수 3개. 1단계의 Vercel 새 프로젝트를 만든 뒤에 한다
 - 네이버 서치어드바이저는 통계 API를 찾지 못해 콘솔 링크만 둔다. 네이버 유입은 GA4의 `naver / organic`으로 본다

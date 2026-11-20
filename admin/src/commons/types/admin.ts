@@ -161,3 +161,6 @@ export type SearchStats = {
   }[]
   organicSessions: { source: string; sessions: number }[]
 }
+
+// 대시보드 가입 경로 카드. GA4 sign_up 이벤트를 처음 들어온 소스·가입 방식별로 센 값.
+export type SignupSource = { source: string; google: number; guest: number }

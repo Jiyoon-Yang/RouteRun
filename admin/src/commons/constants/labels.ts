@@ -22,3 +22,13 @@ export const LOG_ACTION_LABEL: Record<LogAction, string> = {
   delete_notice: "공지 삭제",
   delete_image: "이미지 삭제",
 }
+
+// GA4 유입 소스 값. 목록에 없는 값(도메인 등)은 그대로 보여준다.
+export const SOURCE_LABEL: Record<string, string> = {
+  google: "구글",
+  naver: "네이버",
+  daum: "다음",
+  bing: "빙",
+  "(direct)": "직접 방문",
+  "(not set)": "알 수 없음",
+}

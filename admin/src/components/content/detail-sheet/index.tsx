@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Image from "next/image"
 import {
   ExternalLinkIcon,
@@ -25,7 +26,7 @@ import type { Content } from "@/commons/types/admin"
 
 /** 코스·트랙 한 개를 목록에서 받은 그대로 펼쳐 보여 준다. 경로 지도는 아직 없다. */
 export function ContentDetailSheet({
-  content,
+  content: current,
   onClose,
   onHide,
   onUnhide,
@@ -35,8 +36,13 @@ export function ContentDetailSheet({
   onHide: (id: string) => void
   onUnhide: (id: string) => void
 }) {
+  // 닫히는 애니메이션 동안 패널이 비지 않게 마지막 글을 붙잡아 둔다.
+  const [lastContent, setLastContent] = useState(current)
+  if (current && current !== lastContent) setLastContent(current)
+  const content = current ?? lastContent
+
   return (
-    <Sheet open={content !== null} onOpenChange={(open) => !open && onClose()}>
+    <Sheet open={current !== null} onOpenChange={(next) => !next && onClose()}>
       <SheetContent className="data-[side=right]:sm:max-w-lg">
         {content && (
           <>

@@ -24,8 +24,18 @@ npx vitest run --project storybook  # Storybook 컴포넌트/인터랙션·a11y 
 cd admin && npm run lint && npm run typecheck
 ```
 
-**완료 보고 전 검증:** 서비스 앱을 고쳤으면 `npx tsc --noEmit`, `npm run lint`, `npm test`. UI·인터랙션을 고쳤으면 `npx vitest run --project storybook`도. 어드민을 고쳤으면 `cd admin && npm run lint && npm run typecheck`(어드민은 테스트 없음). 루트 명령은 어드민을 검사하지 않는다.
-- **Storybook 테스트:** Playwright 브라우저가 없다는 에러면 `npx playwright install chromium`. 워크트리의 심볼릭 링크 `node_modules`는 `vitest.config.ts`의 `server.fs.allow`가 실제 경로로 허용한다. 스토리에서 `useRouter`(next/navigation)를 쓰는 컴포넌트는 `parameters: { nextjs: { appDirectory: true } }`, `useAuth`·`useModal`을 쓰는 컴포넌트는 `AuthProvider`·`ModalProvider` 데코레이터가 필요하다(`navigation-bar` 스토리 참고). 반복되는 실수는 이 문서에 설명을 늘리기보다 ESLint 규칙·타입·테스트로 막는 쪽을 먼저 고려한다.
+**완료 보고 전 검증:**
+
+- 서비스 앱: `npx tsc --noEmit`, `npm run lint`, `npm test`. UI·인터랙션을 고쳤으면 `npx vitest run --project storybook`도
+- 어드민: `cd admin && npm run lint && npm run typecheck`(테스트 없음). 루트 명령은 어드민을 검사하지 않는다
+- 반복되는 실수는 이 문서에 설명을 늘리기보다 ESLint 규칙·타입·테스트로 막는 쪽을 먼저 고려한다
+
+**Storybook 테스트:**
+
+- Playwright 브라우저가 없다는 에러면 `npx playwright install chromium`
+- 워크트리의 심볼릭 링크 `node_modules`는 `vitest.config.ts`의 `server.fs.allow`가 실제 경로로 허용한다
+- 스토리에서 `useRouter`(next/navigation)를 쓰는 컴포넌트는 `parameters: { nextjs: { appDirectory: true } }`가 필요하다
+- `useAuth`·`useModal`을 쓰는 컴포넌트는 `AuthProvider`·`ModalProvider` 데코레이터가 필요하다(`navigation-bar` 스토리 참고)
 
 ## 아키텍처
 

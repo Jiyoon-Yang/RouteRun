@@ -3,6 +3,7 @@
 # gh pr merge 사례는 존재하지 않는 PR 번호라 base 조회 실패 → ask가 기대값이다.
 G="$(dirname "$0")/guard.sh"
 FAIL=0
+export GUARD_BRANCH=feat/test # 실행 중인 체크아웃 브랜치(CI의 main push 등)에 결과가 흔들리지 않게 고정
 t() {
   local exp=$1 cmd=$2 out
   out=$(jq -n --arg c "$cmd" '{tool_input:{command:$c}}' | bash "$G" | jq -r '.hookSpecificOutput.permissionDecision')
@@ -15,15 +16,29 @@ t deny  'git push origin HEAD:main'
 t deny  'git push -f origin +main'
 t deny  'git push origin refs/heads/main'
 t deny  'git push --all origin'
+t deny  'git -C . push origin main'
+t deny  "git push origin 'HEAD:main'"
+t deny  'git push origin "main"'
+t deny  'git push origin HEAD:main; echo done'
 t allow 'git push -u origin feat/harness-guardrails'
 t allow 'git push origin feat/main-thing'
+t allow 'git push -u origin feat/maintenance'
+GUARD_BRANCH=main t deny 'git push'
 t ask   'gh pr merge 99999 --merge'
 t deny  'gh api repos/x/y/pulls/3/merge -X PUT'
 t deny  "gh api graphql -f query='mutation{mergePullRequest(input:{})}'"
 t ask   'gh api repos/x/y/issues/3/comments -f body=hi'
 t allow 'gh api repos/x/y/pulls/3/comments'
+t ask   'gh api --method=DELETE repos/x/y/rulesets/1'
+t ask   'gh api -X delete repos/x/y/rulesets/1'
+t ask   'gh api repos/x/y/issues/3/comments --field=body=hi'
 t deny  'vercel --prod'
+t deny  'npx vercel deploy --prod'
 t ask   'vercel env pull'
+t allow 'cat vercel.json'
+t allow 'cat src/components/Button.tsx'
+t allow 'grep -rn foo --include=*.tsx src'
+t allow 'npx eslint src/app/page.tsx'
 t ask   'supabase db push'
 t ask   'supabase functions deploy send-report-email'
 t allow 'supabase --version'

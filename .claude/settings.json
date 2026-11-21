@@ -26,7 +26,7 @@
           },
           {
             "type": "command",
-            "command": "bash /Users/jiyoon/Desktop/RunningCourse/RunningCourse/.claude/hooks/pre-push-build-check.sh",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-push-build-check.sh\"",
             "timeout": 120,
             "statusMessage": "빌드 검사 중..."
           }

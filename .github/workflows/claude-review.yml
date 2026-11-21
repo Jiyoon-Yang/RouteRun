@@ -22,7 +22,6 @@ jobs:
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
-            HEAD SHA: ${{ github.event.pull_request.head.sha }}
 
             이 PR을 리뷰해줘. CLAUDE.md의 아키텍처·컨벤션·Gotchas를 기준으로 삼고,
             버그, 보안(인증/RLS/게스트 제한), 데이터 손실 위험을 우선으로 봐.
@@ -35,7 +34,5 @@ jobs:
             - P2: 선택 사항. 컨벤션, 가독성, 사소한 개선
             인라인 코멘트는 첫 줄을 [P0]처럼 등급으로 시작해.
             요약 코멘트는 맨 위에 등급별 개수를 적고, P0 → P1 → P2 순서로 묶어. 지적이 없는 등급은 "없음"으로 표시해.
-            요약 코멘트의 마지막 줄은 반드시 아래 형식 한 줄로 끝내. 자동 머지 판단이 이 줄만 읽는다.
-            REVIEW_RESULT: sha=<위 HEAD SHA 전체> P0=<개수> P1=<개수> P2=<개수>
           claude_args: |
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"

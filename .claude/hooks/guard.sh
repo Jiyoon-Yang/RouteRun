@@ -5,7 +5,7 @@
 #   필수 방어선은 원격 Rulesets. 다만 Claude가 사용자 gh 자격증명을 쓰므로 main 머지는 여기서만 막힌다.
 CMD=$(jq -r '.tool_input.command // ""')
 BRANCH=${GUARD_BRANCH:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null)}
-CMD_START='(^|[;&|(`[:space:]])' # 명령 위치(파일명 `Button.tsx`·`vercel.json` 제외)
+CMD_START="(^|[;&|(\`\"'{[:space:]])" # 명령 위치(`bash -c "…"` 래퍼 포함, 파일명 `Button.tsx`·`vercel.json` 제외)
 
 decide() {
   jq -n --arg d "$1" --arg r "$2" \

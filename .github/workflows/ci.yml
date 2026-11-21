@@ -3,8 +3,10 @@ name: CI
 # dev·main Rulesets의 필수 status check(`ci`). 실패하면 머지가 막힌다.
 on:
   pull_request:
-  push:
-    branches: [dev, main]
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 permissions:
   contents: read

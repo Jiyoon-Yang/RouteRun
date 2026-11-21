@@ -24,6 +24,12 @@ t allow 'git push -u origin feat/harness-guardrails'
 t allow 'git push origin feat/main-thing'
 t allow 'git push -u origin feat/maintenance'
 GUARD_BRANCH=main t deny 'git push'
+t deny  'bash -c "git push origin main"'
+t deny  "sh -c 'git push origin HEAD:main'"
+t deny  "sh -c 'vercel --prod'"
+t ask   'bash -c "supabase db push"'
+t ask   "{ psql \$DATABASE_URL; }"
+t ask   "bash -c 'node -e 1'"
 t ask   'gh pr merge 99999 --merge'
 t deny  'gh api repos/x/y/pulls/3/merge -X PUT'
 t deny  "gh api graphql -f query='mutation{mergePullRequest(input:{})}'"

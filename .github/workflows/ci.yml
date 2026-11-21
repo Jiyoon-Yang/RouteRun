@@ -1,0 +1,29 @@
+name: CI
+
+# dev·main Rulesets의 필수 status check(`ci`). 실패하면 머지가 막힌다.
+on:
+  pull_request:
+  push:
+    branches: [dev, main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            admin/package-lock.json
+      - run: npm ci
+      - run: npm ci
+        working-directory: admin
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npm test
+      - run: bash .claude/hooks/guard.test.sh
+      - run: npm run lint && npm run typecheck
+        working-directory: admin

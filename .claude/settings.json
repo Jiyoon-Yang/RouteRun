@@ -3,6 +3,17 @@
     "baseRef": "head",
     "symlinkDirectories": ["node_modules", "admin/node_modules"]
   },
+  "permissions": {
+    "ask": [
+      "Edit(**/.github/**)",
+      "Write(**/.github/**)",
+      "Edit(**/.claude/settings*.json)",
+      "Write(**/.claude/settings*.json)",
+      "Edit(**/.claude/hooks/**)",
+      "Write(**/.claude/hooks/**)",
+      "Read(**/.env*.local)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -10,21 +21,14 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash /Users/jiyoon/Desktop/RunningCourse/RunningCourse/.claude/hooks/pre-push-build-check.sh",
-            "timeout": 120,
-            "statusMessage": "빌드 검사 중..."
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.sh\"",
+            "timeout": 30
+          },
           {
             "type": "command",
-            "command": "npm run lint 2>&1",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-push-build-check.sh\"",
             "timeout": 120,
-            "statusMessage": "린트 검사 중..."
+            "statusMessage": "빌드 검사 중..."
           }
         ]
       }

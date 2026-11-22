@@ -16,7 +16,8 @@ type UseRoutesResult = {
 
 export function useRoutes(viewport: RouteViewport | null): UseRoutesResult {
   const [allRoutes, setAllRoutes] = useState<Route[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  // 첫 조회 전(TMap SDK가 뜨고 뷰포트가 나오기까지 느린 회선에서 수 초)에도 로딩으로 둬 목록 스켈레톤을 보여 준다
+  const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {

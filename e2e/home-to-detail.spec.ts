@@ -34,6 +34,27 @@ test('홈 지도에서 코스를 골라 상세로 간다 (Supabase 쓰기 요청
   expect(writes).toEqual([]);
 });
 
+// 느린 회선에서 SDK(1.25MB)가 뜨기 전 수 초 동안 목록이 텅 비어 보이지 않게, 첫 조회 전부터 스켈레톤을 보여 준다
+test('지도가 뜨기 전에도 목록 자리에 스켈레톤이 보이고, 조회 후 카드로 바뀐다', async ({
+  page,
+}) => {
+  // SDK 로더를 3초 붙잡아 두면 그동안은 지도도 첫 조회도 있을 수 없다. 그 안(2초)에 스켈레톤이 보여야 한다.
+  // 5초 이상 붙잡으면 안 된다: 레이아웃 로더가 document.write를 5초만 가로채 그 뒤 도착한 SDK는 실행되지 않는다
+  await page.route('**/tmap/vectorjs**', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 3_000));
+    await route.continue();
+  });
+  const skeleton = page.locator('[aria-busy="true"]');
+
+  await page.goto('/');
+  await expect(skeleton).toBeVisible({ timeout: 2_000 });
+
+  await expect(page.getByRole('link', { name: / 코스 선택$/ }).first()).toBeVisible({
+    timeout: 20_000,
+  });
+  await expect(skeleton).toHaveCount(0);
+});
+
 // TMap SDK 로더는 (with-map) 레이아웃의 afterInteractive Script라 클라이언트 이동에서도 실행된다.
 // beforeInteractive로 앞당기면 첫 로딩에만 실행돼, 마이페이지 카드(router.push) → 상세처럼 지도 없는 페이지에서
 // 들어올 때 지도가 안 뜬다(2026-11-22 실험, docs/perf/baseline.md). 마이페이지는 로그인이 필요해 공지에서 같은 이동을 낸다.

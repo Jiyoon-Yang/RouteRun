@@ -38,8 +38,7 @@ test('홈 지도에서 코스를 골라 상세로 간다 (Supabase 쓰기 요청
 test('지도가 뜨기 전에도 목록 자리에 스켈레톤이 보이고, 조회 후 카드로 바뀐다', async ({
   page,
 }) => {
-  // SDK 로더를 3초 붙잡아 두면 그동안은 지도도 첫 조회도 있을 수 없다. 그 안(2초)에 스켈레톤이 보여야 한다.
-  // 5초 이상 붙잡으면 안 된다: 레이아웃 로더가 document.write를 5초만 가로채 그 뒤 도착한 SDK는 실행되지 않는다
+  // SDK 로더를 3초 붙잡아 두면 그동안은 지도도 첫 조회도 있을 수 없다. 그 안(2초)에 스켈레톤이 보여야 한다
   await page.route('**/tmap/vectorjs**', async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 3_000));
     await route.continue();
@@ -53,6 +52,23 @@ test('지도가 뜨기 전에도 목록 자리에 스켈레톤이 보이고, 조
     timeout: 20_000,
   });
   await expect(skeleton).toHaveCount(0);
+});
+
+// 아주 느린 회선: 로더(vectorjs) 도착이 늦어도 지도가 떠야 한다. 예전 로더는 document.write 가로채기를
+// 5초 고정으로 풀어, 그 뒤 도착한 vectorjs의 write가 무시돼 지도가 영영 안 떴다
+test('TMap 로더가 7초 늦게 와도 지도와 코스 카드가 뜬다', async ({ page }) => {
+  await page.route('**/tmap/vectorjs**', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 7_000));
+    await route.continue();
+  });
+
+  await page.goto('/');
+  await expect(page.locator('#map_div .vsm-container')).toBeVisible({ timeout: 25_000 });
+  // vectorjs의 두 번째 write(지도 CSS)도 가로채기 해제 전에 들어가야 한다
+  await expect(page.locator('head link[href*="vsm.css"]')).toHaveCount(1);
+  await expect(page.getByRole('link', { name: / 코스 선택$/ }).first()).toBeVisible({
+    timeout: 10_000,
+  });
 });
 
 // TMap SDK 로더는 (with-map) 레이아웃의 afterInteractive Script라 클라이언트 이동에서도 실행된다.

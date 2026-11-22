@@ -3,6 +3,8 @@ export const ROUTES = {
   HOME: '/home',
   NOTICE: '/notice',
   REPORT: '/report',
+  TERMS: '/terms',
+  PRIVACY: '/privacy',
   COURSES: {
     DETAIL: (id: string | number) => `/courses/${id}`,
     NEW: '/courses/new',
@@ -89,6 +91,8 @@ export const NAVIGATION_BAR_ROUTES = [
   ROUTES.HOME,
   ROUTES.NOTICE,
   ROUTES.REPORT,
+  ROUTES.TERMS,
+  ROUTES.PRIVACY,
   ROUTES.COURSES.NEW,
   ROUTES.TRACKS.NEW,
   ROUTES.MYPAGE,

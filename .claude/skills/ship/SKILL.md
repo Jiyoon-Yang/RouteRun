@@ -91,7 +91,7 @@ bash .claude/skills/ship/merge-gate.sh <PR>; echo $?
 |---|---|
 | 0 | 5단계 머지 |
 | 1 | 인라인 코멘트(`gh api repos/{owner}/{repo}/pulls/<PR>/comments`)와 요약을 읽고 P0·P1을 고쳐 push → 다시 4단계. 3회째에도 1이면 멈추고 남은 지적을 보고 |
-| 2 | 멈추고 사용자에게 묻는다(금지 경로 변경 `.github/`·`.claude/`·`supabase/`·`middleware.ts`, 결과 줄 없음, ci 없음·미완료) |
+| 2 | 멈추고 사용자에게 묻는다(금지 경로 변경 `.github/`·`.claude/`·`supabase/`·`middleware.ts`, 결과 줄 없음, ci 없음·미완료). 단 결과 줄만 없고 `review` check가 끝났으면, 리뷰 봇이 코멘트를 못 남긴 경우가 있어(#46) `gh run rerun <review run id>`로 한 번 재실행한 뒤 다시 본다 |
 
 - P2는 PR 코멘트로 남겨 두고 따로 처리하지 않는다
 - 리뷰 지적이 틀렸다고 판단하면 고치지 말고 이유를 사용자에게 보고한다

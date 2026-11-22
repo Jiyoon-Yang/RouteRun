@@ -6,7 +6,13 @@ PR=${1:?사용법: merge-gate.sh <PR 번호>}
 
 # .github·.claude: 하네스·CI 자체(리뷰가 skip되거나 스스로를 바꾼다), supabase: 운영 DB·Edge Function, middleware: 비공개 라우트 보호
 FORBIDDEN='^(\.github/|\.claude/|supabase/|middleware\.ts$)'
-TOUCHED=$(gh pr diff "$PR" --name-only | grep -E "$FORBIDDEN")
+# rename은 이전 경로도 본다. 목록을 못 받거나 비면 통과시키지 않는다(fail-closed)
+FILES=$(gh api --paginate "repos/{owner}/{repo}/pulls/$PR/files" -q '.[] | .filename, (.previous_filename // empty)')
+if [ $? -ne 0 ] || [ -z "$FILES" ]; then
+  echo "중단: PR 변경 파일 목록을 확인하지 못했다"
+  exit 2
+fi
+TOUCHED=$(grep -E "$FORBIDDEN" <<<"$FILES")
 if [ -n "$TOUCHED" ]; then
   printf '중단: 자동 머지 금지 경로 변경 → 사용자 확인 필요\n%s\n' "$TOUCHED"
   exit 2

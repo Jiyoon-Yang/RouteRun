@@ -83,3 +83,7 @@ specs/**/.spec-context.json
 
 # Supabase
 supabase/.temp/
+
+# playwright (npm run e2e)
+/test-results/
+/playwright-report/

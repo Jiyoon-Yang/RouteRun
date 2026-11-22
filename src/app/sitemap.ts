@@ -15,6 +15,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     { url: baseUrl },
     { url: `${baseUrl}${ROUTES.NOTICE}` },
+    { url: `${baseUrl}${ROUTES.TERMS}` },
+    { url: `${baseUrl}${ROUTES.PRIVACY}` },
     ...courses.map(({ id, lastModified }) => ({
       url: `${baseUrl}${ROUTES.COURSES.DETAIL(id)}`,
       lastModified: lastModified ?? undefined,

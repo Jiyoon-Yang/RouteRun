@@ -1,5 +1,4 @@
 // 이용약관·개인정보처리방침 본문. 개정하면 이전 본문을 별도 상수로 남기고 페이지에서 링크한다.
-// [대괄호] 항목은 운영자가 채워야 하는 자리표시다.
 
 export type LegalSection = {
   heading: string;
@@ -16,9 +15,9 @@ export type LegalDocument = {
   sections: LegalSection[];
 };
 
-const OPERATOR = '[운영자명]';
-const CONTACT_EMAIL = '[문의 이메일]';
-const EFFECTIVE_DATE = '[시행일]';
+const OPERATOR = '양지윤';
+const CONTACT_EMAIL = 'jiyoon3522@naver.com';
+const EFFECTIVE_DATE = '2026.11.23';
 
 export const TERMS: LegalDocument = {
   title: '이용약관',
@@ -153,7 +152,7 @@ export const PRIVACY: LegalDocument = {
       heading: '4. 처리 위탁',
       paragraphs: ['운영자는 서비스 제공을 위해 다음 업체에 개인정보 처리를 맡기고 있습니다.'],
       items: [
-        'Supabase Inc.: 회원 인증, 데이터베이스, 사진 저장',
+        'Supabase Inc.: 회원 인증, 데이터베이스, 사진 저장 (서버 위치: 대한민국 서울)',
         'Vercel Inc.: 웹 서비스 호스팅',
         'Resend, Inc.: 제보 알림 메일 발송',
         'Google LLC: Google 로그인, 이용 통계 분석(Google Analytics)',
@@ -162,13 +161,12 @@ export const PRIVACY: LegalDocument = {
     {
       heading: '5. 국외 이전',
       paragraphs: [
-        '위 위탁 업체의 서버가 국외에 있어, 서비스 이용 시 개인정보가 정보통신망을 통해 수시로 전송됩니다. 국외 이전을 원하지 않으면 서비스 이용을 중단하고 탈퇴할 수 있으나, 이 경우 서비스를 이용할 수 없습니다.',
+        '일부 위탁 업체의 서버가 국외에 있어, 서비스 이용 시 개인정보가 정보통신망을 통해 수시로 전송됩니다. 국외 이전을 원하지 않으면 서비스 이용을 중단하고 탈퇴할 수 있으나, 이 경우 서비스를 이용할 수 없습니다.',
       ],
       items: [
-        'Supabase Inc.: [리전 국가] / 계정 정보, 게시물, 제보 내용 / 탈퇴 시까지',
-        'Vercel Inc.: 미국 등 / 접속 기록 / 위탁 계약 종료 시까지',
-        'Resend, Inc.: 미국 / 제보 내용 / 발송 후 [보관 기간]',
-        'Google LLC: 미국 / Google 계정 정보, 쿠키·이용 기록 / [GA 보관 기간]',
+        'Vercel Inc.: 미국 / 접속 기록(IP, 접속 일시, 브라우저 정보) / 위탁 계약 종료 시까지',
+        'Resend, Inc.: 미국 / 제보 내용 / 발송 후 30일',
+        'Google LLC: 미국 / Google 계정 정보, 쿠키·이용 기록 / 계정 정보는 탈퇴 시까지, 이용 통계는 Google Analytics 보존 설정 기간(2개월 또는 14개월)',
       ],
     },
     {
@@ -194,7 +192,7 @@ export const PRIVACY: LegalDocument = {
     },
     {
       heading: '9. 개인정보 보호책임자',
-      items: ['성명: [보호책임자 성명]', `연락처: ${CONTACT_EMAIL}`],
+      items: ['성명: 양지윤', `연락처: ${CONTACT_EMAIL}`],
       notes: [
         '개인정보 침해에 관한 상담은 개인정보침해신고센터(privacy.kisa.or.kr, 국번 없이 118), 개인정보분쟁조정위원회(kopico.go.kr, 1833-6972)에도 할 수 있습니다.',
       ],

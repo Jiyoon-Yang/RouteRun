@@ -45,7 +45,7 @@ gh pr view <N> --json title,body,files
 
 **제목:** `[release]: <포함 PR 핵심을 한 줄로> 운영 반영 (dev → main)`
 
-**본문** (CLAUDE.md PR 템플릿 구조):
+**본문** (`/ship` PR 템플릿 구조):
 
 ```markdown
 ### 📝 요약

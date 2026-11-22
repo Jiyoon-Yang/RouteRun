@@ -1,4 +1,6 @@
 {
+  // 워크트리(.claude/worktrees/)가 메인 체크아웃 안에 있어, 위로 올라가 부모 설정까지 합치면 플러그인이 충돌한다
+  "root": true,
   "extends": [
     "next/core-web-vitals",
     "eslint:recommended",

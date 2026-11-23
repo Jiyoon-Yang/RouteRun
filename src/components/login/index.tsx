@@ -14,13 +14,10 @@
 
 'use client';
 
-import Link from 'next/link';
-
 import { Button } from '@/commons/components/button';
 import { LogoIcon } from '@/commons/components/icons';
 import { Spinner } from '@/commons/components/spinner';
 import { LOGO_SIZE_PRESETS } from '@/commons/constants/logo-presets';
-import { ROUTES } from '@/commons/constants/url';
 
 import { useAnonymousLogin } from './hooks/useAnonymousLogin';
 import { useGoogleLogin } from './hooks/useGoogleLogin';
@@ -28,8 +25,8 @@ import styles from './styles.module.css';
 
 // i18n 대비 텍스트 상수 분리
 const TEXTS = {
-  GOOGLE_LOGIN: 'Google 계정으로 로그인',
-  GUEST_LOGIN: '게스트 로그인',
+  GOOGLE_LOGIN: 'Google로 시작하기',
+  GUEST_LOGIN: '게스트로 시작하기',
 } as const;
 const LOGIN_LOGO_SIZE = LOGO_SIZE_PRESETS.login;
 
@@ -113,18 +110,6 @@ export default function Login({ returnTo = '/' }: LoginProps) {
           >
             {TEXTS.GUEST_LOGIN}
           </Button>
-
-          <p className={styles.consentNotice}>
-            로그인하면{' '}
-            <Link href={ROUTES.TERMS} className={styles.consentLink}>
-              이용약관
-            </Link>
-            과{' '}
-            <Link href={ROUTES.PRIVACY} className={styles.consentLink}>
-              개인정보처리방침
-            </Link>
-            에 동의하게 됩니다.
-          </p>
         </div>
       </div>
 

@@ -5,6 +5,7 @@ export const ROUTES = {
   REPORT: '/report',
   TERMS: '/terms',
   PRIVACY: '/privacy',
+  AGREE: '/agree',
   COURSES: {
     DETAIL: (id: string | number) => `/courses/${id}`,
     NEW: '/courses/new',

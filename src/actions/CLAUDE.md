@@ -16,4 +16,4 @@ Next.js **Server Actions** (`'use server'`). 인증 확인 → 입력 검증 →
 - 등록·수정 Action은 게스트 한도 확인 후 `validatePostInput`(`commons/utils/post-input.ts`)으로 제목·설명·이미지를 서버에서 다시 검증한다. 이미지 URL은 `isOwnCourseImageUrl`을 통과한 본인 Storage 폴더 URL만 허용된다.
 - `submitReportAction`: 유형·길이(10~500자) 검증 → 유저당 10분 3건 한도(조회 후 insert라 동시 요청은 조금 넘을 수 있음) → Service Role로 저장 → 최근 24시간 전체 50건 미만이고 `REPORT_EDGE_FUNCTION_URL`·`REPORT_EMAIL_SECRET`이 모두 있을 때만 메일 Edge Function 호출. 비밀값은 `x-report-secret` 헤더로 보내고(anon key는 공개라 인증 수단이 아님), 함수 실패는 로그만 남기고 성공으로 반환한다.
 - `auth.action.ts`의 `resolveSiteOrigin()`은 `NEXT_PUBLIC_SITE_URL` → `VERCEL_URL` → `localhost` 순으로 폴백한다. 새 환경 추가 시 이 함수를 확인한다.
-- redirect URL은 `isRelativePath()`로 `/`로 시작하는 상대 경로만 허용해 open redirect를 막는다.
+- redirect URL은 `isSafeRelativePath()`(`commons/utils/safe-path.ts`)로 사이트 내부 상대 경로만 허용해 open redirect를 막는다. 로그인 페이지·OAuth 콜백·동의 페이지도 같은 함수를 쓴다.

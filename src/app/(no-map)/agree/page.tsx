@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { ROUTES } from '@/commons/constants/url';
+import { isSafeRelativePath } from '@/commons/utils/safe-path';
 import { hasAgreedToTerms } from '@/commons/utils/terms-consent';
 import { TermsAgree } from '@/components/terms-agree';
 import { createClient } from '@/lib/supabase/server';
@@ -12,12 +13,7 @@ export const metadata: Metadata = { title: '약관 동의 | 루트런', robots: 
 function safeReturnPath(target: string | string[] | undefined): string {
   const value = Array.isArray(target) ? target[0] : target;
   // /agree로 돌아오면 동의 후 자기 자신으로 무한 리다이렉트되므로 막는다
-  const isSafe =
-    typeof value === 'string' &&
-    value.startsWith('/') &&
-    !value.startsWith('//') &&
-    !value.startsWith(ROUTES.AGREE);
-  return isSafe ? value : '/';
+  return isSafeRelativePath(value) && !value.startsWith(ROUTES.AGREE) ? value : '/';
 }
 
 export default async function AgreePage({

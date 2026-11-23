@@ -6,15 +6,12 @@ import { redirect } from 'next/navigation';
 
 import { SIGNUP_COOKIE, SIGNUP_COOKIE_OPTIONS } from '@/commons/constants/analytics';
 import { ROUTES } from '@/commons/constants/url';
+import { isSafeRelativePath } from '@/commons/utils/safe-path';
 import { TERMS_AGREED_AT_KEY } from '@/commons/utils/terms-consent';
 import { createClient } from '@/lib/supabase/server';
 
 /** 게스트 계정 삭제 실패 시 서버 액션이 반환하는 형태 (성공 시에는 redirect로 응답이 끝나므로 반환되지 않음) */
 export type DeleteGuestAccountError = { error: string };
-
-function isRelativePath(path: unknown): path is string {
-  return typeof path === 'string' && path.startsWith('/') && !path.startsWith('//');
-}
 
 /**
  * OAuth `redirectTo`에 사용할 사이트 기준 URL (스킴 + 호스트, 끝 슬래시 없음).
@@ -41,7 +38,7 @@ function resolveSiteOrigin(): string {
 export async function signInWithGoogle(returnTo: string = '/'): Promise<{ error: string } | void> {
   const supabase = createClient();
   const origin = resolveSiteOrigin();
-  const safeReturnTo = isRelativePath(returnTo) ? returnTo : '/';
+  const safeReturnTo = isSafeRelativePath(returnTo) ? returnTo : '/';
   const callbackUrl = `${origin}/auth/callback?next=${encodeURIComponent(safeReturnTo)}`;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -82,7 +79,7 @@ export async function linkGoogleAccount(returnTo: string = '/'): Promise<{ error
   }
 
   const origin = resolveSiteOrigin();
-  const safeReturnTo = isRelativePath(returnTo) ? returnTo : '/';
+  const safeReturnTo = isSafeRelativePath(returnTo) ? returnTo : '/';
   const callbackUrl = `${origin}/auth/callback?next=${encodeURIComponent(safeReturnTo)}`;
 
   const { data, error } = await supabase.auth.linkIdentity({
@@ -113,7 +110,7 @@ export async function signInAnonymously(returnTo: string = '/'): Promise<{ error
   cookies().set(SIGNUP_COOKIE, 'guest', SIGNUP_COOKIE_OPTIONS);
 
   // 새 게스트는 아직 약관에 동의하지 않았으므로 동의 화면을 거쳐 원래 경로로 간다
-  const safeReturnTo = isRelativePath(returnTo) ? returnTo : '/';
+  const safeReturnTo = isSafeRelativePath(returnTo) ? returnTo : '/';
   redirect(`${ROUTES.AGREE}?next=${encodeURIComponent(safeReturnTo)}`);
 }
 
@@ -142,7 +139,7 @@ export async function agreeToTermsAction(
     return { error: '동의를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.' };
   }
 
-  redirect(isRelativePath(returnTo) ? returnTo : '/');
+  redirect(isSafeRelativePath(returnTo) ? returnTo : '/');
 }
 
 /**

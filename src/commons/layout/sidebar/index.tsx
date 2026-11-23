@@ -20,6 +20,8 @@ const COPY = {
   closePanel: '닫기',
   notices: '공지사항',
   report: '제보하기',
+  terms: '이용약관',
+  privacy: '개인정보처리방침',
 } as const;
 
 export type SidebarProps = {
@@ -115,6 +117,26 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               {COPY.report}
             </button>
           </nav>
+          <div className={styles.legalLinks}>
+            <Link
+              href={ROUTES.TERMS}
+              className={styles.legalLink}
+              tabIndex={open ? 0 : -1}
+              onClick={onClose}
+            >
+              {COPY.terms}
+            </Link>
+            <span aria-hidden="true">·</span>
+            {/* 처리방침은 다른 고지와 구분되게 굵게 표시한다(개인정보 처리방침 작성지침) */}
+            <Link
+              href={ROUTES.PRIVACY}
+              className={`${styles.legalLink} ${styles.privacyLink}`}
+              tabIndex={open ? 0 : -1}
+              onClick={onClose}
+            >
+              {COPY.privacy}
+            </Link>
+          </div>
         </aside>
       </div>
     </div>

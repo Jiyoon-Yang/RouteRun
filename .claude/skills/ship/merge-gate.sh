@@ -5,7 +5,7 @@
 PR=${1:?사용법: merge-gate.sh <PR 번호>}
 
 # .github·.claude: 하네스·CI 자체(리뷰가 skip되거나 스스로를 바꾼다), supabase: 운영 DB·Edge Function, middleware: 비공개 라우트 보호
-FORBIDDEN='^(\.github/|\.claude/|supabase/|middleware\.ts$)'
+FORBIDDEN='^(\.github/|\.claude/|supabase/|(src/)?middleware\.ts$)'
 # rename은 이전 경로도 본다. 목록을 못 받거나 비면 통과시키지 않는다(fail-closed)
 FILES=$(gh api --paginate "repos/{owner}/{repo}/pulls/$PR/files" -q '.[] | .filename, (.previous_filename // empty)')
 if [ $? -ne 0 ] || [ -z "$FILES" ]; then

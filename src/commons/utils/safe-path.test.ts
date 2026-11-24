@@ -9,7 +9,16 @@ describe('isSafeRelativePath', () => {
   });
 
   it('외부로 나갈 수 있는 값은 막는다', () => {
-    for (const value of ['//evil.com', '/\\evil.com', '/foo\\bar', 'https://evil.com', '', null]) {
+    for (const value of [
+      '//evil.com',
+      '/\\evil.com',
+      '/foo\\bar',
+      '/\t/evil.com',
+      '/\n/evil.com',
+      'https://evil.com',
+      '',
+      null,
+    ]) {
       expect(isSafeRelativePath(value)).toBe(false);
     }
   });

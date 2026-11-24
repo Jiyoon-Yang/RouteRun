@@ -7,6 +7,7 @@ import { Button } from '@/commons/components/button';
 import { LogoIcon } from '@/commons/components/icons';
 import { LOGO_SIZE_PRESETS } from '@/commons/constants/logo-presets';
 import { ROUTES } from '@/commons/constants/url';
+import { useModal } from '@/commons/providers/modal/modal.provider';
 import { useLogout } from '@/components/mypage/hooks/useLogout';
 
 import { useAgreeTerms } from './hooks/useAgreeTerms';
@@ -42,6 +43,18 @@ export function TermsAgree({ returnTo, isAnonymous }: TermsAgreeProps) {
   });
   const { agree, isPending, error } = useAgreeTerms(returnTo);
   const { executeLogoutOrDelete, isPending: isLeaving } = useLogout();
+  const { openModal } = useModal();
+
+  // 기존 게스트도 이 화면을 보므로, 작성한 글까지 지워지는 삭제는 반드시 확인을 거친다
+  const confirmLeave = () =>
+    openModal({
+      type: 'confirm',
+      title: '동의하지 않고 나가기',
+      content: isAnonymous
+        ? '게스트 계정과 작성한 글이 삭제되며 되돌릴 수 없습니다.\n진행하시겠습니까?'
+        : '동의하지 않으면 서비스를 이용할 수 없습니다.\n로그아웃하시겠습니까?',
+      onConfirm: () => void executeLogoutOrDelete(isAnonymous),
+    });
 
   const allChecked = ITEMS.every(({ key }) => checked[key]);
   const isBusy = isPending || isLeaving;
@@ -112,7 +125,7 @@ export function TermsAgree({ returnTo, isAnonymous }: TermsAgreeProps) {
             type="button"
             className={styles.leaveButton}
             disabled={isBusy}
-            onClick={() => executeLogoutOrDelete(isAnonymous)}
+            onClick={confirmLeave}
           >
             동의하지 않고 나가기
           </button>

@@ -46,8 +46,9 @@ export const config = {
      * 정적 에셋 및 내부 Next.js 경로를 제외한 모든 요청에 미들웨어를 적용한다.
      * - _next/static, _next/image: Next.js 내부 파일
      * - favicon.ico: 파비콘
-     * - 이미지/폰트 확장자
+     * - 이미지·아이콘·폰트 확장자, robots.txt·sitemap.xml
+     *   (/assets/logo/favicon.ico 같은 하위 경로 파일이 동의 화면으로 리다이렉트되지 않게)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2?)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|txt|xml)$).*)',
   ],
 };

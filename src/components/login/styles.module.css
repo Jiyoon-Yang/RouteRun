@@ -111,29 +111,6 @@
   color: var(--color-black-500);
 }
 
-/* ===== 약관 동의 고지 ===== */
-
-.consentNotice {
-  margin: 4px 0 0;
-  text-align: center;
-  color: var(--color-dark_grey-400);
-  font-family: var(--typography-caption-1-ko-mobile-font-family);
-  font-size: var(--typography-caption-1-ko-mobile-font-size);
-  font-weight: var(--typography-caption-1-ko-mobile-font-weight);
-  line-height: var(--typography-caption-1-ko-mobile-line-height);
-  letter-spacing: var(--typography-caption-1-ko-mobile-letter-spacing);
-}
-
-.consentLink {
-  color: var(--color-light_black-500);
-  text-decoration: underline;
-}
-
-.consentLink:focus-visible {
-  outline: 2px solid var(--color-blue-500);
-  outline-offset: 2px;
-}
-
 /* ===== login in progress (viewport overlay) ===== */
 
 .loadingOverlay {

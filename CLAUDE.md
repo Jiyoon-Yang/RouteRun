@@ -74,7 +74,7 @@ cd admin && npm run lint && npm run typecheck
 
 `Providers` (`src/commons/layout/providers.tsx`)는 `AuthProvider`, `ModalProvider`, `ToastProvider`를 한 번에 래핑하는 Server Component다. 단순 래퍼가 아니라 익명 유저의 코스·트랙 작성 횟수를 서버에서 집계해 `hasWrittenItem` 플래그로 레이아웃에 주입한다.
 
-미들웨어 (`middleware.ts`)는 모든 요청에서 세션을 갱신하고 비공개 라우트를 보호합니다. 세션이 없는 경우(완전 미로그인)만 차단하고 `/login`으로 리다이렉트합니다. 익명(게스트) 세션은 라우트를 통과합니다. 이 보호 로직과 비공개 라우트 목록을 요청 없이 완화하지 않는다. 게스트는 좋아요·제보·본인 글 수정/삭제가 가능하고, 코스·트랙 작성만 합산 1개로 제한됩니다 (`isGuestWriteLimitReached`, 등록 페이지와 등록 Action 양쪽에서 검사).
+미들웨어 (`src/middleware.ts`. `src/app`을 쓰므로 루트에 두면 Next가 조용히 무시한다, `middleware.test.ts`가 막음)는 모든 요청에서 세션을 갱신하고 비공개 라우트를 보호하며, 로그인했지만 약관에 동의하지 않은 사용자를 `/agree`로 보냅니다(동의 기록은 user_metadata `terms_agreed_at`). 세션이 없는 경우(완전 미로그인)만 차단하고 `/login`으로 리다이렉트합니다. 익명(게스트) 세션은 라우트를 통과합니다. 이 보호 로직과 비공개 라우트 목록을 요청 없이 완화하지 않는다. 게스트는 좋아요·제보·본인 글 수정/삭제가 가능하고, 코스·트랙 작성만 합산 1개로 제한됩니다 (`isGuestWriteLimitReached`, 등록 페이지와 등록 Action 양쪽에서 검사).
 
 **비공개 라우트:** `/courses/new`, `/courses/[id]/edit`, `/tracks/new`, `/tracks/[id]/edit`, `/mypage`, `/report` (정의: `src/commons/constants/url.ts`의 `PRIVATE_ROUTES`·`PRIVATE_DYNAMIC_PATTERNS`)
 

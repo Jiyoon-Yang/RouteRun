@@ -1,8 +1,9 @@
+import { isSafeRelativePath } from '@/commons/utils/safe-path';
 import Login from '@/components/login';
 
 function safeReturnPath(target: string | string[] | undefined): string {
   const value = Array.isArray(target) ? target[0] : target;
-  if (typeof value === 'string' && value.startsWith('/') && !value.startsWith('//')) {
+  if (isSafeRelativePath(value)) {
     return value;
   }
   return '/';

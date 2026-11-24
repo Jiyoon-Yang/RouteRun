@@ -87,7 +87,7 @@
         "src/commons/providers/auth/auth.provider.tsx",
         "src/repositories/**",
         "src/lib/supabase/**",
-        "middleware.ts",
+        "src/middleware.ts",
         // 기존 예외
         "src/services/course/courseLikeService.ts",
         "src/services/track/trackLikeService.ts",

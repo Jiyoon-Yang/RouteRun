@@ -9,7 +9,11 @@ export type User = {
   isAnonymous: boolean
   avatarUrl: string | null
   joinedAt: string
+  isSuspended: boolean
 }
+
+// 지금 걸려 있는 정지. until이 null이면 영구.
+export type Suspension = { until: string | null; reason: string }
 
 // 유저 목록 조회 조건. type의 "all"은 거르지 않는다는 뜻, google은 is_anonymous=false.
 export type UserFilters = {
@@ -93,6 +97,7 @@ export type UserDetail = {
   reportCount: number
   written: UserContent[]
   reports: Report[]
+  suspension: Suspension | null
 }
 
 export type NoticeStatus = "published" | "draft"

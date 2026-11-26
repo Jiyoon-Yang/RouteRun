@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import * as courseRepository from '@/repositories/course/course.repository';
 import * as reportRepository from '@/repositories/report.repository';
 import * as trackRepository from '@/repositories/track/track.repository';
+import * as userRepository from '@/repositories/user.repository';
 import * as courseService from '@/services/course/courseService';
 import type { SubmitCourseInput } from '@/services/course/courseService';
 import * as trackService from '@/services/track/trackService';
@@ -28,7 +29,7 @@ import {
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn() }));
 vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn() }));
-vi.mock('@/repositories/user.repository', () => ({}));
+vi.mock('@/repositories/user.repository', () => ({ isCurrentUserSuspended: vi.fn() }));
 vi.mock('@/repositories/report.repository', () => ({
   countReportsSince: vi.fn(),
   createReport: vi.fn(),
@@ -124,7 +125,16 @@ beforeEach(() => {
     error: null,
   } as never);
   writtenCounts(0, 0);
+  suspended(false);
 });
+
+/** 정지 여부 확인 결과. null이면 확인 실패 */
+function suspended(value: boolean | null) {
+  vi.mocked(userRepository.isCurrentUserSuspended).mockResolvedValue({
+    data: value ?? false,
+    error: value === null ? new Error('rpc') : null,
+  });
+}
 
 describe.each(creators)('$name 등록 Server Action 권한', ({ create, insert }) => {
   it('미로그인은 막고 DB에 쓰지 않는다', async () => {
@@ -249,5 +259,60 @@ describe('제보 Server Action 권한 (reports는 Service Role 전용)', () => {
       success: false,
     });
     expect(createServiceRoleClient).not.toHaveBeenCalled();
+  });
+});
+
+describe('정지된 유저는 작성·수정·좋아요·제보를 못 한다 (RLS RESTRICTIVE 정책과 같은 규칙)', () => {
+  const SUSPENDED = '이용이 제한된 계정이라 코스·트랙 작성·수정, 좋아요, 제보를 할 수 없습니다.';
+  const blocked = [
+    ['코스 등록', () => createCourseAction(courseInput), () => courseRepository.createRoute],
+    ['트랙 등록', () => createTrackAction(trackInput), () => trackService.submitNewTrack],
+    [
+      '코스 수정',
+      () => updateCourseAction({ courseId: ID, title: 't', description: null, image_urls: [] }),
+      () => courseService.updateCourse,
+    ],
+    [
+      '트랙 수정',
+      () => updateTrackAction({ trackId: ID, title: 't', description: null, image_urls: [] }),
+      () => trackService.updateTrack,
+    ],
+    ['코스 좋아요', () => toggleCourseLikeAction(ID, true), () => courseRepository.upsertRouteLike],
+    [
+      '코스 좋아요 취소',
+      () => toggleCourseLikeAction(ID, false),
+      () => courseRepository.deleteRouteLike,
+    ],
+    ['트랙 좋아요', () => toggleTrackLikeAction(ID, true), () => trackRepository.upsertTrackLike],
+    [
+      '제보',
+      () => submitReportAction({ type: 'bug', content: '버튼이 눌리지 않아요 확인 부탁' }),
+      () => reportRepository.createReport,
+    ],
+  ] as const;
+
+  it.each(blocked)('%s: 막고 DB에 쓰지 않는다', async (_label, run, write) => {
+    signInAs(GOOGLE);
+    suspended(true);
+    expect(JSON.stringify(await run())).toContain(SUSPENDED);
+    expect(write()).not.toHaveBeenCalled();
+  });
+
+  it.each(blocked)(
+    '%s: 정지 여부 확인이 실패해도 우회되지 않게 막는다',
+    async (_label, run, write) => {
+      signInAs(GUEST);
+      suspended(null);
+      expect(JSON.stringify(await run())).toContain(SUSPENDED);
+      expect(write()).not.toHaveBeenCalled();
+    },
+  );
+
+  it('삭제는 정지 중에도 할 수 있다', async () => {
+    signInAs(GOOGLE);
+    suspended(true);
+    await deleteCourseAction(ID);
+    expect(courseService.deleteCourse).toHaveBeenCalledWith(ID, GOOGLE.id);
+    expect(userRepository.isCurrentUserSuspended).not.toHaveBeenCalled();
   });
 });

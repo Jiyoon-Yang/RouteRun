@@ -17,6 +17,13 @@ export const USER_PAGE_SIZE = 20
 // 유저 상세에 보여 주는 최근 작성글·제보 수. 그보다 많으면 위 숫자(전체 수)로만 본다.
 export const USER_RECENT_LIMIT = 10
 
+// 정지 기간. days 0은 영구. 화면 선택지와 Action 검증이 같이 쓴다.
+export const SUSPEND_PERIODS = [
+  { label: "7일", days: 7 },
+  { label: "30일", days: 30 },
+  { label: "영구", days: 0 },
+]
+
 // 지역 필터 권역. start_address_region 첫 단어(시·도)로 묶고, 통합·개명 전후 이름을 같이 둔다.
 // shortcut: 새 시·도 이름(통합·개명)이 생기면 여기에 추가해야 한다. 빠지면 그 글은 "모든 지역"에서만 보인다
 export const REGION_GROUPS = [

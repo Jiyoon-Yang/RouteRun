@@ -7,10 +7,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { requireAdmin } from "@/lib/require-admin"
 import { getReports, updateReport } from "@/services/report.service"
-import { getUserDetail, getUsers } from "@/services/user.service"
+import {
+  getUserDetail,
+  getUsers,
+  suspendUser,
+  unsuspendUser,
+} from "@/services/user.service"
 
 import { getReportsAction, updateReportAction } from "./report.action"
-import { getUserDetailAction, getUsersAction } from "./user.action"
+import {
+  getUserDetailAction,
+  getUsersAction,
+  suspendUserAction,
+  unsuspendUserAction,
+} from "./user.action"
 
 // 로그인 전에 불려서 requireAdmin을 넣으면 로그인이 막히는 액션
 const PUBLIC_ACTIONS = new Set(["signInAction", "signOutAction"])
@@ -120,6 +130,8 @@ vi.mock("@/services/report.service", () => ({
 vi.mock("@/services/user.service", () => ({
   getUsers: vi.fn(),
   getUserDetail: vi.fn(),
+  suspendUser: vi.fn(),
+  unsuspendUser: vi.fn(),
 }))
 
 describe("어드민이 아니면 reports·admin_logs에 닿지 않는다", () => {
@@ -150,5 +162,14 @@ describe("어드민이 아니면 reports·admin_logs에 닿지 않는다", () =>
     // getUserDetail이 Auth Admin API로 이메일을 읽는다
     expect(getUsers).not.toHaveBeenCalled()
     expect(getUserDetail).not.toHaveBeenCalled()
+  })
+
+  it("유저를 정지·해제하지도, 조치 기록을 남기지도 않는다", async () => {
+    await expect(suspendUserAction("u1", 7, "스팸")).rejects.toThrow(
+      "NEXT_REDIRECT"
+    )
+    await expect(unsuspendUserAction("u1")).rejects.toThrow("NEXT_REDIRECT")
+    expect(suspendUser).not.toHaveBeenCalled()
+    expect(unsuspendUser).not.toHaveBeenCalled()
   })
 })

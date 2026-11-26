@@ -9,7 +9,11 @@ import { createClient } from '@/lib/supabase/server';
 import * as trackRepository from '@/repositories/track/track.repository';
 import * as trackService from '@/services/track/trackService';
 import type { SubmitTrackInput } from '@/services/track/trackService';
-import { isGuestWriteLimitReached } from '@/services/user/userService';
+import {
+  isGuestWriteLimitReached,
+  isSuspended,
+  SUSPENDED_MESSAGE,
+} from '@/services/user/userService';
 
 export type CreateTrackActionResult =
   | { success: true; trackId: string }
@@ -48,6 +52,10 @@ export async function toggleTrackLikeAction(
     return { likeCount: null, error: '로그인이 필요합니다.' };
   }
 
+  if (await isSuspended(supabase)) {
+    return { likeCount: null, error: SUSPENDED_MESSAGE };
+  }
+
   if (shouldLike) {
     const { error } = await trackRepository.upsertTrackLike(supabase, user.id, trackId);
     if (error) return { likeCount: null, error: error.message };
@@ -78,6 +86,10 @@ export async function createTrackAction(input: SubmitTrackInput): Promise<Create
 
   if (!user) {
     return { success: false, message: '로그인이 필요합니다.' };
+  }
+
+  if (await isSuspended(supabase)) {
+    return { success: false, message: SUSPENDED_MESSAGE };
   }
 
   if (user.is_anonymous === true && (await isGuestWriteLimitReached(user.id))) {
@@ -163,6 +175,10 @@ export async function updateTrackAction(
 
   if (!user) {
     return { success: false, error: '로그인이 필요합니다.' };
+  }
+
+  if (await isSuspended(supabase)) {
+    return { success: false, error: SUSPENDED_MESSAGE };
   }
 
   const validated = validatePostInput({

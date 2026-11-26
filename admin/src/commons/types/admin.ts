@@ -125,6 +125,7 @@ export type LogAction =
   | "delete_notice"
   | "delete_image"
 
+// 작업 기록 한 줄. admin은 관리자 이메일(계정이 지워졌으면 안내 문구).
 export type AuditLog = {
   id: string
   admin: string
@@ -132,6 +133,22 @@ export type AuditLog = {
   target: string
   reason: string | null
   at: string
+}
+
+// 작업 기록 조회 조건. period는 최근 N일("all"은 전체), action·adminId의 "all"은 거르지 않는다는 뜻.
+export type AuditFilters = {
+  period: "1" | "7" | "30" | "all"
+  action: LogAction | "all"
+  adminId: string
+  query: string
+  page: number
+}
+
+// 한 페이지 기록, 조건에 맞는 전체 수, 관리자 필터 선택지.
+export type AuditList = {
+  items: AuditLog[]
+  total: number
+  admins: { id: string; email: string }[]
 }
 
 // 이미지 검수 갤러리 한 장. 글의 image_urls를 펼친 것이라 업로드 시각 대신 글 등록 시각을 쓴다.

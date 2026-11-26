@@ -39,7 +39,7 @@ src/
 
 ## 화면
 
-화면은 2026-11-04에 시안 A/B 중에서 확정했다. 대시보드·제보 처리함·공지 관리·코스·트랙 관리·이미지 검수·유저 관리(조회)는 실데이터(Service Role)이고, 나머지 화면은 아직 `commons/mocks` 목데이터다. 로그인은 Supabase 대시보드에서 만든 이메일 계정 중 `admins`에 등록된 계정만 통과한다.
+화면은 2026-11-04에 시안 A/B 중에서 확정했다. 대시보드·제보 처리함·공지 관리·코스·트랙 관리·이미지 검수·유저 관리는 실데이터(Service Role)이고, 나머지 화면은 아직 `commons/mocks` 목데이터다. 로그인은 Supabase 대시보드에서 만든 이메일 계정 중 `admins`에 등록된 계정만 통과한다.
 
 | 화면 | 경로 | 고른 시안 | 연결에 필요한 DB 변경 |
 | --- | --- | --- | --- |
@@ -47,7 +47,7 @@ src/
 | 대시보드 | `/` | 지표 중심 | 없음 |
 | 제보 처리함 | `/reports` | 메일함 2단 | `reports.status`, `admin_note`, `handled_at` |
 | 코스·트랙 관리 | `/content` | 데이터 테이블 | `routes`·`tracks`.`is_hidden` + RLS SELECT 정책 |
-| 유저 관리 | `/users` | 목록 + 프로필 패널 | 정지만 `user_suspensions` 테이블 (조회는 없음) |
+| 유저 관리 | `/users` | 목록 + 프로필 패널 | `user_suspensions` 테이블 + RESTRICTIVE RLS 정책 |
 | 공지 관리 | `/notices` | 목록 + 작성 다이얼로그 | `notices` 테이블 |
 | 이미지 검수 | `/images` | 갤러리 그리드 | 없음 |
 | 작업 기록 | `/audit` | 필터 테이블 | `admin_logs` 테이블 |

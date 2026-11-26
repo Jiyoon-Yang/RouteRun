@@ -7,6 +7,7 @@ import type { ReportTarget, ReportType } from '@/commons/types/routerun';
 import { isValidReportTarget } from '@/commons/utils/report-target';
 import { createClient } from '@/lib/supabase/server';
 import * as reportRepository from '@/repositories/report.repository';
+import { isSuspended, SUSPENDED_MESSAGE } from '@/services/user/userService';
 
 export type SubmitReportInput = {
   type: ReportType;
@@ -39,6 +40,10 @@ export async function submitReportAction(
 
   if (!user) {
     return { success: false, message: '로그인이 필요합니다.' };
+  }
+
+  if (await isSuspended(supabase)) {
+    return { success: false, message: SUSPENDED_MESSAGE };
   }
 
   if (!VALID_TYPES.includes(input.type)) {

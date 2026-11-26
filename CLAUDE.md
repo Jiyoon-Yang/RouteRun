@@ -88,10 +88,11 @@ cd admin && npm run lint && npm run typecheck
 - `reports`: `id, user_id (탈퇴 시 null), type ('bug'|'inconvenience'|'suggestion'|'content'), content, target_type ('route'|'track', content일 때만), target_id, status ('open'|'in_progress'|'resolved', 기본 'open'), admin_note, handled_at, created_at` — Service Role 클라이언트로만 읽고 쓴다(anon·authenticated 정책·권한 없음). `status`·`admin_note`·`handled_at`은 어드민 제보 처리함이 쓴다
 - `admin_logs`: `id, admin_id (auth.users), action, target, reason, created_at` — 어드민 조치 기록. RLS 정책 없음(Service Role 전용)
 - `admins`: `user_id (auth.users), created_at` — 어드민 로그인 허용 명단. 본인 행만 조회 가능
+- `user_suspensions`: `user_id (auth.users, PK), until (null이면 영구), reason, created_at` — 어드민 유저 정지. Service Role 전용. 일반 유저는 `is_current_user_suspended()`(SECURITY DEFINER, 본인 것만)로만 묻는다
 - `notices`: `id, title, body, status ('draft'|'published'), pinned, published_at, created_at, updated_at` — 공지. 누구나 게시된 공지만 읽고(RLS), 쓰기는 어드민 Service Role만. 고정은 초안 포함 전체 1개(partial unique index)
 - 스토리지 버킷: `course_images` (공개)
 
-`supabase/migrations/`에는 likes_count 트리거와 어드민용 변경(`admins`, `reports` 처리 컬럼과 권한 정리, `admin_logs`, `notices`, 코스·트랙 숨김)만 있다. 나머지 테이블 구조는 위 목록과 `src/repositories/{course,track}/*-row.ts`를 기준으로 본다.
+`supabase/migrations/`에는 likes_count 트리거와 어드민용 변경(`admins`, `reports` 처리 컬럼과 권한 정리, `admin_logs`, `notices`, 코스·트랙 숨김, 유저 정지)만 있다. 나머지 테이블 구조는 위 목록과 `src/repositories/{course,track}/*-row.ts`를 기준으로 본다.
 `supabase/functions/send-report-email/` — 제보 메일 Edge Function (Deno + Resend). 함수 secrets: `RESEND_API_KEY`, `REPORT_EMAIL_TO`, `REPORT_EMAIL_SECRET`
 
 ## 환경 변수
@@ -135,4 +136,5 @@ GA_ID=                           # 선택. GA4 측정 ID. Vercel Production에�
 - **`likes_count`는 DB 트리거(`sync_route_likes_count`/`sync_track_likes_count`, SECURITY DEFINER)만 갱신한다:** routes·tracks UPDATE는 작성자 본인만 허용돼 앱 코드로 올리면 남의 글 좋아요가 반영되지 않던 버그가 있었다. 좋아요 Action은 카운트를 읽기만 하고, 직접 쓰는 코드는 ESLint가 막는다.
 - **`Providers` 이중 역할:** `src/commons/layout/providers.tsx`는 Provider 래핑 외에 익명 유저의 작성 횟수(`getUserRouteWriteCount` + `getUserTrackWriteCount`)를 병렬 집계한다. 익명 유저 관련 UI 게이팅 이슈 발생 시 이 컴포넌트를 먼저 확인.
 - **숨긴 코스·트랙(`is_hidden`)은 작성자 본인에게만 보인다:** 어드민이 숨기면 RLS SELECT 정책(`not is_hidden or user_id = auth.uid()`)이 다른 사용자에게서 뺀다. 작성자는 마이페이지·상세에서 계속 보므로, 여러 사람의 글을 보여 주는 목록 쿼리를 새로 만들면 `.eq('is_hidden', false)`를 직접 넣는다(홈 지도 `getHome*ByViewport`처럼).
+- **정지 유저는 코스·트랙 작성·수정, 좋아요, 제보를 못 한다:** 해당 Action이 세션 확인 직후 `userService.isSuspended`로 막고(확인 실패도 막음), routes·tracks INSERT/UPDATE·좋아요 INSERT/DELETE의 RESTRICTIVE RLS 정책이 REST 직접 호출을 막는다. 새 쓰기 Action을 만들면 같은 검사를 넣고 `permission.test.ts`의 정지 목록에 추가한다. 삭제는 막지 않는다.
 - **routes·tracks UPDATE는 컬럼 단위로만 허용한다:** 작성자가 REST로 `is_hidden`을 풀지 못하게 `authenticated`에 `title, description, image_urls, updated_at`만 grant했다. 수정 화면에서 바꾸는 컬럼을 늘리면 마이그레이션으로 grant도 추가해야 한다(안 하면 `permission denied`).

@@ -1,8 +1,14 @@
 "use server"
 
+import { MAX_REASON, SUSPEND_PERIODS } from "@/commons/constants/content"
 import type { UserFilters } from "@/commons/types/admin"
 import { requireAdmin } from "@/lib/require-admin"
-import { getUserDetail, getUsers } from "@/services/user.service"
+import {
+  getUserDetail,
+  getUsers,
+  suspendUser,
+  unsuspendUser,
+} from "@/services/user.service"
 
 const MAX_QUERY = 100
 
@@ -41,5 +47,49 @@ export async function getUserDetailAction(userId: string) {
   } catch (error) {
     console.error("[getUserDetailAction]", error)
     return null
+  }
+}
+
+/** 정지(사유 필수, 기간은 정해진 선택지만). 반영했으면 true. */
+export async function suspendUserAction(
+  userId: string,
+  days: number,
+  reason: string
+) {
+  const admin = await requireAdmin()
+
+  // 액션은 직접 호출될 수 있어서 입력을 다시 확인한다.
+  const trimmed = typeof reason === "string" ? reason.trim() : ""
+  if (
+    typeof userId !== "string" ||
+    !userId ||
+    !SUSPEND_PERIODS.some((period) => period.days === days) ||
+    !trimmed ||
+    trimmed.length > MAX_REASON
+  ) {
+    return false
+  }
+
+  try {
+    await suspendUser(admin.id, userId, days, trimmed)
+    return true
+  } catch (error) {
+    console.error("[suspendUserAction]", error)
+    return false
+  }
+}
+
+/** 정지 해제(사유 없음). 반영했으면 true. */
+export async function unsuspendUserAction(userId: string) {
+  const admin = await requireAdmin()
+
+  if (typeof userId !== "string" || !userId) return false
+
+  try {
+    await unsuspendUser(admin.id, userId)
+    return true
+  } catch (error) {
+    console.error("[unsuspendUserAction]", error)
+    return false
   }
 }

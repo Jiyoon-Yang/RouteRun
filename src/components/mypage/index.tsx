@@ -53,6 +53,7 @@ const TEXTS = {
   EMPTY_LIKED: '좋아요한 게시글이 없습니다.',
   GOOGLE_CONTINUE: '내 Google 계정과 연동하기',
   GOOGLE_LINKING: '연동 중...',
+  WITHDRAW: '회원 탈퇴',
 } as const;
 
 /**
@@ -153,6 +154,16 @@ export default function Mypage({
       onConfirm: () => void executeLogoutOrDelete(isAnonymous),
     });
   }, [openModal, isAnonymous, executeLogoutOrDelete]);
+
+  const openWithdrawModal = useCallback(() => {
+    openModal({
+      type: 'confirm',
+      title: TEXTS.WITHDRAW,
+      content:
+        '작성한 코스·트랙·사진과 좋아요가 모두 삭제되며 되돌릴 수 없습니다.\n탈퇴하시겠습니까?',
+      onConfirm: () => void executeLogoutOrDelete(true),
+    });
+  }, [openModal, executeLogoutOrDelete]);
 
   useEffect(() => {
     if (isError) {
@@ -268,6 +279,17 @@ export default function Mypage({
               />
             ),
           )
+        )}
+        {/* 게스트는 로그아웃이 곧 계정 삭제라 회원에게만 보인다 */}
+        {!isAnonymous && (
+          <button
+            type="button"
+            className={styles.withdrawButton}
+            disabled={isLogoutPending}
+            onClick={openWithdrawModal}
+          >
+            {TEXTS.WITHDRAW}
+          </button>
         )}
       </section>
 

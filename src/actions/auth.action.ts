@@ -9,9 +9,10 @@ import { ROUTES } from '@/commons/constants/url';
 import { isSafeRelativePath } from '@/commons/utils/safe-path';
 import { TERMS_AGREED_AT_KEY } from '@/commons/utils/terms-consent';
 import { createClient } from '@/lib/supabase/server';
+import { removeUserImageFolder } from '@/repositories/storage.repository';
 
-/** 게스트 계정 삭제 실패 시 서버 액션이 반환하는 형태 (성공 시에는 redirect로 응답이 끝나므로 반환되지 않음) */
-export type DeleteGuestAccountError = { error: string };
+/** 계정 삭제 실패 시 서버 액션이 반환하는 형태 (성공 시에는 redirect로 응답이 끝나므로 반환되지 않음) */
+export type DeleteAccountError = { error: string };
 
 /**
  * OAuth `redirectTo`에 사용할 사이트 기준 URL (스킴 + 호스트, 끝 슬래시 없음).
@@ -164,10 +165,11 @@ export async function signOut(): Promise<{ error: string } | void> {
 }
 
 /**
- * 현재 로그인된 게스트(익명) 계정을 Auth에서 영구 삭제하고 로그인 페이지로 보낸다.
- * Service Role은 서버에서만 사용하며 브라우저 번들에 포함되지 않는다.
+ * 현재 로그인된 계정(게스트 로그아웃·회원 탈퇴)을 Auth에서 영구 삭제하고 로그인 페이지로 보낸다.
+ * public.users·코스·트랙·좋아요·댓글은 FK ON DELETE CASCADE로, 제보는 SET NULL로 정리되고
+ * Storage 이미지만 여기서 직접 지운다. Service Role은 서버에서만 사용한다.
  */
-export async function deleteGuestAccount(): Promise<DeleteGuestAccountError | void> {
+export async function deleteAccount(): Promise<DeleteAccountError | void> {
   // 1) SSR용 Supabase 클라이언트로 쿠키 기반 세션에서 현재 사용자 정보를 조회한다.
   const supabase = createClient();
   const {
@@ -183,15 +185,6 @@ export async function deleteGuestAccount(): Promise<DeleteGuestAccountError | vo
   // 3) 로그인된 사용자가 없으면 삭제할 계정이 없다.
   if (!user?.id) {
     return { error: '삭제할 계정의 세션이 없습니다.' };
-  }
-
-  // 3a) 익명(게스트) 세션이 아니면 Admin 삭제 API를 호출하지 않는다.
-  if (user.is_anonymous !== true) {
-    console.error(
-      '[deleteGuestAccount] 일반 사용자가 게스트 계정 삭제 경로로 접근 시도함:',
-      user.id,
-    );
-    return { error: '일반 사용자는 이 접근 방식을 통해 계정을 삭제할 수 없습니다.' };
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -217,6 +210,9 @@ export async function deleteGuestAccount(): Promise<DeleteGuestAccountError | vo
   if (deleteError) {
     return { error: deleteError.message };
   }
+
+  // 6a) 계정이 지워진 뒤 업로드 이미지를 정리한다(실패해도 고아 파일만 남으므로 로그만)
+  await removeUserImageFolder(adminClient, user.id);
 
   // 8) 삭제 후에도 브라우저에 남을 수 있는 Supabase 세션 쿠키를 정리한다 (signOut과 동일).
   const cookieStore = cookies();

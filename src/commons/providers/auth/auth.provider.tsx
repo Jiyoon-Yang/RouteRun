@@ -87,6 +87,14 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 서버 액션 로그인(게스트 로그인·약관 동의) 뒤 이동에서는 브라우저 onAuthStateChange가 오지 않는다.
+  // 레이아웃이 다시 내려준 initialUser가 바뀌면 그 값으로 맞춘다(null은 레이아웃 보존으로 stale할 수 있어 무시)
+  const initialUserKey = initialUser ? `${initialUser.id}:${initialUser.is_anonymous}` : null;
+  useEffect(() => {
+    if (initialUser) setAuthState(buildAuthState(initialUser));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialUserKey]);
+
   const value = useMemo<AuthContextValue>(() => ({ ...authState }), [authState]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

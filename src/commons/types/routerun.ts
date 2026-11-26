@@ -91,7 +91,10 @@ export type HomeListItem =
   | { itemType: 'course'; data: CourseCardView }
   | { itemType: 'track'; data: TrackCardView };
 
-export type ReportType = 'bug' | 'inconvenience' | 'suggestion';
+export type ReportType = 'bug' | 'inconvenience' | 'suggestion' | 'content';
+
+/** 게시물 신고(type 'content')의 대상 */
+export type ReportTarget = { type: 'route' | 'track'; id: string };
 
 export interface Report {
   id: string;

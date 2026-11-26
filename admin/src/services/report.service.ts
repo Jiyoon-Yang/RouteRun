@@ -15,6 +15,10 @@ export const toReport = (row: ReportRow): Report => ({
   id: row.id,
   userId: row.user_id,
   type: row.type,
+  target:
+    row.target_type && row.target_id
+      ? { kind: row.target_type === "route" ? "course" : "track", id: row.target_id }
+      : null,
   content: row.content,
   createdAt: row.created_at,
   status: row.status,
@@ -31,7 +35,9 @@ export async function getReports(): Promise<{
   const rows = await fetchReports(supabase)
   if (rows.length === 0) return { reports: [], reporters: {} }
 
-  const userIds = [...new Set(rows.map((row) => row.user_id))]
+  const userIds = [
+    ...new Set(rows.flatMap((row) => (row.user_id ? [row.user_id] : []))),
+  ]
   const [authors, counts] = await Promise.all([
     fetchAuthors(supabase, userIds),
     fetchContentCounts(supabase, userIds),

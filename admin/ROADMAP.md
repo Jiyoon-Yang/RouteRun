@@ -34,6 +34,8 @@ DB 변경이 없어 단계를 기다리지 않는다. 설정 방법은 README의
 - 리뷰 중 발견: `reports`에 authenticated용 `check true` INSERT 정책이 남아 있어 REST로 status·admin_note를 채워 넣을 수 있었다. `20261112000000_reports_service_role_only.sql`로 정책·권한을 걷는다(사용자 앱은 Service Role로만 insert)
 - 상태를 바꿀 때만 `admin_logs`에 `update_report`를 남긴다(메모만 저장하면 기록 안 함). 메모는 기록의 사유로 같이 남는다
 - 제보는 전부 받아 클라이언트에서 필터한다. 1000건에 가까워지면 페이지네이션
+- 게시물 신고(`type='content'`, `target_type`·`target_id`)가 같은 처리함에 쌓인다. 상세에 대상 글 링크, 숨김은 코스·트랙 관리에서 — `20261126000000_reports_content_target.sql`
+- 신고자가 탈퇴하면 `user_id`가 null(FK SET NULL)이라 "탈퇴한 사용자"로 보인다
 
 ## 3. 공지 관리
 - [x] 공지 작성·수정·삭제, 상단 고정 1개 (`feat/admin-notices`)

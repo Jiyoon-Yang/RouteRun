@@ -4,6 +4,7 @@ export const REPORT_TYPE_LABEL: Record<ReportType, string> = {
   bug: "버그",
   inconvenience: "불편함",
   suggestion: "제안",
+  content: "게시물 신고",
 }
 
 export const REPORT_STATUS_LABEL: Record<ReportStatus, string> = {

@@ -1,9 +1,14 @@
 import { redirect } from 'next/navigation';
 
+import { parseReportTarget } from '@/commons/utils/report-target';
 import { ReportPage } from '@/components/report';
 import { createClient } from '@/lib/supabase/server';
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: { target?: string | string[] };
+}) {
   const supabase = createClient();
 
   const {
@@ -18,5 +23,6 @@ export default async function Page() {
     redirect('/login');
   }
 
-  return <ReportPage />;
+  // ?target=route:<id>면 게시물 신고, 형식이 틀리면 일반 제보로 연다
+  return <ReportPage target={parseReportTarget(searchParams.target) ?? undefined} />;
 }

@@ -2,18 +2,23 @@
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
-import type { ReportType } from '@/commons/types/routerun';
+import { ROUTES } from '@/commons/constants/url';
+import type { ReportTarget, ReportType } from '@/commons/types/routerun';
+import { isValidReportTarget } from '@/commons/utils/report-target';
 import { createClient } from '@/lib/supabase/server';
 import * as reportRepository from '@/repositories/report.repository';
 
 export type SubmitReportInput = {
   type: ReportType;
   content: string;
+  /** 게시물 신고(type 'content')일 때만 */
+  target?: ReportTarget;
 };
 
 export type SubmitReportActionResult = { success: true } | { success: false; message: string };
 
-const VALID_TYPES: ReportType[] = ['bug', 'inconvenience', 'suggestion'];
+const VALID_TYPES: ReportType[] = ['bug', 'inconvenience', 'suggestion', 'content'];
+const TARGET_LABEL: Record<ReportTarget['type'], string> = { route: '코스', track: '트랙' };
 
 // 게스트 세션은 무제한 생성 가능하므로 유저당 접수 횟수로 스팸(메일 폭주)을 막는다.
 // shortcut: 조회 후 insert라 동시 요청은 한도를 조금 넘을 수 있음, 악용되면 DB 트리거로 강제.
@@ -39,6 +44,13 @@ export async function submitReportAction(
   if (!VALID_TYPES.includes(input.type)) {
     return { success: false, message: '제보 유형을 선택해주세요.' };
   }
+
+  // 게시물 신고만 대상이 있어야 한다(DB check 제약과 같은 규칙)
+  const isContentReport = input.type === 'content';
+  if (isContentReport !== isValidReportTarget(input.target)) {
+    return { success: false, message: '신고할 게시물을 찾을 수 없습니다.' };
+  }
+  const target = isContentReport ? input.target : undefined;
 
   const trimmed = input.content.trim();
   if (trimmed.length < 10) {
@@ -85,6 +97,7 @@ export async function submitReportAction(
     user_id: user.id,
     type: input.type,
     content: trimmed,
+    target,
   });
 
   if (error || !data) {
@@ -108,6 +121,13 @@ export async function submitReportAction(
   if (emailQuotaReached) {
     console.warn('[report] 하루 메일 발송 한도 도달로 이메일 발송 생략 (제보는 저장됨)');
   }
+  // 메일 함수(Edge Function)를 다시 배포하지 않도록 신고 대상 링크는 본문 앞에 붙인다
+  const targetPath =
+    target &&
+    (target.type === 'route' ? ROUTES.COURSES.DETAIL(target.id) : ROUTES.TRACKS.DETAIL(target.id));
+  const emailContent = target
+    ? `[신고 대상: ${TARGET_LABEL[target.type]} ${process.env.NEXT_PUBLIC_SITE_URL ?? ''}${targetPath}]\n${data.content}`
+    : data.content;
   if (edgeFunctionUrl && reportEmailSecret && !emailQuotaReached) {
     try {
       const emailRes = await fetch(edgeFunctionUrl, {
@@ -120,7 +140,7 @@ export async function submitReportAction(
         body: JSON.stringify({
           userId: data.user_id,
           type: data.type,
-          content: data.content,
+          content: emailContent,
           createdAt: data.created_at,
         }),
       });

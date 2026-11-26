@@ -34,6 +34,8 @@ DB 변경이 없어 단계를 기다리지 않는다. 설정 방법은 README의
 - 리뷰 중 발견: `reports`에 authenticated용 `check true` INSERT 정책이 남아 있어 REST로 status·admin_note를 채워 넣을 수 있었다. `20261112000000_reports_service_role_only.sql`로 정책·권한을 걷는다(사용자 앱은 Service Role로만 insert)
 - 상태를 바꿀 때만 `admin_logs`에 `update_report`를 남긴다(메모만 저장하면 기록 안 함). 메모는 기록의 사유로 같이 남는다
 - 제보는 전부 받아 클라이언트에서 필터한다. 1000건에 가까워지면 페이지네이션
+- 게시물 신고(`type='content'`, `target_type`·`target_id`)가 같은 처리함에 쌓인다. 상세에 대상 글 링크, 숨김은 코스·트랙 관리에서 — `20261126000000_reports_content_target.sql`
+- 신고자가 탈퇴하면 `user_id`가 null(FK SET NULL)이라 "탈퇴한 사용자"로 보인다
 
 ## 3. 공지 관리
 - [x] 공지 작성·수정·삭제, 상단 고정 1개 (`feat/admin-notices`)
@@ -63,9 +65,13 @@ DB 변경이 없어 단계를 기다리지 않는다. 설정 방법은 README의
 - 목록은 서버에서 필터해 20개씩 받는다(`feat/admin-content-pagination`). 지역 필터는 권역 7개 고정 목록(`REGION_GROUPS`: 서울·경기·인천·강원·충청·전라·경상·제주)이고, 시·도 이름으로 시작하는지로 거른다(`feat/admin-region-groups`). 광주는 `광주광역시`·`전라남도`·`전남광주통합특별시`가 섞여 있어 전라로 묶었다. 경로 미리보기는 `path_data` 파서를 옮겨야 해서 뺐다
 
 ## 5. 유저 관리
-- [ ] 목록·프로필·작성 활동, 정지/해제(기간·사유)
-- [ ] 사용자 앱 Server Action에서 정지 유저의 작성·좋아요·제보 차단
-- DB: `users.suspended_until`, `suspend_reason`
+- [x] 목록·검색·구글/게스트 필터, 프로필(이메일·최근 로그인·활동 수), 최근 작성글·제보 10개 (`feat/admin-users`, DB 변경 없음)
+  - 목록은 20명씩 서버에서 받는다. 좁은 열이라 번호 대신 이전·다음만 둔다
+  - 이메일·최근 로그인은 `users`에 없어 Auth Admin API(`getUserById`)로 고른 유저만 읽는다. 그래서 이메일 검색은 없다
+- [ ] 정지/해제(기간·사유), `suspend_user`·`unsuspend_user` 기록
+- [ ] 사용자 앱에서 정지 유저의 코스·트랙 작성·수정, 좋아요, 제보 차단. 삭제·조회·로그인·탈퇴는 그대로(사용자 확정)
+  - Server Action에서 막아 안내하고, routes·tracks·좋아요 INSERT(수정은 UPDATE)에 RESTRICTIVE RLS 정책을 더해 REST 직접 호출도 막는다
+- DB: `user_suspensions(user_id, until, reason)` Service Role 전용. `users`는 닉네임 수정으로 본인 UPDATE가 열려 있어 컬럼을 두면 정지를 스스로 풀 수 있다(사용자 확정)
 
 ## 6. 작업 기록 + 대시보드
 - [ ] 작업 기록 조회 화면 (`admin_logs`는 2단계 제보 처리부터 쌓이는 중)

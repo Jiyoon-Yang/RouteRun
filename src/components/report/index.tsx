@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/commons/components/button';
 import { Spinner } from '@/commons/components/spinner';
 import { Header } from '@/commons/layout/header';
+import type { ReportTarget } from '@/commons/types/routerun';
 
 import {
   MAX_REPORT_CONTENT,
@@ -41,7 +42,14 @@ export function StaticInfoPage({ title, description }: StaticInfoPageProps) {
 
 // ── ReportPage ────────────────────────────────────────────────────────────────
 
-export function ReportPage() {
+export type ReportPageProps = {
+  /** 있으면 게시물 신고 화면 */
+  target?: ReportTarget;
+};
+
+const TARGET_LABEL: Record<ReportTarget['type'], string> = { route: '코스', track: '트랙' };
+
+export function ReportPage({ target }: ReportPageProps) {
   const router = useRouter();
   const {
     selectedType,
@@ -52,37 +60,47 @@ export function ReportPage() {
     selectType,
     changeContent,
     handleSubmit,
-  } = useReportForm();
+  } = useReportForm(target);
 
   return (
     <section className={styles.root}>
       <Header
-        title="제보하기"
+        title={target ? '게시물 신고' : '제보하기'}
         showLogo={false}
         showRightIcon={false}
         onLeftIconClick={() => router.back()}
       />
       <div className={styles.body}>
-        <div className={styles.formSection}>
-          <p className={styles.fieldLabel}>제보 유형</p>
-          <div className={styles.typeChips}>
-            {REPORT_TYPE_OPTIONS.map(({ value, label }) => (
-              <button
-                key={value}
-                type="button"
-                className={[
-                  styles.chip,
-                  selectedType === value ? styles.chipSelected : styles.chipDefault,
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-                onClick={() => selectType(value)}
-              >
-                {label}
-              </button>
-            ))}
+        {target ? (
+          <div className={styles.formSection}>
+            <p className={styles.fieldLabel}>신고 대상: {TARGET_LABEL[target.type]}</p>
+            <p className={styles.guide}>
+              다른 사람의 사진·저작물 무단 사용, 사생활 침해, 사유지·출입 금지 구역 경로, 광고 등
+              문제가 되는 이유를 적어 주세요. 확인 후 게시물을 숨기거나 삭제합니다.
+            </p>
           </div>
-        </div>
+        ) : (
+          <div className={styles.formSection}>
+            <p className={styles.fieldLabel}>제보 유형</p>
+            <div className={styles.typeChips}>
+              {REPORT_TYPE_OPTIONS.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={[
+                    styles.chip,
+                    selectedType === value ? styles.chipSelected : styles.chipDefault,
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  onClick={() => selectType(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className={styles.formSection}>
           <p className={styles.fieldLabel}>내용</p>

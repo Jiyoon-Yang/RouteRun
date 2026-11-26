@@ -4,9 +4,11 @@ import type { ReportStatus, ReportType } from "@/commons/types/admin"
 
 export type ReportRow = {
   id: string
-  user_id: string
+  user_id: string | null
   type: ReportType
   content: string
+  target_type: "route" | "track" | null
+  target_id: string | null
   status: ReportStatus
   admin_note: string
   handled_at: string | null
@@ -14,7 +16,7 @@ export type ReportRow = {
 }
 
 const REPORT_SELECT =
-  "id, user_id, type, content, status, admin_note, handled_at, created_at"
+  "id, user_id, type, content, target_type, target_id, status, admin_note, handled_at, created_at"
 
 // shortcut: PostgREST 기본 1000행 제한, 제보가 1000건을 넘으면 페이지네이션
 export async function fetchReports(
@@ -30,6 +32,26 @@ export async function fetchReports(
   }
 
   return data
+}
+
+/** 한 유저가 보낸 최근 제보 `limit`개와 전체 수. */
+export async function fetchUserReports(
+  supabase: SupabaseClient,
+  userId: string,
+  limit: number
+): Promise<{ rows: ReportRow[]; total: number }> {
+  const { data, error, count } = await supabase
+    .from("reports")
+    .select(REPORT_SELECT, { count: "exact" })
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    throw new Error(`reports: ${error.message}`)
+  }
+
+  return { rows: data, total: count ?? 0 }
 }
 
 export async function updateReport(

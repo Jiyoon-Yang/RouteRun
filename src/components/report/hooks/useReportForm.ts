@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useState, useTransition } from 'react';
 
 import { submitReportAction } from '@/actions/report.action';
+import { ROUTES } from '@/commons/constants/url';
 import { useToast } from '@/commons/providers/toast/toast.provider';
 import type { ReportTarget, ReportType } from '@/commons/types/routerun';
 
@@ -56,9 +57,14 @@ export function useReportForm(target?: ReportTarget) {
         return;
       }
       showToast(target ? '신고가 접수됐습니다.' : '제보가 접수됐습니다.', 'success');
-      // 게시물 신고는 보던 글로 돌아간다
-      if (target) router.back();
-      else router.push('/');
+      // 게시물 신고는 신고한 글로 간다(로그인을 거쳐 왔으면 back이 로그인 화면이라 replace)
+      if (target) {
+        router.replace(
+          target.type === 'route'
+            ? ROUTES.COURSES.DETAIL(target.id)
+            : ROUTES.TRACKS.DETAIL(target.id),
+        );
+      } else router.push('/');
     });
   }, [selectedType, content, target, router, showToast]);
 

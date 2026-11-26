@@ -6,7 +6,7 @@ alter table public.reports
   add column if not exists target_type text,
   add column if not exists target_id uuid;
 
--- type 컬럼의 기존 check 제약 이름을 레포가 모르므로(초기 테이블은 대시보드에서 만듦) 찾아서 지운 뒤 다시 건다
+-- type 컬럼의 기존 check 제약 이름을 레포가 모르므로(초기 테이블은 대시보드에서 만듦) 'bug' 값이 든 제약을 찾아서 지운 뒤 다시 건다
 do $$
 declare
   constraint_name text;
@@ -15,7 +15,7 @@ begin
     select conname from pg_constraint
     where conrelid = 'public.reports'::regclass
       and contype = 'c'
-      and pg_get_constraintdef(oid) ilike '%type%'
+      and pg_get_constraintdef(oid) ilike '%''bug''%'
       and pg_get_constraintdef(oid) not ilike '%target%'
   loop
     execute format('alter table public.reports drop constraint %I', constraint_name);

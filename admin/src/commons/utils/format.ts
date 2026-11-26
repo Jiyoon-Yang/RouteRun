@@ -1,5 +1,3 @@
-import { MOCK_NOW } from "@/commons/mocks"
-
 // 서버(UTC)와 브라우저 시간대가 달라도 같은 문자열이 나오도록 시간대를 고정한다.
 const dateTime = new Intl.DateTimeFormat("ko-KR", {
   timeZone: "Asia/Seoul",
@@ -28,8 +26,8 @@ export const formatDateTime = (iso: string) => dateTime.format(new Date(iso))
 export const formatTime = (iso: string) => time.format(new Date(iso))
 export const formatDate = (iso: string) => date.format(new Date(iso))
 
-// shortcut: 시안은 MOCK_NOW 기준. 실제 구현에서는 서버에서 받은 now를 넘긴다.
-export function formatRelative(iso: string, now = MOCK_NOW) {
+// now는 서버·브라우저 렌더 결과가 같도록 호출하는 쪽이 고정해서 넘긴다.
+export function formatRelative(iso: string, now: string) {
   const minutes = Math.round((Date.parse(now) - Date.parse(iso)) / 60000)
   if (minutes < 60) return `${Math.max(minutes, 1)}분 전`
   if (minutes < 60 * 24) return `${Math.round(minutes / 60)}시간 전`

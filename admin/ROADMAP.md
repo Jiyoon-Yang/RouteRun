@@ -78,10 +78,15 @@ DB 변경이 없어 단계를 기다리지 않는다. 설정 방법은 README의
 - DB: `user_suspensions(user_id, until, reason)` Service Role 전용 — `20261127000000_user_suspensions.sql`. `users`는 닉네임 수정으로 본인 UPDATE가 열려 있어 컬럼을 두면 정지를 스스로 풀 수 있다(사용자 확정). 사용자 앱 Action이 함수를 부르므로 **사용자 앱 배포 전에 반영**(없으면 작성·좋아요·제보가 모두 막힌다)
 
 ## 6. 작업 기록 + 대시보드
-- [ ] 작업 기록 조회 화면 (`admin_logs`는 2단계 제보 처리부터 쌓이는 중)
+- [x] 작업 기록 조회 화면 (`feat/admin-audit`, DB 변경 없음)
+  - 기간(24시간·7일·30일·전체)·작업 종류·관리자 필터, 대상·사유 검색을 서버에서 걸고 50건씩 `PageNav`로 본다
+  - 관리자 이메일은 `admins` 명단 + 기록에 남은 id를 Auth Admin API로 한 명씩 읽는다(몇 명뿐). 못 읽으면 id 앞 8자, 계정이 지워져 `admin_id`가 null이면 "삭제된 관리자"
+  - 검색어는 `or` 조건을 큰따옴표로 감싸 쉼표·괄호가 문법을 깨지 않게 한다(`ilikeAny`, 테스트 있음)
+  - 시안의 CSV 내보내기는 뺐다
 - [x] 대시보드 지표 집계 (읽기 전용). KPI·신규 가입·지역별 등록·최근 등록을 DB 집계로 바꿨다 (`feat/admin-dashboard`)
   - 코스·트랙 KPI의 "숨김 N건 제외"와 숨김 글 제외는 4단계에서 붙였다
   - 지역·가입 집계는 행을 받아 JS로 센다. PostgREST 1000행 제한에 가까워지면 집계 RPC로 바꾼다
 
 ## 7. 정리
-- [ ] `src/commons/mocks` 삭제, 운영 배포
+- [x] `src/commons/mocks` 삭제 (작업 기록이 마지막 사용처였다. `formatRelative`의 `now`는 필수 인자로)
+- [ ] 운영 배포

@@ -11,6 +11,9 @@ export const CONTENT_PAGE_SIZE = 20
 // 이미지 검수 한 페이지에 보여 주는 사진 수.
 export const IMAGE_PAGE_SIZE = 20
 
+// 작업 기록 한 페이지에 DB에서 받아오는 기록 수.
+export const AUDIT_PAGE_SIZE = 50
+
 // 유저 관리 목록 한 페이지에 DB에서 받아오는 유저 수.
 export const USER_PAGE_SIZE = 20
 

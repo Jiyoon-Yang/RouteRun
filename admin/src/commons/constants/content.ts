@@ -11,6 +11,12 @@ export const CONTENT_PAGE_SIZE = 20
 // 이미지 검수 한 페이지에 보여 주는 사진 수.
 export const IMAGE_PAGE_SIZE = 20
 
+// 유저 관리 목록 한 페이지에 DB에서 받아오는 유저 수.
+export const USER_PAGE_SIZE = 20
+
+// 유저 상세에 보여 주는 최근 작성글·제보 수. 그보다 많으면 위 숫자(전체 수)로만 본다.
+export const USER_RECENT_LIMIT = 10
+
 // 지역 필터 권역. start_address_region 첫 단어(시·도)로 묶고, 통합·개명 전후 이름을 같이 둔다.
 // shortcut: 새 시·도 이름(통합·개명)이 생기면 여기에 추가해야 한다. 빠지면 그 글은 "모든 지역"에서만 보인다
 export const REGION_GROUPS = [

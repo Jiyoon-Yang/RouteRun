@@ -11,7 +11,7 @@ import {
   type ReportRow,
 } from "@/repositories/report.repository"
 
-const toReport = (row: ReportRow): Report => ({
+export const toReport = (row: ReportRow): Report => ({
   id: row.id,
   userId: row.user_id,
   type: row.type,

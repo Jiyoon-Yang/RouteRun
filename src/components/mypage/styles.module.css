@@ -209,3 +209,23 @@
     transform: none;
   }
 }
+
+/* 회원 탈퇴 — 목록 맨 아래 작은 텍스트 버튼 */
+.withdrawButton {
+  align-self: center;
+  margin-top: auto;
+  padding: 12px 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-dark_grey-400);
+  font-family: var(--typography-caption-1-ko-mobile-font-family);
+  font-size: var(--typography-caption-1-ko-mobile-font-size);
+  line-height: var(--typography-caption-1-ko-mobile-line-height);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.withdrawButton:focus-visible {
+  outline: 2px solid var(--color-blue-500);
+  outline-offset: 2px;
+}

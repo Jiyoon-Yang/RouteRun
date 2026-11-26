@@ -74,7 +74,8 @@ DB 변경이 없어 단계를 기다리지 않는다. 설정 방법은 README의
 - [x] 사용자 앱에서 정지 유저의 코스·트랙 작성·수정, 좋아요(누르기·취소), 제보 차단. 삭제·조회·로그인·탈퇴는 그대로(사용자 확정)
   - Server Action이 세션 확인 직후 `is_current_user_suspended()`로 막고 안내한다. 확인이 실패해도 막는다(게스트 한도와 같은 규칙)
   - routes·tracks INSERT/UPDATE, 좋아요 INSERT/DELETE에 RESTRICTIVE RLS 정책을 더해 REST 직접 호출도 막는다. 제보는 Service Role insert라 Action에서만 막는다
-  - 좋아요 실패 토스트는 공용 훅의 "좋아요 처리에 실패했습니다" 그대로다. 정지 안내 문구는 작성·수정·제보에서만 보인다
+  - 좋아요가 정지로 막히면 공용 훅이 정지 안내 문구를 띄운다(다른 실패는 "좋아요 처리에 실패했습니다")
+  - `course_images` 업로드도 RESTRICTIVE 정책으로 막는다(`20261128000000_suspended_upload_block.sql`). 업로드 INSERT 정책이 버킷만 보므로 이 버킷의 RLS 거부는 정지뿐이라, `storage.ts`가 그 거부를 정지 안내로 바꾼다. 글에 붙지 않는 파일이 남지 않는다
 - DB: `user_suspensions(user_id, until, reason)` Service Role 전용 — `20261127000000_user_suspensions.sql`. `users`는 닉네임 수정으로 본인 UPDATE가 열려 있어 컬럼을 두면 정지를 스스로 풀 수 있다(사용자 확정). 사용자 앱 Action이 함수를 부르므로 **사용자 앱 배포 전에 반영**(없으면 작성·좋아요·제보가 모두 막힌다)
 
 ## 6. 작업 기록 + 대시보드

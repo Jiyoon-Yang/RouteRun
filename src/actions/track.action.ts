@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { SUSPENDED_MESSAGE } from '@/commons/constants/messages';
 import type { Track } from '@/commons/types/routerun';
 import { validatePostInput } from '@/commons/utils/post-input';
 import { isValidUuid } from '@/commons/utils/uuid';
@@ -9,11 +10,7 @@ import { createClient } from '@/lib/supabase/server';
 import * as trackRepository from '@/repositories/track/track.repository';
 import * as trackService from '@/services/track/trackService';
 import type { SubmitTrackInput } from '@/services/track/trackService';
-import {
-  isGuestWriteLimitReached,
-  isSuspended,
-  SUSPENDED_MESSAGE,
-} from '@/services/user/userService';
+import { isGuestWriteLimitReached, isSuspended } from '@/services/user/userService';
 
 export type CreateTrackActionResult =
   | { success: true; trackId: string }

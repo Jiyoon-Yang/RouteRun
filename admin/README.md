@@ -29,8 +29,7 @@ src/
 │   ├── types/admin.ts       도메인 타입
 │   ├── utils/format.ts      날짜·거리·숫자 표시
 │   ├── hooks/               use-mobile (shadcn 생성)
-│   ├── providers/theme/     다크 모드
-│   └── mocks/               목데이터. 실데이터 연결이 끝나면 삭제
+│   └── providers/theme/     다크 모드
 └── lib/utils.ts             cn. clsx + tailwind-merge 대신 `cn` 패키지(shadcn-ui/cn)를 앱 생성 때부터 사용. Node 22 이상 필요
 ```
 
@@ -39,7 +38,7 @@ src/
 
 ## 화면
 
-화면은 2026-11-04에 시안 A/B 중에서 확정했다. 대시보드·제보 처리함·공지 관리·코스·트랙 관리·이미지 검수·유저 관리는 실데이터(Service Role)이고, 나머지 화면은 아직 `commons/mocks` 목데이터다. 로그인은 Supabase 대시보드에서 만든 이메일 계정 중 `admins`에 등록된 계정만 통과한다.
+화면은 2026-11-04에 시안 A/B 중에서 확정했다. 모든 화면이 실데이터(Service Role)다. 로그인은 Supabase 대시보드에서 만든 이메일 계정 중 `admins`에 등록된 계정만 통과한다.
 
 | 화면 | 경로 | 고른 시안 | 연결에 필요한 DB 변경 |
 | --- | --- | --- | --- |

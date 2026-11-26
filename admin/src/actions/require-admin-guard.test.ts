@@ -6,6 +6,7 @@ import ts from "typescript"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { requireAdmin } from "@/lib/require-admin"
+import { getAuditLogs } from "@/services/audit.service"
 import { getReports, updateReport } from "@/services/report.service"
 import {
   getUserDetail,
@@ -14,6 +15,7 @@ import {
   unsuspendUser,
 } from "@/services/user.service"
 
+import { getAuditLogsAction } from "./audit.action"
 import { getReportsAction, updateReportAction } from "./report.action"
 import {
   getUserDetailAction,
@@ -127,6 +129,7 @@ vi.mock("@/services/report.service", () => ({
   updateReport: vi.fn(),
 }))
 
+vi.mock("@/services/audit.service", () => ({ getAuditLogs: vi.fn() }))
 vi.mock("@/services/user.service", () => ({
   getUsers: vi.fn(),
   getUserDetail: vi.fn(),
@@ -171,5 +174,18 @@ describe("어드민이 아니면 reports·admin_logs에 닿지 않는다", () =>
     await expect(unsuspendUserAction("u1")).rejects.toThrow("NEXT_REDIRECT")
     expect(suspendUser).not.toHaveBeenCalled()
     expect(unsuspendUser).not.toHaveBeenCalled()
+  })
+
+  it("작업 기록과 관리자 이메일을 조회하지 않는다", async () => {
+    await expect(
+      getAuditLogsAction({
+        period: "30",
+        action: "all",
+        adminId: "all",
+        query: "",
+        page: 1,
+      })
+    ).rejects.toThrow("NEXT_REDIRECT")
+    expect(getAuditLogs).not.toHaveBeenCalled()
   })
 })

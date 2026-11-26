@@ -12,9 +12,8 @@ import {
   ItemGroup,
   ItemTitle,
 } from "@/commons/components/ui/item"
-import { formatDistance, formatRelative } from "@/commons/utils/format"
-import { contents, reports } from "@/commons/mocks"
-import type { User } from "@/commons/types/admin"
+import { formatDateTime, formatDistance } from "@/commons/utils/format"
+import type { Report, User, UserContent } from "@/commons/types/admin"
 
 export function UserAvatar({
   user,
@@ -31,9 +30,7 @@ export function UserAvatar({
   )
 }
 
-export function WrittenList({ user }: { user: User }) {
-  const written = contents.filter((content) => content.authorId === user.id)
-
+export function WrittenList({ written }: { written: UserContent[] }) {
   return (
     <section className="flex flex-col gap-3">
       <h3 className="font-medium">최근 작성한 글</h3>
@@ -44,7 +41,11 @@ export function WrittenList({ user }: { user: User }) {
       ) : (
         <ItemGroup>
           {written.map((content) => (
-            <Item key={content.id} size="sm" variant="outline">
+            <Item
+              key={`${content.kind}-${content.id}`}
+              size="sm"
+              variant="outline"
+            >
               <ItemContent>
                 <ItemTitle>
                   <Badge variant="outline">
@@ -56,8 +57,9 @@ export function WrittenList({ user }: { user: User }) {
                   )}
                 </ItemTitle>
                 <ItemDescription>
-                  {content.region} · {formatDistance(content.distanceMeters)} ·
-                  좋아요 {content.likes}
+                  {content.region ?? "지역 없음"} ·{" "}
+                  {formatDistance(content.distanceMeters)} · 좋아요{" "}
+                  {content.likes} · {formatDateTime(content.createdAt)}
                 </ItemDescription>
               </ItemContent>
             </Item>
@@ -68,22 +70,20 @@ export function WrittenList({ user }: { user: User }) {
   )
 }
 
-export function ReportList({ user }: { user: User }) {
-  const userReports = reports.filter((report) => report.userId === user.id)
-
+export function ReportList({ reports }: { reports: Report[] }) {
   return (
     <section className="flex flex-col gap-3">
       <h3 className="font-medium">최근 보낸 제보</h3>
-      {userReports.length === 0 ? (
+      {reports.length === 0 ? (
         <p className="text-sm text-muted-foreground">보낸 제보가 없어요.</p>
       ) : (
         <ItemGroup>
-          {userReports.map((report) => (
+          {reports.map((report) => (
             <Item key={report.id} size="sm" variant="muted">
               <ItemContent>
                 <ItemTitle className="line-clamp-1">{report.content}</ItemTitle>
                 <ItemDescription>
-                  {formatRelative(report.createdAt)}
+                  {formatDateTime(report.createdAt)}
                 </ItemDescription>
               </ItemContent>
               <ReportStatusBadge status={report.status} />

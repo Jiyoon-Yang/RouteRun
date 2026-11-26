@@ -7,8 +7,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { requireAdmin } from "@/lib/require-admin"
 import { getReports, updateReport } from "@/services/report.service"
+import { getUserDetail, getUsers } from "@/services/user.service"
 
 import { getReportsAction, updateReportAction } from "./report.action"
+import { getUserDetailAction, getUsersAction } from "./user.action"
 
 // 로그인 전에 불려서 requireAdmin을 넣으면 로그인이 막히는 액션
 const PUBLIC_ACTIONS = new Set(["signInAction", "signOutAction"])
@@ -115,6 +117,11 @@ vi.mock("@/services/report.service", () => ({
   updateReport: vi.fn(),
 }))
 
+vi.mock("@/services/user.service", () => ({
+  getUsers: vi.fn(),
+  getUserDetail: vi.fn(),
+}))
+
 describe("어드민이 아니면 reports·admin_logs에 닿지 않는다", () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -133,5 +140,15 @@ describe("어드민이 아니면 reports·admin_logs에 닿지 않는다", () =>
     ).rejects.toThrow("NEXT_REDIRECT")
     // updateReport가 reports 갱신과 logAdminAction(admin_logs)을 한다
     expect(updateReport).not.toHaveBeenCalled()
+  })
+
+  it("유저 목록·이메일을 조회하지 않는다", async () => {
+    await expect(
+      getUsersAction({ type: "all", query: "", page: 1 })
+    ).rejects.toThrow("NEXT_REDIRECT")
+    await expect(getUserDetailAction("u1")).rejects.toThrow("NEXT_REDIRECT")
+    // getUserDetail이 Auth Admin API로 이메일을 읽는다
+    expect(getUsers).not.toHaveBeenCalled()
+    expect(getUserDetail).not.toHaveBeenCalled()
   })
 })

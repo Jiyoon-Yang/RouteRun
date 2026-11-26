@@ -34,6 +34,26 @@ export async function fetchReports(
   return data
 }
 
+/** 한 유저가 보낸 최근 제보 `limit`개와 전체 수. */
+export async function fetchUserReports(
+  supabase: SupabaseClient,
+  userId: string,
+  limit: number
+): Promise<{ rows: ReportRow[]; total: number }> {
+  const { data, error, count } = await supabase
+    .from("reports")
+    .select(REPORT_SELECT, { count: "exact" })
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    throw new Error(`reports: ${error.message}`)
+  }
+
+  return { rows: data, total: count ?? 0 }
+}
+
 export async function updateReport(
   supabase: SupabaseClient,
   id: string,

@@ -7,20 +7,19 @@ export type User = {
   id: string
   nickname: string
   isAnonymous: boolean
-  email: string | null
   avatarUrl: string | null
   joinedAt: string
-  lastSeenAt: string
-  courseCount: number
-  trackCount: number
-  likeCount: number
-  reportCount: number
-  suspendedUntil: string | null
-  suspendReason: string | null
 }
 
-// 0~1로 정규화한 경로 좌표. 실제로는 routes.path_data를 같은 형태로 변환해 쓴다.
-export type PathPoint = [number, number]
+// 유저 목록 조회 조건. type의 "all"은 거르지 않는다는 뜻, google은 is_anonymous=false.
+export type UserFilters = {
+  type: "all" | "google" | "guest"
+  query: string
+  page: number
+}
+
+// 한 페이지 유저와 조건에 맞는 전체 유저 수.
+export type UserList = { items: User[]; total: number }
 
 export type ContentKind = "course" | "track"
 
@@ -66,10 +65,35 @@ export type Report = {
 }
 
 // 제보 처리함에 보이는 신고자 정보. 제보 수는 화면이 목록에서 센다.
-export type Reporter = Pick<
-  User,
-  "nickname" | "isAnonymous" | "avatarUrl" | "courseCount" | "trackCount"
+export type Reporter = Pick<User, "nickname" | "isAnonymous" | "avatarUrl"> & {
+  courseCount: number
+  trackCount: number
+}
+
+// 유저 상세의 작성글 한 줄.
+export type UserContent = Pick<
+  Content,
+  | "id"
+  | "kind"
+  | "title"
+  | "region"
+  | "distanceMeters"
+  | "likes"
+  | "isHidden"
+  | "createdAt"
 >
+
+// 유저 상세. 이메일·최근 로그인은 auth.users에서 온다. 목록은 최근 것만, 수는 전체를 센다.
+export type UserDetail = {
+  email: string | null
+  lastSignInAt: string | null
+  courseCount: number
+  trackCount: number
+  likeCount: number
+  reportCount: number
+  written: UserContent[]
+  reports: Report[]
+}
 
 export type NoticeStatus = "published" | "draft"
 

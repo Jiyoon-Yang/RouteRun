@@ -1,0 +1,18 @@
+.link {
+  align-self: center;
+  margin: 8px 0 16px;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-dark_grey-400);
+  font-family: var(--typography-caption-1-ko-mobile-font-family);
+  font-size: var(--typography-caption-1-ko-mobile-font-size);
+  line-height: var(--typography-caption-1-ko-mobile-line-height);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--color-blue-500);
+  outline-offset: 2px;
+}

@@ -85,7 +85,7 @@ cd admin && npm run lint && npm run typecheck
 - `route_likes`: 복합키 `(user_id, route_id)`, `created_at`
 - `tracks`: `id, user_id, title, description, distance_meters, start_lat, start_lng, start_address_region, image_urls, likes_count, is_hidden, created_at, updated_at` (routes와 달리 `path_data` 없음)
 - `track_likes`: 복합키 `(user_id, track_id)`, `created_at`
-- `reports`: `id, user_id, type ('bug'|'inconvenience'|'suggestion'), content, status ('open'|'in_progress'|'resolved', 기본 'open'), admin_note, handled_at, created_at` — Service Role 클라이언트로만 읽고 쓴다(anon·authenticated 정책·권한 없음). `status`·`admin_note`·`handled_at`은 어드민 제보 처리함이 쓴다
+- `reports`: `id, user_id (탈퇴 시 null), type ('bug'|'inconvenience'|'suggestion'|'content'), content, target_type ('route'|'track', content일 때만), target_id, status ('open'|'in_progress'|'resolved', 기본 'open'), admin_note, handled_at, created_at` — Service Role 클라이언트로만 읽고 쓴다(anon·authenticated 정책·권한 없음). `status`·`admin_note`·`handled_at`은 어드민 제보 처리함이 쓴다
 - `admin_logs`: `id, admin_id (auth.users), action, target, reason, created_at` — 어드민 조치 기록. RLS 정책 없음(Service Role 전용)
 - `admins`: `user_id (auth.users), created_at` — 어드민 로그인 허용 명단. 본인 행만 조회 가능
 - `notices`: `id, title, body, status ('draft'|'published'), pinned, published_at, created_at, updated_at` — 공지. 누구나 게시된 공지만 읽고(RLS), 쓰기는 어드민 Service Role만. 고정은 초안 포함 전체 1개(partial unique index)

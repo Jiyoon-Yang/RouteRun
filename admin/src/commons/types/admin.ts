@@ -1,6 +1,6 @@
 // 어드민 화면이 다루는 도메인 타입. 실데이터 연결 시 Repository의 Row → 이 타입으로 변환한다.
 
-export type ReportType = "bug" | "inconvenience" | "suggestion"
+export type ReportType = "bug" | "inconvenience" | "suggestion" | "content"
 export type ReportStatus = "open" | "in_progress" | "resolved"
 
 export type User = {
@@ -53,8 +53,11 @@ export type ContentList = { items: Content[]; total: number }
 
 export type Report = {
   id: string
-  userId: string
+  // 신고자가 탈퇴하면 FK SET NULL로 비워진다
+  userId: string | null
   type: ReportType
+  // 게시물 신고(type "content")의 대상
+  target: { kind: ContentKind; id: string } | null
   content: string
   createdAt: string
   status: ReportStatus

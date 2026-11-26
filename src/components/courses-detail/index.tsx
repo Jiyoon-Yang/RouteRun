@@ -29,6 +29,7 @@ import type { Route } from '@/commons/types/routerun';
 import { formatDistanceKm as formatCourseDistanceKm } from '@/commons/utils/distance/format';
 import { filterNonemptyImageUrls } from '@/commons/utils/image/filter';
 import { getCourseDescriptionDisplay } from '@/commons/utils/text/display';
+import { ContentReportLink } from '@/components/report/content-report-link';
 import { TmapCourseDetail } from '@/components/tmap/course-detail';
 
 import { useCourseDetailLikes } from './hooks/useCourseDetailLikes';
@@ -235,6 +236,9 @@ export function Courses({ course, authorNickname, location, canEdit = false }: C
               </div>
             )}
           </section>
+
+          {/* 본인 글은 신고하지 않는다 */}
+          {!canEdit && <ContentReportLink target={{ type: 'route', id: course.id }} />}
         </article>
       </div>
     </main>

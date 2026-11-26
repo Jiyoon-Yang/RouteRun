@@ -5,7 +5,7 @@ import { useCallback, useState, useTransition } from 'react';
 
 import { submitReportAction } from '@/actions/report.action';
 import { useToast } from '@/commons/providers/toast/toast.provider';
-import type { ReportType } from '@/commons/types/routerun';
+import type { ReportTarget, ReportType } from '@/commons/types/routerun';
 
 export const REPORT_TYPE_OPTIONS: { value: ReportType; label: string }[] = [
   { value: 'bug', label: '버그 신고' },
@@ -16,11 +16,12 @@ export const REPORT_TYPE_OPTIONS: { value: ReportType; label: string }[] = [
 export const MAX_REPORT_CONTENT = 500;
 export const MIN_REPORT_CONTENT = 10;
 
-export function useReportForm() {
+/** target이 있으면 게시물 신고: 유형은 'content'로 고정된다 */
+export function useReportForm(target?: ReportTarget) {
   const router = useRouter();
   const { showToast } = useToast();
 
-  const [selectedType, setSelectedType] = useState<ReportType | null>(null);
+  const [selectedType, setSelectedType] = useState<ReportType | null>(target ? 'content' : null);
   const [content, setContent] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -49,15 +50,17 @@ export function useReportForm() {
     setError(null);
 
     startTransition(async () => {
-      const result = await submitReportAction({ type: selectedType, content });
+      const result = await submitReportAction({ type: selectedType, content, target });
       if (!result.success) {
         setError(result.message);
         return;
       }
-      showToast('제보가 접수됐습니다.', 'success');
-      router.push('/');
+      showToast(target ? '신고가 접수됐습니다.' : '제보가 접수됐습니다.', 'success');
+      // 게시물 신고는 보던 글로 돌아간다
+      if (target) router.back();
+      else router.push('/');
     });
-  }, [selectedType, content, router, showToast]);
+  }, [selectedType, content, target, router, showToast]);
 
   return {
     selectedType,

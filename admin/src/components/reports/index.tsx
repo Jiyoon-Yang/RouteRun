@@ -53,6 +53,7 @@ import {
   formatRelative,
   formatReportId,
 } from "@/commons/utils/format"
+import { USER_SITE_URL } from "@/commons/constants/content"
 import { REPORT_STATUS_LABEL } from "@/commons/constants/labels"
 import type { Report, Reporter, ReportStatus } from "@/commons/types/admin"
 import { useReports } from "@/components/reports/hooks/use-reports"
@@ -67,6 +68,23 @@ const FILTERS = [
 ]
 
 type ReportPatch = { status?: ReportStatus; adminNote: string }
+
+
+// 신고자가 탈퇴하면 userId가 비어 신고자 정보가 없다
+const WITHDRAWN_REPORTER: Reporter = {
+  nickname: "탈퇴한 사용자",
+  isAnonymous: false,
+  avatarUrl: null,
+  courseCount: 0,
+  trackCount: 0,
+}
+
+function reporterOf(
+  reporters: Record<string, Reporter> | undefined,
+  userId: string | null
+): Reporter {
+  return (userId && reporters?.[userId]) || WITHDRAWN_REPORTER
+}
 
 export function ReportsPage() {
   const { data, isLoading, update } = useReports()
@@ -189,7 +207,7 @@ export function ReportsPage() {
                       />
                     )}
                     <span className="font-medium">
-                      {data?.reporters[report.userId].nickname}
+                      {reporterOf(data?.reporters, report.userId).nickname}
                     </span>
                     <span className="ml-auto text-xs text-muted-foreground">
                       {formatRelative(report.createdAt, now)}
@@ -221,10 +239,12 @@ export function ReportsPage() {
           <ReportDetail
             key={selected.id}
             report={selected}
-            reporter={data.reporters[selected.userId]}
+            reporter={reporterOf(data.reporters, selected.userId)}
             reportCount={
-              reports.filter((report) => report.userId === selected.userId)
-                .length
+              selected.userId
+                ? reports.filter((report) => report.userId === selected.userId)
+                    .length
+                : 1
             }
             onUpdate={(id, patch) => {
               // 자동으로 열린 제보도 처리 후 필터에서 빠질 때 다음 제보로 넘어가지 않게 고정한다.
@@ -312,7 +332,11 @@ function ReportDetail({
               <ItemTitle>
                 {reporter.nickname}
                 <Badge variant="secondary">
-                  {reporter.isAnonymous ? "게스트" : "구글"}
+                  {!report.userId
+                    ? "탈퇴"
+                    : reporter.isAnonymous
+                      ? "게스트"
+                      : "구글"}
                 </Badge>
               </ItemTitle>
               <ItemDescription>
@@ -321,6 +345,23 @@ function ReportDetail({
               </ItemDescription>
             </ItemContent>
           </Item>
+          {report.target && (
+            <p className="text-sm">
+              신고 대상: {report.target.kind === "course" ? "코스" : "트랙"}{" "}
+              <a
+                className="underline underline-offset-4"
+                href={`${USER_SITE_URL}/${report.target.kind === "course" ? "courses" : "tracks"}/${report.target.id}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                서비스에서 보기
+              </a>
+              <span className="text-muted-foreground">
+                {" "}
+                · 숨김은 코스·트랙 관리에서
+              </span>
+            </p>
+          )}
           <p className="text-base leading-relaxed whitespace-pre-wrap">
             {report.content}
           </p>

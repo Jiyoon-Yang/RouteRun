@@ -139,3 +139,14 @@
   margin-top: auto;
   padding-top: 8px;
 }
+
+/* 안내 문구 — StaticInfoPage·게시물 신고 */
+.guide {
+  margin: 0;
+  color: var(--color-dark_grey-400);
+  font-family: var(--typography-body-2-ko-mobile-regular-font-family);
+  font-size: var(--typography-body-2-ko-mobile-regular-font-size);
+  font-weight: var(--typography-body-2-ko-mobile-regular-font-weight);
+  line-height: var(--typography-body-2-ko-mobile-regular-line-height);
+  letter-spacing: var(--typography-body-2-ko-mobile-regular-letter-spacing);
+}

@@ -408,6 +408,7 @@ export const reports: Report[] = [
     id: "r-31",
     userId: "u-01",
     type: "bug",
+    target: null,
     content:
       "코스 등록할 때 사진 3장 올리면 마지막 사진이 업로드가 안 돼요. 아이폰 15, 사파리입니다. 두 장까지는 잘 됩니다.",
     createdAt: "2026-11-03T09:12:00+09:00",
@@ -419,6 +420,7 @@ export const reports: Report[] = [
     id: "r-30",
     userId: "u-06",
     type: "inconvenience",
+    target: null,
     content:
       "게스트로는 코스를 하나밖에 못 쓰는 걸 등록 다 하고 나서 알았어요. 미리 알려주면 좋겠어요.",
     createdAt: "2026-11-02T19:50:00+09:00",
@@ -430,6 +432,7 @@ export const reports: Report[] = [
     id: "r-29",
     userId: "u-05",
     type: "suggestion",
+    target: null,
     content:
       "코스에 '화장실 있음', '음수대 있음' 같은 태그가 있으면 좋겠습니다. 장거리 뛸 때 중요해요.",
     createdAt: "2026-11-02T07:58:00+09:00",
@@ -441,6 +444,7 @@ export const reports: Report[] = [
     id: "r-28",
     userId: "u-07",
     type: "bug",
+    target: null,
     content:
       "지도에서 코스 선택하면 가끔 다른 코스 경로가 같이 그려져요. 새로고침하면 사라집니다.",
     createdAt: "2026-11-01T21:33:00+09:00",
@@ -452,6 +456,7 @@ export const reports: Report[] = [
     id: "r-27",
     userId: "u-02",
     type: "inconvenience",
+    target: null,
     content: "다크모드에서 코스 상세 거리 글씨가 잘 안 보여요.",
     createdAt: "2026-10-31T06:20:00+09:00",
     status: "open",
@@ -462,6 +467,7 @@ export const reports: Report[] = [
     id: "r-26",
     userId: "u-05",
     type: "bug",
+    target: null,
     content: "좋아요 눌렀는데 숫자가 안 올라가요. 다시 들어가면 올라가 있어요.",
     createdAt: "2026-10-29T08:05:00+09:00",
     status: "resolved",
@@ -472,6 +478,7 @@ export const reports: Report[] = [
     id: "r-25",
     userId: "u-03",
     type: "suggestion",
+    target: null,
     content: "트랙도 지역별로 모아보는 화면이 있으면 좋겠어요.",
     createdAt: "2026-10-27T13:10:00+09:00",
     status: "resolved",

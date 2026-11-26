@@ -1,4 +1,4 @@
-import type { Report, ReportType } from '@/commons/types/routerun';
+import type { Report, ReportTarget, ReportType } from '@/commons/types/routerun';
 
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 
@@ -24,11 +24,12 @@ function toReport(row: ReportRow): Report {
 
 export async function createReport(
   supabase: SupabaseClient,
-  payload: { user_id: string; type: ReportType; content: string },
+  payload: { user_id: string; type: ReportType; content: string; target?: ReportTarget },
 ): Promise<{ data: Report | null; error: PostgrestError | null }> {
+  const { target, ...rest } = payload;
   const { data, error } = await supabase
     .from('reports')
-    .insert(payload)
+    .insert({ ...rest, target_type: target?.type ?? null, target_id: target?.id ?? null })
     .select(REPORT_SELECT)
     .single();
 

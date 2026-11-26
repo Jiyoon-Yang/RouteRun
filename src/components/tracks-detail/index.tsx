@@ -16,6 +16,7 @@ import { useToast } from '@/commons/providers/toast/toast.provider';
 import type { Track } from '@/commons/types/routerun';
 import { filterNonemptyImageUrls } from '@/commons/utils/image/filter';
 import { getCourseDescriptionDisplay } from '@/commons/utils/text/display';
+import { ContentReportLink } from '@/components/report/content-report-link';
 import TmapTrackDetail from '@/components/tmap/track-detail';
 
 import { useTrackDetailLikes } from './hooks/useTrackDetailLikes';
@@ -219,6 +220,9 @@ export function TracksDetail({
               </div>
             )}
           </section>
+
+          {/* 본인 글은 신고하지 않는다 */}
+          {!canEdit && <ContentReportLink target={{ type: 'track', id: track.id }} />}
         </article>
       </div>
     </main>

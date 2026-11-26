@@ -160,9 +160,12 @@ export function UsersPage() {
           >
             <ChevronLeftIcon />
           </Button>
-          <span className="tabular-nums">
-            {page} / {pageCount} · {formatNumber(total)}명
-          </span>
+          {/* 첫 결과가 오기 전엔 total이 0이라 "0명"으로 오해하지 않게 숨긴다 */}
+          {users && (
+            <span className="tabular-nums">
+              {page} / {pageCount} · {formatNumber(total)}명
+            </span>
+          )}
           <Button
             variant="ghost"
             size="icon-sm"

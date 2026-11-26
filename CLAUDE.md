@@ -46,7 +46,7 @@ cd admin && npm run lint && npm run typecheck
 ```
 
 - **Repositories**: DB 쿼리(`.from`, `.rpc`, `.storage`)를 두는 곳. 새 쿼리는 반드시 여기에 둔다. 아래 예외 외에 Page·Component·Service·Action에 쿼리를 새로 쓰지 않는다
-  - 기존 예외(일부러 고치지 않는다): `courseLikeService`/`trackLikeService`의 좋아요 상태 조회, `commons/utils/storage.ts`의 이미지 업로드, `app/auth/callback/route.ts`의 `users.is_anonymous` 갱신, `auth.action.ts`의 게스트 계정 삭제(Service Role Admin API)
+  - 기존 예외(일부러 고치지 않는다): `courseLikeService`/`trackLikeService`의 좋아요 상태 조회, `commons/utils/storage.ts`의 이미지 업로드, `app/auth/callback/route.ts`의 `users.is_anonymous` 갱신, `auth.action.ts`의 계정 삭제(`deleteAccount`, 게스트 로그아웃·회원 탈퇴, Service Role Admin API)
 - **Supabase 클라이언트 생성과 `auth.getUser()` 세션 확인**은 Page·Action·Route Handler·`Providers`에서 해도 된다. 만든 클라이언트는 Service/Repository에 주입한다. ESLint(`.eslintrc.json`·`admin/eslint.config.mjs`의 `no-restricted-imports`)가 그 밖의 Supabase import를 막는다. 허용·기존 예외 파일 목록은 거기 있고, 예외를 늘리지 않는다
   - 클라이언트 생성 기존 예외(일부러 고치지 않는다): 위 쿼리 예외의 `courseLikeService`·`trackLikeService`·`commons/utils/storage.ts`, 그리고 서버 클라이언트를 직접 만드는 `courseDetailService`·`trackDetailService`·`userService`
 - **Server Actions**: 인증, 코스·트랙 CRUD, 좋아요, 제보 등 mutation 처리. 조합·도메인 규칙이 없으면 Service 없이 Repository를 바로 불러도 된다(`createCourseAction`, 좋아요 토글)
@@ -130,7 +130,7 @@ GA_ID=                           # 선택. GA4 측정 ID. Vercel Production에�
 ## Gotchas
 
 - **TMap SDK 로딩:** `(with-map)/layout.tsx`에서 인라인 스크립트로 로드. `document.write` 호환을 위한 우회 로직 포함. TMap 관련 이슈 발생 시 이 레이아웃을 먼저 확인. 지도 전체가 이 로직에 걸려 있으니 요청 없이 리팩터링하거나 `useEffect`로 옮기지 않는다.
-- **Service Role 키(`SUPABASE_SERVICE_ROLE_KEY`)는 서버에서만:** 서비스 앱은 `report.action.ts`(제보 저장·집계)·`auth.action.ts`(게스트 계정 삭제)에서만 쓰고 ESLint가 그 밖을 막는다. `NEXT_PUBLIC_` 접두사를 붙이지 않는다. `reports`·`admin_logs`는 anon·authenticated 권한이 없어 Service Role로만 읽고 쓴다.
+- **Service Role 키(`SUPABASE_SERVICE_ROLE_KEY`)는 서버에서만:** 서비스 앱은 `report.action.ts`(제보 저장·집계)·`auth.action.ts`(계정 삭제)에서만 쓰고 ESLint가 그 밖을 막는다. `NEXT_PUBLIC_` 접두사를 붙이지 않는다. `reports`·`admin_logs`는 anon·authenticated 권한이 없어 Service Role로만 읽고 쓴다.
 - **익명 세션 vs 미로그인:** 미들웨어는 세션 없는 경우만 차단. 익명 세션은 통과하며, 게스트 작성 제한(코스·트랙 합산 1개)만 `userService.isGuestWriteLimitReached`로 서버에서 강제한다. 좋아요는 게스트도 허용.
 - **`likes_count`는 DB 트리거(`sync_route_likes_count`/`sync_track_likes_count`, SECURITY DEFINER)만 갱신한다:** routes·tracks UPDATE는 작성자 본인만 허용돼 앱 코드로 올리면 남의 글 좋아요가 반영되지 않던 버그가 있었다. 좋아요 Action은 카운트를 읽기만 하고, 직접 쓰는 코드는 ESLint가 막는다.
 - **`Providers` 이중 역할:** `src/commons/layout/providers.tsx`는 Provider 래핑 외에 익명 유저의 작성 횟수(`getUserRouteWriteCount` + `getUserTrackWriteCount`)를 병렬 집계한다. 익명 유저 관련 UI 게이팅 이슈 발생 시 이 컴포넌트를 먼저 확인.

@@ -113,7 +113,7 @@
       }
     },
     {
-      // Service Role 클라이언트를 만드는 'use server' Action (제보 저장·집계, 게스트 계정 삭제)
+      // Service Role 클라이언트를 만드는 'use server' Action (제보 저장·집계, 계정 삭제)
       "files": ["src/actions/report.action.ts", "src/actions/auth.action.ts"],
       "rules": {
         "@typescript-eslint/no-restricted-imports": "off",

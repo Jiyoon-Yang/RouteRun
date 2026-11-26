@@ -9,6 +9,8 @@ import * as trackService from '@/services/track/trackService';
 
 import { validateNickname } from './userValidation';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 type MypageAuthFallback = {
   fallbackDisplayName: string;
 };
@@ -59,6 +61,19 @@ export async function isGuestWriteLimitReached(userId: string): Promise<boolean>
 
   if (courseResult.count === null || trackResult.count === null) return true;
   return courseResult.count + trackResult.count >= 1;
+}
+
+export const SUSPENDED_MESSAGE =
+  '이용이 제한된 계정이라 코스·트랙 작성·수정, 좋아요, 제보를 할 수 없습니다.';
+
+/** 어드민이 정지한 유저인지. 확인이 실패해도 정지를 우회하지 못하게 정지로 본다(게스트 한도와 같은 규칙). */
+export async function isSuspended(supabase: SupabaseClient): Promise<boolean> {
+  const { data, error } = await userRepository.isCurrentUserSuspended(supabase);
+  if (error) {
+    console.error('[userService] 정지 여부 확인 실패:', error);
+    return true;
+  }
+  return data;
 }
 
 export async function checkNicknameAvailable(nickname: string): Promise<boolean> {

@@ -3,12 +3,12 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-// reports·admin_logs는 Service Role 전용이다. anon·authenticated에 권한이나 정책을 다시 열면
+// reports·admin_logs·user_suspensions는 Service Role 전용이다. anon·authenticated에 권한이나 정책을 다시 열면
 // 게스트가 REST로 남의 제보를 읽거나 status·admin_note를 채우고, 조치 기록을 위조할 수 있다.
 // 정말 열어야 하면 이 테스트를 먼저 고치고 PR에서 이유를 설명한다.
 // 한계: 마이그레이션 SQL 문자열만 본다. SQL Editor로 직접 바꾼 운영 DB 권한이나 동적 SQL(execute)은 못 잡는다.
 const MIGRATIONS_DIR = path.join(process.cwd(), 'supabase/migrations');
-const SERVICE_ROLE_TABLES = ['reports', 'admin_logs'];
+const SERVICE_ROLE_TABLES = ['reports', 'admin_logs', 'user_suspensions'];
 
 const sql = fs
   .readdirSync(MIGRATIONS_DIR)

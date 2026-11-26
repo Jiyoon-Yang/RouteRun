@@ -47,6 +47,7 @@ import {
 import type { User, UserFilters } from "@/commons/types/admin"
 
 import { useUserDetail, useUsers } from "./hooks/use-users"
+import { SuspendPanel } from "./suspend-panel"
 import { ReportList, UserAvatar, WrittenList } from "./user-activity"
 
 export function UsersPage() {
@@ -56,10 +57,13 @@ export function UsersPage() {
   const [page, setPage] = useState(1)
   // 페이지·필터를 바꿔도 보던 유저가 그대로 보이게 목록 행 전체를 들고 있는다.
   const [selected, setSelected] = useState<User | null>(null)
-  const { users, total, isLoading } = useUsers({ type, query, page })
-  const { detail, isLoading: isDetailLoading } = useUserDetail(
-    selected?.id ?? null
-  )
+  const { users, total, isLoading, reload } = useUsers({ type, query, page })
+  const {
+    detail,
+    isLoading: isDetailLoading,
+    suspend,
+    unsuspend,
+  } = useUserDetail(selected?.id ?? null, reload)
 
   // 글자마다 서버를 부르지 않게 입력이 멈춘 뒤 검색한다.
   useEffect(() => {
@@ -131,7 +135,12 @@ export function UsersPage() {
                     <UserAvatar user={user} />
                   </ItemMedia>
                   <ItemContent>
-                    <ItemTitle>{user.nickname}</ItemTitle>
+                    <ItemTitle>
+                      {user.nickname}
+                      {user.isSuspended && (
+                        <Badge variant="destructive">정지</Badge>
+                      )}
+                    </ItemTitle>
                     <ItemDescription>
                       {user.isAnonymous ? "게스트" : "구글"} ·{" "}
                       {formatDate(user.joinedAt)} 가입
@@ -189,6 +198,9 @@ export function UsersPage() {
                   >
                     {selected.isAnonymous ? "게스트" : "구글"}
                   </Badge>
+                  {detail?.suspension && (
+                    <Badge variant="destructive">정지</Badge>
+                  )}
                 </CardTitle>
                 <CardDescription>
                   {isDetailLoading ? (
@@ -236,12 +248,21 @@ export function UsersPage() {
               <TabsList variant="line">
                 <TabsTrigger value="written">작성글</TabsTrigger>
                 <TabsTrigger value="reports">제보</TabsTrigger>
+                <TabsTrigger value="suspend">정지 관리</TabsTrigger>
               </TabsList>
               <TabsContent value="written" className="pt-4">
                 <WrittenList written={detail.written} />
               </TabsContent>
               <TabsContent value="reports" className="pt-4">
                 <ReportList reports={detail.reports} />
+              </TabsContent>
+              <TabsContent value="suspend" className="max-w-lg pt-4">
+                <SuspendPanel
+                  userId={selected.id}
+                  suspension={detail.suspension}
+                  onSuspend={suspend}
+                  onUnsuspend={unsuspend}
+                />
               </TabsContent>
             </Tabs>
           )}

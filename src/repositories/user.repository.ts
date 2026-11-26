@@ -31,6 +31,22 @@ export async function getUserProfileById(
   return { data, error: null };
 }
 
+/**
+ * 세션 유저가 지금 정지 중인지. `user_suspensions`는 Service Role 전용이라
+ * 본인 것만 보는 SECURITY DEFINER 함수로 묻는다.
+ */
+export async function isCurrentUserSuspended(
+  supabase: SupabaseClient,
+): Promise<{ data: boolean; error: Error | null }> {
+  const { data, error } = await supabase.rpc('is_current_user_suspended');
+
+  if (error) {
+    return { data: false, error: new Error(error.message) };
+  }
+
+  return { data: data === true, error: null };
+}
+
 export async function checkNicknameDuplicate(nickname: string): Promise<boolean> {
   const supabase = createClient();
   const normalizedNickname = nickname.trim();

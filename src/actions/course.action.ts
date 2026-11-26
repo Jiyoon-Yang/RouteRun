@@ -12,7 +12,11 @@ import { createClient } from '@/lib/supabase/server';
 import * as courseRepository from '@/repositories/course/course.repository';
 import * as courseService from '@/services/course/courseService';
 import type { SubmitCourseInput } from '@/services/course/courseService';
-import { isGuestWriteLimitReached } from '@/services/user/userService';
+import {
+  isGuestWriteLimitReached,
+  isSuspended,
+  SUSPENDED_MESSAGE,
+} from '@/services/user/userService';
 
 export type CreateCourseActionResult =
   | { success: true; courseId: string }
@@ -57,6 +61,10 @@ export async function toggleCourseLikeAction(
     return { likeCount: null, error: '로그인이 필요합니다.' };
   }
 
+  if (await isSuspended(supabase)) {
+    return { likeCount: null, error: SUSPENDED_MESSAGE };
+  }
+
   if (shouldLike) {
     const { error } = await courseRepository.upsertRouteLike(supabase, user.id, courseId);
     if (error) return { likeCount: null, error: error.message };
@@ -96,6 +104,10 @@ export async function createCourseAction(
 
   if (!user) {
     return { success: false, message: '로그인이 필요합니다.' };
+  }
+
+  if (await isSuspended(supabase)) {
+    return { success: false, message: SUSPENDED_MESSAGE };
   }
 
   if (user.is_anonymous === true && (await isGuestWriteLimitReached(user.id))) {
@@ -200,6 +212,10 @@ export async function updateCourseAction(
 
   if (!user) {
     return { success: false, error: '로그인이 필요합니다.' };
+  }
+
+  if (await isSuspended(supabase)) {
+    return { success: false, error: SUSPENDED_MESSAGE };
   }
 
   const validated = validatePostInput({

@@ -82,7 +82,7 @@ export async function uploadCourseImages(files: File[]): Promise<string[]> {
       });
 
     if (error) {
-      // 업로드 INSERT 정책은 버킷만 보므로, 이 버킷에서 RLS로 거부되는 건 정지(RESTRICTIVE 정책)뿐이다.
+      // 항상 본인 폴더에 올리므로 폴더 정책에는 걸리지 않는다. 이 버킷에서 RLS로 거부되는 건 정지(RESTRICTIVE 정책)뿐이다.
       throw new Error(
         /row-level security/i.test(error.message) ? SUSPENDED_MESSAGE : error.message,
       );

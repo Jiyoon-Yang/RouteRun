@@ -1,3 +1,4 @@
+import { SUSPENDED_MESSAGE } from '@/commons/constants/messages';
 import { createClient } from '@/lib/supabase/client';
 
 export const COURSE_IMAGES_BUCKET = 'course_images' as const;
@@ -81,7 +82,10 @@ export async function uploadCourseImages(files: File[]): Promise<string[]> {
       });
 
     if (error) {
-      throw new Error(error.message);
+      // 업로드 INSERT 정책은 버킷만 보므로, 이 버킷에서 RLS로 거부되는 건 정지(RESTRICTIVE 정책)뿐이다.
+      throw new Error(
+        /row-level security/i.test(error.message) ? SUSPENDED_MESSAGE : error.message,
+      );
     }
 
     const {

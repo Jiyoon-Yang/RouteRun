@@ -11,10 +11,10 @@
 - [x] Supabase 서버 클라이언트
 - [x] Service Role 클라이언트(`server-only`, 한 파일에만) — `lib/supabase/admin.ts`. 대시보드 집계에서 먼저 사용
 - [x] 이메일 로그인·로그아웃, 미로그인 접근 차단(`proxy.ts`). 사이드바 `NavUser`의 로그아웃 링크와 하드코딩 이메일도 실제 세션으로 교체
-- [ ] `requireAdmin()`을 레이아웃과 모든 Server Action에서 호출 (레이아웃은 완료, Action은 만들 때마다)
+- [x] `requireAdmin()`을 레이아웃과 모든 Server Action에서 호출. Action은 `require-admin-guard.test.ts`가 첫 문장인지 검사한다
 - [x] 조치 기록 함수 `logAdminAction()` — `repositories/admin-log.repository.ts`. 2단계 제보 상태 변경부터 기록
-- [ ] 기존 Vercel 프로젝트는 `admin/` 변경 시 빌드 건너뛰기
-- [ ] Vercel 새 프로젝트(Root Directory=`admin`). 인증 없는 화면이 공개되지 않도록 위 로그인 차단과 `requireAdmin()`이 들어간 뒤에 만든다
+- [x] 기존 Vercel 프로젝트는 `admin/` 변경 시 빌드 건너뛰기 — 2026-11-26 #64(어드민만 변경)에서 routerun이 "Canceled by Ignored Build Step"으로 확인
+- [x] Vercel 새 프로젝트(Root Directory=`admin`) — 운영 주소 https://admin-yangjis-projects.vercel.app (배포 보호는 2026-11-12에 끔, 로그인 차단·`requireAdmin()`으로 막는다)
 - DB: `admins`, `admin_logs`
   - `admins`는 2026-11-10 SQL Editor로 반영. 관리자 추가: `insert into admins (user_id) values ('<auth.users id>')`
   - `admin_logs`는 2단계 마이그레이션(`20261111000000_reports_status_admin_logs.sql`)에 같이 넣었다. Service Role 전용
@@ -74,7 +74,8 @@ DB 변경이 없어 단계를 기다리지 않는다. 설정 방법은 README의
 - [x] 사용자 앱에서 정지 유저의 코스·트랙 작성·수정, 좋아요(누르기·취소), 제보 차단. 삭제·조회·로그인·탈퇴는 그대로(사용자 확정)
   - Server Action이 세션 확인 직후 `is_current_user_suspended()`로 막고 안내한다. 확인이 실패해도 막는다(게스트 한도와 같은 규칙)
   - routes·tracks INSERT/UPDATE, 좋아요 INSERT/DELETE에 RESTRICTIVE RLS 정책을 더해 REST 직접 호출도 막는다. 제보는 Service Role insert라 Action에서만 막는다
-  - 좋아요 실패 토스트는 공용 훅의 "좋아요 처리에 실패했습니다" 그대로다. 정지 안내 문구는 작성·수정·제보에서만 보인다
+  - 좋아요가 정지로 막히면 공용 훅이 정지 안내 문구를 띄운다(다른 실패는 "좋아요 처리에 실패했습니다")
+  - `course_images` 업로드도 RESTRICTIVE 정책으로 막는다(`20261128000000_suspended_upload_block.sql`). 업로드 INSERT 정책이 버킷만 보므로 이 버킷의 RLS 거부는 정지뿐이라, `storage.ts`가 그 거부를 정지 안내로 바꾼다. 글에 붙지 않는 파일이 남지 않는다
 - DB: `user_suspensions(user_id, until, reason)` Service Role 전용 — `20261127000000_user_suspensions.sql`. `users`는 닉네임 수정으로 본인 UPDATE가 열려 있어 컬럼을 두면 정지를 스스로 풀 수 있다(사용자 확정). 사용자 앱 Action이 함수를 부르므로 **사용자 앱 배포 전에 반영**(없으면 작성·좋아요·제보가 모두 막힌다)
 
 ## 6. 작업 기록 + 대시보드
@@ -89,4 +90,4 @@ DB 변경이 없어 단계를 기다리지 않는다. 설정 방법은 README의
 
 ## 7. 정리
 - [x] `src/commons/mocks` 삭제 (작업 기록이 마지막 사용처였다. `formatRelative`의 `now`는 필수 인자로)
-- [ ] 운영 배포
+- [x] 운영 배포 — 2026-11-26 #64로 0~7단계 전부 운영 반영

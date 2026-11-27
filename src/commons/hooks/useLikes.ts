@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { SUSPENDED_MESSAGE } from '@/commons/constants/messages';
 import { ROUTES } from '@/commons/constants/url';
 import { useAuth } from '@/commons/providers/auth/auth.provider';
 import { useModal } from '@/commons/providers/modal/modal.provider';
@@ -121,7 +122,11 @@ export function useLikes(initialLikeCounts: LikeCountsById, config: LikeConfig) 
       }
 
       console.error(`[useLikes:${entityLabel}] 좋아요 상태 변경 실패:`, result.error);
-      showToast('좋아요 처리에 실패했습니다.', 'failed');
+      // 다른 실패는 DB 원문 메시지라 그대로 보여 주지 않고, 정지만 안내 문구로 알린다.
+      showToast(
+        result.error === SUSPENDED_MESSAGE ? SUSPENDED_MESSAGE : '좋아요 처리에 실패했습니다.',
+        'failed',
+      );
       setLikedIds((previous) => {
         const next = new Set(previous);
         if (wasLiked) next.add(id);

@@ -2,12 +2,13 @@
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
+import { SUSPENDED_MESSAGE } from '@/commons/constants/messages';
 import { ROUTES } from '@/commons/constants/url';
 import type { ReportTarget, ReportType } from '@/commons/types/routerun';
 import { isValidReportTarget } from '@/commons/utils/report-target';
 import { createClient } from '@/lib/supabase/server';
 import * as reportRepository from '@/repositories/report.repository';
-import { isSuspended, SUSPENDED_MESSAGE } from '@/services/user/userService';
+import { isSuspended } from '@/services/user/userService';
 
 export type SubmitReportInput = {
   type: ReportType;

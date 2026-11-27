@@ -199,9 +199,12 @@ export function AuditPage() {
       )}
 
       <PageNav page={page} pageCount={pageCount} onPageChange={setPage} />
-      <p className="text-sm text-muted-foreground">
-        {formatNumber(total)}건 · 기록은 수정·삭제할 수 없습니다.
-      </p>
+      {/* 첫 결과가 오기 전엔 total이 0이라 "0건"으로 오해하지 않게 숨긴다 */}
+      {list && (
+        <p className="text-sm text-muted-foreground">
+          {formatNumber(total)}건 · 기록은 수정·삭제할 수 없습니다.
+        </p>
+      )}
     </>
   )
 }

@@ -90,7 +90,7 @@ cd admin && npm run lint && npm run typecheck
 - `admins`: `user_id (auth.users), created_at` — 어드민 로그인 허용 명단. 본인 행만 조회 가능
 - `user_suspensions`: `user_id (auth.users, PK), until (null이면 영구), reason, created_at` — 어드민 유저 정지. Service Role 전용. 일반 유저는 `is_current_user_suspended()`(SECURITY DEFINER, 본인 것만)로만 묻는다
 - `notices`: `id, title, body, status ('draft'|'published'), pinned, published_at, created_at, updated_at` — 공지. 누구나 게시된 공지만 읽고(RLS), 쓰기는 어드민 Service Role만. 고정은 초안 포함 전체 1개(partial unique index)
-- 스토리지 버킷: `course_images` (공개)
+- 스토리지 버킷: `course_images` (공개 조회). 업로드·수정·삭제는 본인 폴더(`<user id>/...`)만. 새 업로드 경로를 만들면 이 규칙을 지킨다(어긋나면 RLS 거부가 정지 안내로 보인다)
 
 `supabase/migrations/`에는 likes_count 트리거와 어드민용 변경(`admins`, `reports` 처리 컬럼과 권한 정리, `admin_logs`, `notices`, 코스·트랙 숨김, 유저 정지)만 있다. 나머지 테이블 구조는 위 목록과 `src/repositories/{course,track}/*-row.ts`를 기준으로 본다.
 `supabase/functions/send-report-email/` — 제보 메일 Edge Function (Deno + Resend). 함수 secrets: `RESEND_API_KEY`, `REPORT_EMAIL_TO`, `REPORT_EMAIL_SECRET`
